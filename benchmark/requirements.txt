@@ -1,0 +1,4 @@
+git+https://github.com/ServiceNow/TACTiS.git
+gluonts==0.15.1
+numpy==1.26.4
+pandas==2.2.2
