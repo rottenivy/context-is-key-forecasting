@@ -16,9 +16,9 @@ from .utils import get_random_window_univar
 
 class PeriodicSensorMaintenanceTask(UnivariateCRPSTask):
     """
-    Task that involves time series whose past series contains misleading information
-    that can only be detected by understanding the contextual information provided
-    with the data.
+    A task where the history contains misleading information due to periodic
+    sensor maintenance. The maintenance periods should not be reflected in
+    the forecast.
 
     """
 
@@ -68,12 +68,10 @@ class PeriodicSensorMaintenanceTask(UnivariateCRPSTask):
                 history_series.between_time(start_time, end_time).index
             ] = 0
 
-            background = f"The sensor was offline for maintenance every day between {start_time} and {end_time}, which resulted in zero readings."
+            background = f"The sensor was offline for maintenance every day between {start_time} and {end_time}, which resulted in zero readings. This should be disregarded in the forecast."
 
         else:
-            raise NotImplementedError(
-                f"Scenario for dataset {dataset_name} not implemented yet"
-            )
+            raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
 
         # Instantiate the class variables
         self.past_time = history_series
