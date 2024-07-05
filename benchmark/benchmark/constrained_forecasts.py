@@ -20,10 +20,15 @@ class BaseConstrainedTask(BaseTask):
         constraint_less_than: bool = False,
         constraint_value: float = 0.0,
         num_samples: int = 1000,
+        num_hist_values: int = 20,
+        num_pred_values: int = 10,
     ):
         self.constraint_less_than = constraint_less_than
         self.constraint_value = constraint_value
+
         self.num_samples = num_samples
+        self.num_hist_values = num_hist_values
+        self.num_pred_values = num_pred_values
 
         super().__init__(seed=seed, fixed_config=None)
 
@@ -140,6 +145,8 @@ class ConstrainedRandomWalk(BaseConstrainedTask):
             constraint_less_than=constraint_less_than,
             constraint_value=constraint_value,
             num_samples=num_samples,
+            num_hist_values=num_hist_values,
+            num_pred_values=num_pred_values,
         )
 
     def generate_hist(self) -> np.array:
@@ -159,3 +166,62 @@ class ConstrainedRandomWalk(BaseConstrainedTask):
         )
         pred_values = np.cumsum(pred_steps, axis=1) + self.start_value
         return pred_values
+
+
+class ConstrainedNoisySine(BaseConstrainedTask):
+    def __init__(
+        self,
+        seed: int = None,
+        sine_frequency: float = np.pi / 5,
+        sine_phase: float = 0.0,
+        sine_amplitude: float = 1.0,
+        trend: float = 0.0,
+        start_value: float = 0.0,
+        noise_amplitude: float = 0.5,
+        constraint_less_than: bool = False,
+        constraint_value: float = 0.0,
+        num_hist_values: int = 20,
+        num_pred_values: int = 10,
+        num_samples: int = 1000,
+    ):
+        self.sine_frequency = sine_frequency
+        self.sine_phase = sine_phase
+        self.sine_amplitude = sine_amplitude
+        self.trend = trend
+        self.start_value = (
+            start_value  # Value of the last point in the history (with no phase)
+        )
+        self.noise_amplitude = noise_amplitude
+
+        super().__init__(
+            seed=seed,
+            constraint_less_than=constraint_less_than,
+            constraint_value=constraint_value,
+            num_samples=num_samples,
+            num_hist_values=num_hist_values,
+            num_pred_values=num_pred_values,
+        )
+
+    def generate_hist(self) -> np.array:
+        t = np.arange(-self.num_hist_values + 1, 1)
+        base = (
+            np.sin(self.sine_frequency * t + self.sine_phase)
+            + self.start_value
+            + self.trend * t
+        )
+        hist_values = base + self.noise_amplitude * self.random.randn(
+            self.num_hist_values
+        )
+        return hist_values
+
+    def generate_pred(self) -> np.array:
+        t = np.arange(1, self.num_pred_values + 1)
+        base = (
+            np.sin(self.sine_frequency * t + self.sine_phase)
+            + self.start_value
+            + self.trend * t
+        )
+        hist_values = base[None, :] + self.noise_amplitude * self.random.randn(
+            self.num_samples, self.num_pred_values
+        )
+        return hist_values
