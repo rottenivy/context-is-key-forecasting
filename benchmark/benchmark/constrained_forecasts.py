@@ -8,51 +8,39 @@ normalized by what you would obtained ignoring the contraint.
 import scipy
 import numpy as np
 import pandas as pd
+from abc import abstractmethod
 
 from .base import BaseTask
 
 
-class ConstrainedRandomWalk(BaseTask):
+class BaseConstrainedTask(BaseTask):
     def __init__(
         self,
         seed: int = None,
-        variance: float = 1.0,
-        trend: float = 0.0,
-        start_value: float = 0.0,
         constraint_less_than: bool = False,
         constraint_value: float = 0.0,
-        num_hist_values: int = 20,
-        num_pred_values: int = 10,
         num_samples: int = 1000,
     ):
-        self.variance = variance
-        self.trend = trend
-        self.start_value = start_value  # Value of the last point in the history
         self.constraint_less_than = constraint_less_than
         self.constraint_value = constraint_value
-        self.num_hist_values = num_hist_values
-        self.num_pred_values = num_pred_values
         self.num_samples = num_samples
 
         super().__init__(seed=seed, fixed_config=None)
+
+    @abstractmethod
+    def generate_hist(self) -> np.array:
+        pass
+
+    @abstractmethod
+    def generate_pred(self) -> np.array:
+        pass
 
     def random_instance(self):
         """
         Generate a random instance of the task and instantiate its data
         """
-        hist_steps = (
-            np.sqrt(self.variance) * self.random.randn(self.num_hist_values)
-            + self.trend
-        )
-        hist_values = np.cumsum(hist_steps)
-        hist_values = hist_values - hist_values[-1] + self.start_value
-
-        pred_steps = (
-            np.sqrt(self.variance)
-            * self.random.randn(self.num_samples, self.num_pred_values)
-            + self.trend
-        )
-        pred_values = np.cumsum(pred_steps, axis=1) + self.start_value
+        hist_values = self.generate_hist()
+        pred_values = self.generate_pred()
 
         if self.constraint_less_than:
             const_hist_values = hist_values.clip(max=self.constraint_value)
@@ -88,13 +76,7 @@ class ConstrainedRandomWalk(BaseTask):
         # Values required for the evaluation,
         # regenerating the non_const forecast to allow measuring the distance between both
         self.perfect_const_forecast = const_pred_values
-        pred_steps = (
-            np.sqrt(self.variance)
-            * self.random.randn(self.num_samples, self.num_pred_values)
-            + self.trend
-        )
-        pred_values = np.cumsum(pred_steps, axis=1) + self.start_value
-        self.perfect_non_const_forecast = pred_values
+        self.perfect_non_const_forecast = self.generate_pred()
 
         # Instantiate the class variables
         self.past_time = history_series
@@ -132,3 +114,48 @@ class ConstrainedRandomWalk(BaseTask):
 
         print(cum_metric / self.num_pred_values, cum_naive / self.num_pred_values)
         return (cum_metric - cum_naive) / self.num_pred_values
+
+
+class ConstrainedRandomWalk(BaseConstrainedTask):
+    def __init__(
+        self,
+        seed: int = None,
+        variance: float = 1.0,
+        trend: float = 0.0,
+        start_value: float = 0.0,
+        constraint_less_than: bool = False,
+        constraint_value: float = 0.0,
+        num_hist_values: int = 20,
+        num_pred_values: int = 10,
+        num_samples: int = 1000,
+    ):
+        self.variance = variance
+        self.trend = trend
+        self.start_value = start_value  # Value of the last point in the history
+        self.num_hist_values = num_hist_values
+        self.num_pred_values = num_pred_values
+
+        super().__init__(
+            seed=seed,
+            constraint_less_than=constraint_less_than,
+            constraint_value=constraint_value,
+            num_samples=num_samples,
+        )
+
+    def generate_hist(self) -> np.array:
+        hist_steps = (
+            np.sqrt(self.variance) * self.random.randn(self.num_hist_values)
+            + self.trend
+        )
+        hist_values = np.cumsum(hist_steps)
+        hist_values = hist_values - hist_values[-1] + self.start_value
+        return hist_values
+
+    def generate_pred(self) -> np.array:
+        pred_steps = (
+            np.sqrt(self.variance)
+            * self.random.randn(self.num_samples, self.num_pred_values)
+            + self.trend
+        )
+        pred_values = np.cumsum(pred_steps, axis=1) + self.start_value
+        return pred_values
