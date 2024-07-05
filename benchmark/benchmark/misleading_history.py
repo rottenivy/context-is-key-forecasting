@@ -14,7 +14,7 @@ from .base import UnivariateCRPSTask
 from .utils import get_random_window_univar
 
 
-class PeriodicSensorMaintenanceTask(UnivariateCRPSTask):
+class SensorPeriodicMaintenanceTask(UnivariateCRPSTask):
     """
     A task where the history contains misleading information due to periodic
     sensor maintenance. The maintenance periods should not be reflected in
@@ -47,7 +47,7 @@ class PeriodicSensorMaintenanceTask(UnivariateCRPSTask):
         window = get_random_window_univar(
             full_series,
             prediction_length=metadata.prediction_length,
-            history_factor=self.random.randint(2, 5),
+            history_factor=self.random.randint(3, 7),
             random=self.random,
         )
 
@@ -68,7 +68,89 @@ class PeriodicSensorMaintenanceTask(UnivariateCRPSTask):
                 history_series.between_time(start_time, end_time).index
             ] = 0
 
+            # Convert future index to timestamp for consistency
+            future_series.index = future_series.index.to_timestamp()
+
             background = f"The sensor was offline for maintenance every day between {start_time} and {end_time}, which resulted in zero readings. This should be disregarded in the forecast."
+
+        else:
+            raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
+
+        # Instantiate the class variables
+        self.past_time = history_series
+        self.future_time = future_series
+        self.constraints = None
+        self.background = background
+        self.scenario = None
+
+
+class SensorTrendAccumulationTask(UnivariateCRPSTask):
+    """
+    A task where the history contains misleading information due to the
+    measurement sensor accumulating a trend over time due to a calibration
+    issue. The trend should not be reflected in the forecast.
+
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(seed=seed, fixed_config=fixed_config)
+
+    def random_instance(self):
+        datasets = ["traffic"]
+
+        # Select a random dataset
+        dataset_name = self.random.choice(datasets)
+        dataset = get_dataset(dataset_name, regenerate=False)
+
+        assert len(dataset.train) == len(
+            dataset.test
+        ), "Train and test sets must contain the same number of time series"
+
+        # Get the dataset metadata
+        metadata = dataset.metadata
+
+        # Select a random time series
+        ts_index = self.random.choice(len(dataset.train))
+        full_series = to_pandas(list(dataset.test)[ts_index])
+
+        # Select a random window
+        window = get_random_window_univar(
+            full_series,
+            prediction_length=metadata.prediction_length,
+            history_factor=self.random.randint(3, 7),
+            random=self.random,
+        )
+
+        # Extract the history and future series
+        history_series = window.iloc[: -metadata.prediction_length]
+        future_series = window.iloc[-metadata.prediction_length :]
+
+        if dataset_name == "traffic":
+            # Sample a starting point in the first half of the history's index
+            history_series.index = history_series.index.to_timestamp()
+            start_point = self.random.choice(
+                history_series.index[: len(history_series) // 2]
+            )
+            n_points_slope = len(history_series) - history_series.index.get_loc(
+                start_point
+            )
+
+            # Slope: make sure the mean increases by something between 1 and 1.5
+            mean = history_series.mean()
+            min_slope = mean / (len(history_series) - n_points_slope)
+            max_slope = 1.5 * min_slope
+            slope = self.random.uniform(min_slope, max_slope)
+
+            # Add slope to history series based on number of measurements
+            # XXX: Assumes a constant frequency
+            history_series.loc[start_point:] = history_series.loc[
+                start_point:
+            ] + np.float32(slope * np.arange(n_points_slope))
+
+            # Convert future index to timestamp for consistency
+            future_series.index = future_series.index.to_timestamp()
+
+            background = f"The sensor had a calibration problem starting from {start_point}, which resulted in an upward trend. This should be disregarded in the forecast."
 
         else:
             raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
