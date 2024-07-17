@@ -101,7 +101,7 @@ class ZenithInfoHalfDaySolarForecastTask(BaseHalfDaySolarForecastTask):
 
         # The resample is effectively a groupby based on the given frequency, so this gives us the mean
         # time of the day at which the series is the highest.
-        past_90_days = full_history_series[-90 * 24 * 6 :]
+        past_90_days = full_history_series.iloc[-90 * 24 * 6 :]
         mean_zenith_seconds = round(past_90_days.resample("D").apply(func).mean())
         mean_zenith_formated = (
             datetime.datetime.fromtimestamp(mean_zenith_seconds)
