@@ -27,7 +27,7 @@ def evaluate_all_tasks(method_callable, seeds=5, n_samples=50):
     """
     results = defaultdict(list)
     for task_cls in ALL_TASKS:
-        for seed in range(seeds):
+        for seed in range(1, seeds + 1):
             task = task_cls(seed=seed)
 
             results[task_cls.__name__].append(
