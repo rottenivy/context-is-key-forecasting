@@ -163,4 +163,86 @@ class SensorTrendAccumulationTask(UnivariateCRPSTask):
         self.scenario = None
 
 
-__TASKS__ = [SensorPeriodicMaintenanceTask, SensorTrendAccumulationTask]
+class SensorSpikeTask(UnivariateCRPSTask):
+    """
+    A task where the history contains misleading information due to the
+    measurement sensor having random spikes due to an unexpected glitch.
+    This should not affect the forecast.
+    # TODO: Support more spikes: in which case single-timesteps spikes would be trivial; but it is non-trivial to handle multi-length spikes
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(seed=seed, fixed_config=fixed_config)
+
+    def random_instance(self):
+        datasets = ["traffic"]
+
+        # Select a random dataset
+        dataset_name = self.random.choice(datasets)
+        dataset = get_dataset(dataset_name, regenerate=False)
+
+        assert len(dataset.train) == len(
+            dataset.test
+        ), "Train and test sets must contain the same number of time series"
+
+        # Get the dataset metadata
+        metadata = dataset.metadata
+
+        # Select a random time series
+        ts_index = self.random.choice(len(dataset.train))
+        full_series = to_pandas(list(dataset.test)[ts_index])
+
+        # Select a random window
+        window = get_random_window_univar(
+            full_series,
+            prediction_length=metadata.prediction_length,
+            history_factor=self.random.randint(3, 7),
+            random=self.random,
+        )
+
+        # Extract the history and future series
+        history_series = window.iloc[: -metadata.prediction_length]
+        future_series = window.iloc[-metadata.prediction_length :]
+
+        if dataset_name == "traffic":
+            # Sample a starting point in the first half of the history's index
+            history_series.index = history_series.index.to_timestamp()
+            spike_start_date = self.random.choice(
+                history_series.index[
+                    len(history_series) // 2 : -4
+                ]  # Leave 3 points at the end: arbitrary
+            )  # Arbitrary start point for now
+            spike_start_point = history_series.index.get_loc(spike_start_date)
+            spike_duration = self.random.choice(
+                [1, 2, 3]
+            )  # Arbitrarily picked from 1,2,3
+            spike_type = self.random.choice([-1, 1])  # Upward spike or downward spike
+            spike_magnitude = (
+                self.random.choice([2, 3]) * history_series.max()
+            )  # Arbitrarily set to twice or thrice the max value in the time series
+            # Add spike to the data
+            history_series.iloc[
+                spike_start_point : spike_start_point + spike_duration
+            ] = (spike_type * spike_magnitude)
+
+            # Convert future index to timestamp for consistency
+            future_series.index = future_series.index.to_timestamp()
+
+            background = f"The sensor experienced an unexpected glitch resulting in a spike starting from {spike_start_date} for {spike_duration} timesteps. This should be disregarded in the forecast."
+
+        else:
+            raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
+
+        # Instantiate the class variables
+        self.past_time = history_series
+        self.future_time = future_series
+        self.constraints = None
+        self.background = background
+        self.scenario = None
+
+
+__TASKS__ = [
+    SensorPeriodicMaintenanceTask,
+    SensorTrendAccumulationTask,
+    SensorSpikeTask,
+]
