@@ -150,6 +150,4 @@ def lag_llama(task_instance, n_samples, device=None):
         num_samples=n_samples,
     )
 
-    return forecasts[0].samples.astype(
-        task_instance.past_time.dtype
-    )  # TODO: Make sure output shape is ok
+    return forecasts[0].samples.astype(task_instance.past_time.dtype)[:, :, None]
