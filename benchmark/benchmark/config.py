@@ -2,6 +2,7 @@
 Configuration variables for the benchmark
 
 """
+
 import os
 
 MODEL_STORAGE_PATH = os.environ.get("STARCASTER_MODEL_STORE", "./models")

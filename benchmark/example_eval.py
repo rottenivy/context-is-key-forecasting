@@ -1,4 +1,6 @@
 import logging
+
+logging.basicConfig(level=logging.INFO)
 import numpy as np
 import pandas as pd
 
@@ -26,8 +28,6 @@ def oracle_baseline(task_instance, n_samples=50):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-
     random_results = evaluate_all_tasks(random_baseline)
     oracle_results = evaluate_all_tasks(oracle_baseline)
     lag_llama_results = evaluate_all_tasks(lag_llama)

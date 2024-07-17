@@ -14,7 +14,9 @@ from ..config import MODEL_STORAGE_PATH
 LAG_LLAMA_WEIGHTS_PATH = f"{MODEL_STORAGE_PATH}/lag-llama.ckpt"
 if not os.path.exists(LAG_LLAMA_WEIGHTS_PATH):
     logging.info("Downloading Lag-Llama weights...")
-    os.system(f"huggingface-cli download time-series-foundation-models/Lag-Llama lag-llama.ckpt --local-dir {MODEL_STORAGE_PATH}")
+    os.system(
+        f"huggingface-cli download time-series-foundation-models/Lag-Llama lag-llama.ckpt --local-dir {MODEL_STORAGE_PATH}"
+    )
     logging.info("Lag-Llama weights downloaded.")
 
 
