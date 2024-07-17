@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from benchmark import ALL_TASKS
+from . import ALL_TASKS
 
 
 def evaluate_all_tasks(method_callable, seeds=5, n_samples=50):
