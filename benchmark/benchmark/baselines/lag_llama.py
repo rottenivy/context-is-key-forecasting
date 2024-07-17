@@ -1,3 +1,5 @@
+import logging
+import os
 import pandas as pd
 import torch
 
@@ -6,9 +8,14 @@ from gluonts.evaluation import make_evaluation_predictions
 from lag_llama.gluon.estimator import LagLlamaEstimator
 
 from .utils import torch_default_device
+from ..config import MODEL_STORAGE_PATH
 
 
-LAG_LLAMA_WEIGHTS_PATH = "/Users/alexandre.drouin/.cache/huggingface/hub/models--time-series-foundation-models--Lag-Llama/snapshots/72dcfc29da106acfe38250a60f4ae29d1e56a3d9/lag-llama.ckpt"
+LAG_LLAMA_WEIGHTS_PATH = f"{MODEL_STORAGE_PATH}/lag-llama.ckpt"
+if not os.path.exists(LAG_LLAMA_WEIGHTS_PATH):
+    logging.info("Downloading Lag-Llama weights...")
+    os.system(f"huggingface-cli download time-series-foundation-models/Lag-Llama lag-llama.ckpt --local-dir {MODEL_STORAGE_PATH}")
+    logging.info("Lag-Llama weights downloaded.")
 
 
 def get_lag_llama_predictions(
@@ -41,7 +48,7 @@ def get_lag_llama_predictions(
         - tss (list): A list of time series objects with the ground truth corresponding to the forecasts. Each time series is of shape (prediction length,).
 
     """
-
+    logging.info("Generating forecasts using Lag-Llama...")
     ckpt = torch.load(
         LAG_LLAMA_WEIGHTS_PATH,
         map_location=device,
@@ -101,6 +108,7 @@ def prepare_dataset(history, forecast):
     PandasDataset: The dataset in the format expected by the Lag-Llama model.
 
     """
+    logging.info("Preparing dataset for Lag-Llama...")
     series = pd.concat((history.astype("float32"), forecast.astype("float32")))
     df = series.to_frame(name="target")
     ds = PandasDataset({"F": df}, target="target")
