@@ -30,8 +30,13 @@ def evaluate_all_tasks(method_callable, seeds=5, n_samples=50):
         for seed in range(seeds):
             task = task_cls(seed=seed)
 
-            results[task_cls.__name__].append({"seed": seed, 
-                                               "score": task.evaluate(method_callable(task_instance=task, n_samples=n_samples))})
-    
-    return results
+            results[task_cls.__name__].append(
+                {
+                    "seed": seed,
+                    "score": task.evaluate(
+                        method_callable(task_instance=task, n_samples=n_samples)
+                    ),
+                }
+            )
 
+    return results
