@@ -161,3 +161,6 @@ class SensorTrendAccumulationTask(UnivariateCRPSTask):
         self.constraints = None
         self.background = background
         self.scenario = None
+
+
+__TASKS__ = [SensorPeriodicMaintenanceTask, SensorTrendAccumulationTask]

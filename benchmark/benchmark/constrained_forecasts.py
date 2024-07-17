@@ -96,7 +96,7 @@ class BaseConstrainedTask(BaseTask):
 
         Parameters:
         -----------
-        samples: np.ndarray, shape (n_samples, n_time)
+        samples: np.ndarray, shape (n_samples, n_time, n_dim)
             Samples from the inferred distribution
 
         Returns:
@@ -105,6 +105,9 @@ class BaseConstrainedTask(BaseTask):
             Metric value
 
         """
+        if len(samples.shape) == 3:
+            samples = samples[:, :, 0]
+
         cum_metric = 0.0
         cum_naive = 0.0
 
@@ -117,7 +120,6 @@ class BaseConstrainedTask(BaseTask):
                 self.perfect_const_forecast[:, t_idx],
             )
 
-        print(cum_metric / self.num_pred_values, cum_naive / self.num_pred_values)
         return (cum_metric - cum_naive) / self.num_pred_values
 
 
@@ -225,3 +227,6 @@ class ConstrainedNoisySine(BaseConstrainedTask):
             self.num_samples, self.num_pred_values
         )
         return hist_values
+
+
+__TASKS__ = [ConstrainedRandomWalk, ConstrainedNoisySine]
