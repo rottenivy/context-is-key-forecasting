@@ -42,7 +42,7 @@ class BaseHalfDaySolarForecastTask(UnivariateCRPSTask):
         ]
 
         background = self.get_background(
-            full_history_series, full_series.index[day * 24 * 6].start_time
+            full_history_series, future_series.index[0].start_time
         )
 
         # Instantiate the class variables
@@ -115,8 +115,112 @@ class ZenithInfoHalfDaySolarForecastTask(BaseHalfDaySolarForecastTask):
         )
 
 
+class BaseDayOfWeekTrafficForecastTask(UnivariateCRPSTask):
+    """
+    A task where the model is tasked to forecast the the traffic for Saturday and Sunday,
+    given only the traffic for the past Monday to Friday.
+    The dataset has a strong daily periodicity, but with different patterns for the weekend.
+    The task comes with a textual description which can helps the model guesses the difference.
+    """
+
+    def __init__(self, seed: int = None):
+        super().__init__(seed=seed)
+
+    def random_instance(self):
+        dataset = get_dataset("traffic", regenerate=False)
+
+        # Select a random time series
+        ts_index = self.random.choice(len(dataset.test))
+        full_series = to_pandas(list(dataset.test)[ts_index])
+
+        # The traffic dataset is for the whole years of 2015 and 2016, and is hourly.
+        # Get rid of the first (potentially) incomplete week, to always start on Monday.
+        first_day_of_week = full_series.index[0].day_of_week
+        full_series = full_series.iloc[(7 - first_day_of_week) * 24 :]
+        # Select a week for the forecast
+        week = self.random.randint(low=21, high=101)
+        # history = first 5 days of the week, target = 6th and 7th days of the week
+        full_history_series = full_series.iloc[: (week * 7 * 24)]
+        history_series = full_series.iloc[(week * 7 * 24) : (week * 7 * 24) + 5 * 24]
+        future_series = full_series.iloc[
+            (week * 7 * 24) + 5 * 24 : (week * 7 * 24) + 7 * 24
+        ]
+
+        background = self.get_background(
+            full_history_series, future_series.index[0].start_time
+        )
+
+        # Instantiate the class variables
+        self.past_time = history_series
+        self.future_time = future_series
+        self.constraints = None
+        self.background = background
+        self.scenario = None
+
+    @abstractmethod
+    def get_background(
+        self, full_history_series: pd.Series, forecast_date: pd.Timestamp
+    ) -> str:
+        """
+        Generate a textual hint for the model to know about the potential shape of the daily solar intensity.
+        """
+        pass
+
+
+class MinimalInfoDayOfWeekTrafficForecastTask(BaseDayOfWeekTrafficForecastTask):
+    """
+    Version of the task where only the minimal background information is given.
+    """
+
+    def get_background(
+        self, full_history_series: pd.Series, forecast_date: pd.Timestamp
+    ) -> str:
+        return "This series contains the road occupancy rates on a freeway in the San Francisco Bay area."
+
+
+class ExplicitDayOfWeekTrafficForecastTask(BaseDayOfWeekTrafficForecastTask):
+    """
+    Version of the task where the model is being told explicitly that the forecast is on the weekend.
+    """
+
+    def get_background(
+        self, full_history_series: pd.Series, forecast_date: pd.Timestamp
+    ) -> str:
+        return (
+            "This series contains the road occupancy rates on a freeway in the San Francisco Bay area.\n"
+            "The given history contains the data for Monday to Friday, and the forecast dates are for Saturday and Sunday."
+        )
+
+
+class WeekendShiftDayOfWeekTrafficForecastTask(BaseDayOfWeekTrafficForecastTask):
+    """
+    Version of the task where the difference in traffic between weekend and weekday is computed.
+    """
+
+    def get_background(
+        self, full_history_series: pd.Series, forecast_date: pd.Timestamp
+    ) -> str:
+        def func(s):
+            # Weekend mean traffic divided by weekdays mean traffic
+            return s.iloc[5 * 24 :].mean() / s.iloc[: 5 * 24].mean()
+
+        # The resample is effectively a groupby based on the given frequency, so this gives us the mean
+        # ratio between weekend traffic compared to weekdays traffic.
+        past_20_weeks = full_history_series.iloc[-20 * 7 * 24 :]
+        traffic_ratio = past_20_weeks.resample("W").apply(func).mean()
+
+        return (
+            "This series contains the road occupancy rates on a freeway in the San Francisco Bay area.\n"
+            f"On the previous 20 weeks, the traffic during the weekend was {100 * traffic_ratio:.1f}% "
+            "of the traffic during the rest of the week."
+        )
+
+
 __TASKS__ = [
     MinimalInfoHalfDaySolarForecastTask,
     LocaleInfoHalfDaySolarForecastTask,
     ZenithInfoHalfDaySolarForecastTask,
+    MinimalInfoDayOfWeekTrafficForecastTask,
+    ExplicitDayOfWeekTrafficForecastTask,
+    WeekendShiftDayOfWeekTrafficForecastTask,
 ]
