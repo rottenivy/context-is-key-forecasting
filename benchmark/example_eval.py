@@ -1,6 +1,10 @@
+import logging
+
+logging.basicConfig(level=logging.INFO)
 import numpy as np
 import pandas as pd
 
+from benchmark.baselines.lag_llama import lag_llama
 from benchmark.evaluation import evaluate_all_tasks
 
 
@@ -24,8 +28,11 @@ def oracle_baseline(task_instance, n_samples=50):
 
 
 if __name__ == "__main__":
-    random_results = evaluate_all_tasks(random_baseline)
-    oracle_results = evaluate_all_tasks(oracle_baseline)
+    n_samples = 25
+
+    random_results = evaluate_all_tasks(random_baseline, n_samples=n_samples)
+    oracle_results = evaluate_all_tasks(oracle_baseline, n_samples=n_samples)
+    lag_llama_results = evaluate_all_tasks(lag_llama, n_samples=n_samples)
 
     results = pd.DataFrame(
         {
@@ -37,6 +44,10 @@ if __name__ == "__main__":
             "Oracle": [
                 np.mean([res["score"] for res in oracle_results[task]])
                 for task in oracle_results
+            ],
+            "Lag-Llama": [
+                np.mean([res["score"] for res in lag_llama_results[task]])
+                for task in lag_llama_results
             ],
         }
     )

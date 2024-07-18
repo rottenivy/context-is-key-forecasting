@@ -1,16 +1,24 @@
-from itertools import islice
-
-from matplotlib import pyplot as plt
-import matplotlib.dates as mdates
-
+import logging
+import numpy as np
+import os
+import pandas as pd
 import torch
-from gluonts.evaluation import make_evaluation_predictions, Evaluator
-from gluonts.dataset.repository.datasets import get_dataset
 
 from gluonts.dataset.pandas import PandasDataset
-import pandas as pd
-
+from gluonts.evaluation import make_evaluation_predictions
 from lag_llama.gluon.estimator import LagLlamaEstimator
+
+from .utils import torch_default_device
+from ..config import MODEL_STORAGE_PATH
+
+
+LAG_LLAMA_WEIGHTS_PATH = f"{MODEL_STORAGE_PATH}/lag-llama.ckpt"
+if not os.path.exists(LAG_LLAMA_WEIGHTS_PATH):
+    logging.info("Downloading Lag-Llama weights...")
+    os.system(
+        f"huggingface-cli download time-series-foundation-models/Lag-Llama lag-llama.ckpt --local-dir {MODEL_STORAGE_PATH}"
+    )
+    logging.info("Lag-Llama weights downloaded.")
 
 
 def get_lag_llama_predictions(
@@ -27,6 +35,7 @@ def get_lag_llama_predictions(
     Generates forecasts using the Lag-Llama model.
 
     Parameters:
+    -----------
     dataset (Dataset): The dataset to generate predictions for.
     prediction_length (int): The number of timesteps to predict.
     device (str): The device to run the model on (e.g., 'cpu' or 'cuda').
@@ -40,10 +49,11 @@ def get_lag_llama_predictions(
     tuple: A tuple containing:
         - forecasts (list): A list of forecast objects. Each forecast is of shape (num_samples, prediction_length).
         - tss (list): A list of time series objects with the ground truth corresponding to the forecasts. Each time series is of shape (prediction length,).
-    """
 
+    """
+    logging.info("Generating forecasts using Lag-Llama...")
     ckpt = torch.load(
-        "/Users/alexandre.drouin/.cache/huggingface/hub/models--time-series-foundation-models--Lag-Llama/snapshots/72dcfc29da106acfe38250a60f4ae29d1e56a3d9/lag-llama.ckpt",
+        LAG_LLAMA_WEIGHTS_PATH,
         map_location=device,
     )  # Uses GPU since in this Colab we use a GPU.
     estimator_args = ckpt["hyper_parameters"]["model_kwargs"]
@@ -56,7 +66,7 @@ def get_lag_llama_predictions(
     }
 
     estimator = LagLlamaEstimator(
-        ckpt_path="/Users/alexandre.drouin/.cache/huggingface/hub/models--time-series-foundation-models--Lag-Llama/snapshots/72dcfc29da106acfe38250a60f4ae29d1e56a3d9/lag-llama.ckpt",
+        ckpt_path=LAG_LLAMA_WEIGHTS_PATH,
         prediction_length=prediction_length,
         context_length=context_length,  # Lag-Llama was trained with a context length of 32, but can work with any context length
         # estimator args
@@ -86,44 +96,64 @@ def get_lag_llama_predictions(
 
 
 def prepare_dataset(history, forecast):
-    series = pd.concat((history, forecast))
+    """
+    Packages the dataset in the format expected by the Lag-Llama model.
+
+    Parameters:
+    -----------
+    history: pd.Series
+        The historical time series.
+    forecast: pd.Series
+        The future time series.
+
+    Returns:
+    --------
+    PandasDataset: The dataset in the format expected by the Lag-Llama model.
+
+    """
+    logging.info("Preparing dataset for Lag-Llama...")
+    series = pd.concat((history.astype("float32"), forecast.astype("float32")))
     df = series.to_frame(name="target")
     ds = PandasDataset({"F": df}, target="target")
     return ds
 
 
-if __name__ == "__main__":
-    from benchmark.misleading_history import (
-        SensorPeriodicMaintenanceTask,
-        SensorTrendAccumulationTask,
+def lag_llama(task_instance, n_samples, batch_size=1, device=None):
+    """
+    Get Lag-Llama predictions for a given task instance.
+
+    Parameters:
+    -----------
+    task_instance: Task
+        The task instance to generate predictions for.
+    n_samples: int
+        The number of samples to generate for each prediction.
+    batch_size: int, optional
+        The batch size to use for inference. Default is 1.
+    device: str, optional
+        The device to run the model on (e.g., 'cpu' or 'cuda'). Default is None.
+
+    Returns:
+    --------
+    np.ndarray: The generated predictions, shape=(n_samples, prediction_length, 1).
+
+    """
+
+    if device is None:
+        device = torch_default_device()
+
+    # Package the dataset in the format expected by the Lag-Llama model
+    dataset = prepare_dataset(task_instance.past_time, task_instance.future_time)
+
+    # Generate forecasts using the Lag-Llama model
+    forecasts, _ = get_lag_llama_predictions(
+        dataset=dataset,
+        prediction_length=len(task_instance.future_time),
+        device=device,
+        num_samples=n_samples,
+        batch_size=batch_size,
     )
 
-    for i in range(20):
-        task = SensorTrendAccumulationTask()
-
-        dataset = prepare_dataset(task.past_time, task.future_time)
-        forecasts, gt = get_lag_llama_predictions(
-            dataset, len(task.future_time), torch.device("mps")
-        )
-        print(task.evaluate(forecasts[0].samples))
-
-        plt.figure(figsize=(20, 15))
-        date_formater = mdates.DateFormatter("%b, %d")
-        plt.rcParams.update({"font.size": 15})
-
-        # Iterate through the first 9 series, and plot the predicted samples
-        for idx, (forecast, ts) in islice(enumerate(zip(forecasts, gt)), 9):
-            ax = plt.subplot(3, 3, idx + 1)
-
-            plt.plot(
-                ts[-4 * len(task.future_time) :].to_timestamp(),
-                label="target",
-            )
-            forecast.plot(color="g")
-            plt.xticks(rotation=60)
-            ax.xaxis.set_major_formatter(date_formater)
-            ax.set_title(forecast.item_id)
-
-        plt.gcf().tight_layout()
-        plt.legend()
-        plt.savefig(f"lag_llama_{task.__class__.__name__}_{i}.png", bbox_inches="tight")
+    return np.stack([f.samples for f in forecasts], axis=-1).astype(
+        task_instance.past_time.dtype
+    )
