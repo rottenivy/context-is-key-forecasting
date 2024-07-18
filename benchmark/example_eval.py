@@ -1,11 +1,13 @@
 import logging
-
-logging.basicConfig(level=logging.INFO)
 import numpy as np
 import pandas as pd
 
 from benchmark.baselines.lag_llama import lag_llama
+from benchmark.baselines.llm_processes import LLMPForecaster
 from benchmark.evaluation import evaluate_all_tasks
+
+
+logging.basicConfig(level=logging.INFO)
 
 
 def random_baseline(task_instance, n_samples=50):
@@ -31,6 +33,12 @@ if __name__ == "__main__":
     random_results = evaluate_all_tasks(random_baseline)
     oracle_results = evaluate_all_tasks(oracle_baseline)
     lag_llama_results = evaluate_all_tasks(lag_llama)
+    llmp_llama3_8b = evaluate_all_tasks(
+        LLMPForecaster(llm_type="llama-3-8B", include_context=True)
+    )
+    llmp_llama3_8b_wo_ctx = evaluate_all_tasks(
+        LLMPForecaster(llm_type="llama-3-8B", include_context=False)
+    )
 
     results = pd.DataFrame(
         {
@@ -46,6 +54,14 @@ if __name__ == "__main__":
             "Lag-Llama": [
                 np.mean([res["score"] for res in lag_llama_results[task]])
                 for task in lag_llama_results
+            ],
+            "LLMP-Llama-3-8B": [
+                np.mean([res["score"] for res in llmp_llama3_8b[task]])
+                for task in llmp_llama3_8b
+            ],
+            "LLMP-Llama-3-8B (no ctx)": [
+                np.mean([res["score"] for res in llmp_llama3_8b_wo_ctx[task]])
+                for task in llmp_llama3_8b_wo_ctx
             ],
         }
     )
