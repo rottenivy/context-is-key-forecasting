@@ -157,7 +157,7 @@ Constraints:
 
         # Get results
         samples = self._load_results()
-        return samples
+        return samples.transpose()[:, :, None]  # XXX: Would need to be adapted when we expand to multivariate
 
     def __del__(self):
         """
