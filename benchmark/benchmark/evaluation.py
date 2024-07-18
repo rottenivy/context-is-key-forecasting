@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from . import ALL_TASKS
+from . import ALL_TASKS, MISLEADING_HISTORY_TASKS
 
 
 def evaluate_all_tasks(method_callable, seeds=5, n_samples=50):
@@ -26,7 +26,7 @@ def evaluate_all_tasks(method_callable, seeds=5, n_samples=50):
 
     """
     results = defaultdict(list)
-    for task_cls in ALL_TASKS:
+    for task_cls in MISLEADING_HISTORY_TASKS:
         for seed in range(1, seeds + 1):
             task = task_cls(seed=seed)
 
