@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 import os
 import pandas as pd
 import torch
@@ -117,7 +118,7 @@ def prepare_dataset(history, forecast):
     return ds
 
 
-def lag_llama(task_instance, n_samples, device=None):
+def lag_llama(task_instance, n_samples, batch_size=1, device=None):
     """
     Get Lag-Llama predictions for a given task instance.
 
@@ -127,6 +128,8 @@ def lag_llama(task_instance, n_samples, device=None):
         The task instance to generate predictions for.
     n_samples: int
         The number of samples to generate for each prediction.
+    batch_size: int, optional
+        The batch size to use for inference. Default is 1.
     device: str, optional
         The device to run the model on (e.g., 'cpu' or 'cuda'). Default is None.
 
@@ -148,6 +151,9 @@ def lag_llama(task_instance, n_samples, device=None):
         prediction_length=len(task_instance.future_time),
         device=device,
         num_samples=n_samples,
+        batch_size=batch_size,
     )
 
-    return forecasts[0].samples.astype(task_instance.past_time.dtype)[:, :, None]
+    return np.stack([f.samples for f in forecasts], axis=-1).astype(
+        task_instance.past_time.dtype
+    )
