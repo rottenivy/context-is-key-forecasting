@@ -57,26 +57,26 @@ if __name__ == "__main__":
     results = pd.DataFrame(
         {
             "Task": [task for task in lag_llama_results],
-            # "Random": [
-            #     np.mean([res["score"] for res in random_results[task]])
-            #     for task in random_results
-            # ],
-            # "Oracle": [
-            #     np.mean([res["score"] for res in oracle_results[task]])
-            #     for task in oracle_results
-            # ],
+            "Random": [
+                np.mean([res["score"] for res in random_results[task]])
+                for task in random_results
+            ],
+            "Oracle": [
+                np.mean([res["score"] for res in oracle_results[task]])
+                for task in oracle_results
+            ],
             "Lag-Llama": [
                 np.mean([res["score"] for res in lag_llama_results[task]])
                 for task in lag_llama_results
             ],
-            # "LLMP-Llama-3-8B": [
-            #     np.mean([res["score"] for res in llmp_llama3_8b[task]])
-            #     for task in llmp_llama3_8b
-            # ],
-            # "LLMP-Llama-3-8B (no ctx)": [
-            #     np.mean([res["score"] for res in llmp_llama3_8b_wo_ctx[task]])
-            #     for task in llmp_llama3_8b_wo_ctx
-            # ],
+            "LLMP-Llama-3-8B": [
+                np.mean([res["score"] for res in llmp_llama3_8b[task]])
+                for task in llmp_llama3_8b
+            ],
+            "LLMP-Llama-3-8B (no ctx)": [
+                np.mean([res["score"] for res in llmp_llama3_8b_wo_ctx[task]])
+                for task in llmp_llama3_8b_wo_ctx
+            ],
         }
     )
     print(results)
