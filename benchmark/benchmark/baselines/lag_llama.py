@@ -101,9 +101,9 @@ def prepare_dataset(history, forecast):
 
     Parameters:
     -----------
-    history: pd.Series
+    history: pd.DataFrame
         The historical time series.
-    forecast: pd.Series
+    forecast: pd.DataFrame
         The future time series.
 
     Returns:
@@ -112,9 +112,15 @@ def prepare_dataset(history, forecast):
 
     """
     logging.info("Preparing dataset for Lag-Llama...")
-    series = pd.concat((history.astype("float32"), forecast.astype("float32")))
-    df = series.to_frame(name="target")
-    ds = PandasDataset({"F": df}, target="target")
+    # Making sure that both inputs have the same columns name, since otherwise the concat would fail
+    assert (history.columns == forecast.columns).all()
+
+    history = history.astype("float32")
+    forecast = forecast.astype("float32")
+    df = pd.concat((history, forecast), axis="index")
+    # TODO: The single target implies a univariate task, need to be updated (and tested)
+    # to be compatible with a multivariate task.
+    ds = PandasDataset({"F": df}, target=df.columns[0])
     return ds
 
 
@@ -148,12 +154,12 @@ def lag_llama(task_instance, n_samples, batch_size=1, device=None):
     # Generate forecasts using the Lag-Llama model
     forecasts, _ = get_lag_llama_predictions(
         dataset=dataset,
-        prediction_length=len(task_instance.future_time),
+        prediction_length=task_instance.future_time.shape[0],
         device=device,
         num_samples=n_samples,
         batch_size=batch_size,
     )
 
     return np.stack([f.samples for f in forecasts], axis=-1).astype(
-        task_instance.past_time.dtype
+        task_instance.past_time.dtypes.iloc[0]
     )
