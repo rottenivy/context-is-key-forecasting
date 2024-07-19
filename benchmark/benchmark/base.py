@@ -4,6 +4,7 @@ Base classes for the benchmark
 """
 
 import numpy as np
+import pandas as pd
 
 from abc import ABC, abstractmethod
 
@@ -35,6 +36,34 @@ class BaseTask(ABC):
             self.scenario = fixed_config["scenario"]
         else:
             self.random_instance()
+
+        config_errors = self.verify_config()
+        if config_errors:
+            raise RuntimeError(
+                f"Incorrect config for {self.__class__.__name__}: {config_errors}"
+            )
+
+    def verify_config(self) -> list[str]:
+        """
+        Check whether the task satisfy the correct format for its parameters.
+
+        Returns:
+        --------
+        errors: list[str]
+            A list of textual descriptions of all errors in the format
+        """
+        errors = []
+        # A few tests to make sure that all tasks use a compatible format for the parameters
+        # Note: Only the parameters which are used elsewhere are current tested
+        if not isinstance(self.past_time, pd.DataFrame):
+            errors.append(
+                f"past_time is not a pd.DataFrame, but a {self.past_time.__class__.__name__}"
+            )
+        if not isinstance(self.future_time, pd.DataFrame):
+            errors.append(
+                f"future_time is not a pd.DataFrame, but a {self.future_time.__class__.__name__}"
+            )
+        return errors
 
     @abstractmethod
     def evaluate(self, samples: np.ndarray):
