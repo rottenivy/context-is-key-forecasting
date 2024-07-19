@@ -151,8 +151,8 @@ class BaseDayOfWeekTrafficForecastTask(UnivariateCRPSTask):
         )
 
         # Instantiate the class variables
-        self.past_time = history_series
-        self.future_time = future_series
+        self.past_time = history_series.to_frame()
+        self.future_time = future_series.to_frame()
         self.constraints = None
         self.background = background
         self.scenario = None
@@ -170,6 +170,10 @@ class BaseDayOfWeekTrafficForecastTask(UnivariateCRPSTask):
 class MinimalInfoDayOfWeekTrafficForecastTask(BaseDayOfWeekTrafficForecastTask):
     """
     Version of the task where only the minimal background information is given.
+
+    Main difficulty: using a world model to guess that the traffic is lower during the weekend.
+    Secondary difficulty: using a world model to guess at the amplitude of the reduction.
+    Secondary difficulty: being able to detect that given history is only for weekdays.
     """
 
     def get_background(
@@ -181,6 +185,9 @@ class MinimalInfoDayOfWeekTrafficForecastTask(BaseDayOfWeekTrafficForecastTask):
 class ExplicitDayOfWeekTrafficForecastTask(BaseDayOfWeekTrafficForecastTask):
     """
     Version of the task where the model is being told explicitly that the forecast is on the weekend.
+
+    Main difficulty: using a world model to guess that the traffic is lower during the weekend.
+    Secondary difficulty: using a world model to guess at the amplitude of the reduction.
     """
 
     def get_background(
@@ -195,6 +202,8 @@ class ExplicitDayOfWeekTrafficForecastTask(BaseDayOfWeekTrafficForecastTask):
 class WeekendShiftDayOfWeekTrafficForecastTask(BaseDayOfWeekTrafficForecastTask):
     """
     Version of the task where the difference in traffic between weekend and weekday is computed.
+
+    Main difficulty: using a world model to guess that the traffic is lower during the weekend.
     """
 
     def get_background(
