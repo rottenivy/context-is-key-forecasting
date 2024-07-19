@@ -77,8 +77,8 @@ class SensorPeriodicMaintenanceTask(UnivariateCRPSTask):
             raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
 
         # Instantiate the class variables
-        self.past_time = history_series
-        self.future_time = future_series
+        self.past_time = history_series.to_frame()
+        self.future_time = future_series.to_frame()
         self.constraints = None
         self.background = background
         self.scenario = None
@@ -156,8 +156,8 @@ class SensorTrendAccumulationTask(UnivariateCRPSTask):
             raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
 
         # Instantiate the class variables
-        self.past_time = history_series
-        self.future_time = future_series
+        self.past_time = history_series.to_frame()
+        self.future_time = future_series.to_frame()
         self.constraints = None
         self.background = background
         self.scenario = None
@@ -234,8 +234,8 @@ class SensorSpikeTask(UnivariateCRPSTask):
             raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
 
         # Instantiate the class variables
-        self.past_time = history_series
-        self.future_time = future_series
+        self.past_time = history_series.to_frame()
+        self.future_time = future_series.to_frame()
         self.constraints = None
         self.background = background
         self.scenario = None

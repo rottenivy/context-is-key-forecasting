@@ -102,4 +102,7 @@ class UnivariateCRPSTask(BaseTask):
         if len(samples.shape) == 3:
             samples = samples[:, :, 0]
 
-        return crps_quantile(target=self.future_time, samples=samples)[0].sum()
+        # This is the dual of pd.Series.to_frame(), compatible with any series name
+        only_column = self.future_time.columns[0]
+        target = self.future_time[only_column]
+        return crps_quantile(target=target, samples=samples)[0].sum()

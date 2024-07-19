@@ -67,7 +67,7 @@ class BaseConstrainedTask(BaseTask):
                 periods=self.num_hist_values + 1,
                 inclusive="left",
             ),
-        )
+        ).to_frame()
         future_series = pd.Series(
             data=const_pred_values[0, :],
             index=pd.date_range(
@@ -76,7 +76,7 @@ class BaseConstrainedTask(BaseTask):
                 periods=self.num_pred_values,
                 inclusive="both",
             ),
-        )
+        ).to_frame()
 
         # Values required for the evaluation,
         # regenerating the non_const forecast to allow measuring the distance between both
