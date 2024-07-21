@@ -25,7 +25,7 @@ dynamic = ["dependencies", "optional-dependencies", "version"]
 homepage = "https://github.com/ServiceNow/research-starcaster"
 
 [tool.setuptools]
-packages = ["benchmark"]
+packages = { find = { where = ["."] } }
 
 [tool.setuptools.dynamic]
 version = {attr = "benchmark.__version__"}
