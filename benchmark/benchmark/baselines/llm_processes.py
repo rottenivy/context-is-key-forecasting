@@ -1,8 +1,10 @@
+import gc
 import logging
 import numpy as np
 import os
 import pickle
 import tempfile
+import torch
 
 from llm_processes.hf_api import get_model_and_tokenizer
 from llm_processes.parse_args import llm_map, parse_command_line
@@ -169,3 +171,10 @@ Constraints:
 
         """
         self.tmpdir.cleanup()
+
+        # Clean up CPU/GPU memory
+        del self.model
+        del self.tokenizer
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        gc.collect()
