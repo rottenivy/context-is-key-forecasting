@@ -1,3 +1,5 @@
+__version__ = "0.0.1"
+
 from .constrained_forecasts import __TASKS__ as CONSTRAINED_FORECASTS_TASKS
 from .misleading_history import __TASKS__ as MISLEADING_HISTORY_TASKS
 from .short_history import __TASKS__ as SHORT_HISTORY_TASKS
