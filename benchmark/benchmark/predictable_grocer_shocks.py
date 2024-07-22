@@ -9,28 +9,8 @@ from .utils import get_random_window_univar
 from .base import BaseTask
 
 
-class SalesInfluences:
-    """
-    Class to load and access sales influences from a JSON file.
-    These influences are used to generate predictable shocks in the sales data.
-    """
-
-    def __init__(self, json_path):
-        with open(json_path, "r") as file:
-            self.influences = json.load(file)
-
-    def get_influence(self, category, direction, size, time_in_days):
-        influence_info = self.influences[category][direction][size]
-        influence = influence_info["influence"].replace(
-            "{time_in_days}", str(time_in_days)
-        )
-        impact_range = influence_info["impact"]
-        min_impact, max_impact = map(
-            lambda x: int(x.strip("%")), impact_range.split("-")
-        )
-        random_impact = random.randint(min_impact, max_impact)
-
-        return influence, random_impact
+GROCER_SALES_INFLUENCES_PATH = "/home/toolkit/starcaster/research-starcaster/benchmark/benchmark/data/grocer_sales_influences.json"
+DOMINICK_GROCER_SALES_PATH = "/home/toolkit/starcaster/research-starcaster/benchmark/benchmark/data/filtered_dominic.csv"
 
 
 class PredictableGrocerSpikesUnivariateTask(BaseTask):
@@ -40,16 +20,23 @@ class PredictableGrocerSpikesUnivariateTask(BaseTask):
     the forecast.
     Note: this does NOT use the Monash dominick's dataset, which is transformed with no
     meaningful context.
-    Time series: modified from real
-    Context: synthetic
+    Parameters:
+    -----------
+    fixed_config: dict
+        A dictionary containing fixed parameters for the task
+    seed: int
+        Seed for the random number generator
     """
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
-        self.prediction_length = np.random.randint(7, 30)
         super().__init__(seed=seed, fixed_config=fixed_config)
 
+        self.prediction_length = np.random.randint(7, 30)
+        with open(GROCER_SALES_INFLUENCES_PATH, "r") as file:
+            self.influences = json.load(file)
+
     def random_instance(self):
-        dataset = self.load_dataset("dominick")
+        dataset = pd.read_csv(DOMINICK_GROCER_SALES_PATH)
         dataset["date"] = pd.to_datetime(dataset["date"])
         dataset = dataset.set_index("date")
 
@@ -83,40 +70,40 @@ class PredictableGrocerSpikesUnivariateTask(BaseTask):
         history_series = window.iloc[: -self.prediction_length]
         future_series = window.iloc[-self.prediction_length :]
 
-        # choose an influence
+        # choose an influence and a relative impact from the influence
         time_in_days = self.random.randint(2, self.prediction_length)
         direction = self.random.choice(["positive", "negative"])
         size = self.random.choice(["small", "medium", "large"])
-        influence, relative_impact = self.get_influence(
-            sales_category, direction, size, time_in_days
+        influence_info = self.influences[sales_category][direction][size]
+        self.influence = influence_info["influence"].replace(
+            "{time_in_days}", str(time_in_days)
         )
-        self.relative_impact = relative_impact
+        impact_range = influence_info["impact"]
+        min_impact, max_impact = map(
+            lambda x: int(x.strip("%")), impact_range.split("-")
+        )
+        sampled_relative_impact = random.randint(min_impact, max_impact)
+
+        self.min_impact = min_impact
+        self.max_impact = max_impact
+        self.relative_impact = sampled_relative_impact
         self.direction = direction
         self.ground_truth = future_series.copy()
 
-        future_series[time_in_days:] = self.add_influence(
-            future_series[time_in_days:], relative_impact, direction
+        # apply the influence to the future series
+        future_series[time_in_days:] = self.apply_influence_to_series(
+            future_series[time_in_days:], sampled_relative_impact, direction
         )
 
         self.past_time = history_series
         self.future_time = future_series
         self.constraints = None
-        self.background = influence
-        self.scenario = None
-        self.past_context = None
-        self.future_context = None
-
-    def get_influence(self, category, direction, size, time_in_days):
-        influences = SalesInfluences(
-            "/home/toolkit/starcaster/research-starcaster/benchmark/benchmark/data/grocer_sales_influences.json"
-        )
-        influence, random_impact = influences.get_influence(
-            category, direction, size, time_in_days
+        self.background = None
+        self.scenario = self.get_context_from_event(
+            self.influence, sampled_relative_impact, direction
         )
 
-        return influence, random_impact
-
-    def add_influence(self, series, relative_impact, direction):
+    def apply_influence_to_series(self, series, relative_impact, direction):
         if direction == "positive":
             series += series * (relative_impact / 100)
         else:
@@ -124,13 +111,12 @@ class PredictableGrocerSpikesUnivariateTask(BaseTask):
 
         return series
 
-    def load_dataset(self, dataset_name):
-        if dataset_name == "dominick":
-            dataset = pd.read_csv(
-                "/home/toolkit/starcaster/research-starcaster/benchmark/benchmark/data/filtered_dominic.csv"
-            )
-
-        return dataset
+    def get_context_from_event(self):
+        context = self.influence
+        if self.direction == "negative":
+            flipped_impact = -self.relative_impact
+        context += f" The relative impact is expected to be {flipped_impact}%."
+        return context
 
     def evaluate(self, samples):
         """
