@@ -1,7 +1,6 @@
 # from tactis.gluon.dataset import get_dataset
 from gluonts.dataset.util import to_pandas
 
-import random
 
 from tactis.gluon.dataset import get_dataset
 
@@ -17,6 +16,14 @@ class STLMutliplierTask(UnivariateCRPSTask):
     using STL decomposition. The trend is then modified and the series is recomposed.
     Time series: agnostic
     Context: synthetic
+    Parameters:
+    ----------
+    modified_component: str
+        The component of the series that will be modified. Valid options are 'trend', 'seasonal', and 'residual'.
+    fixed_config: dict
+        Fixed configuration for the task
+    seed: int
+        Seed for the random number generator
     """
 
     def __init__(
@@ -70,7 +77,8 @@ class STLMutliplierTask(UnivariateCRPSTask):
             history_series.index = history_series.index.to_timestamp()
             future_series.index = future_series.index.to_timestamp()
             ground_truth = future_series.copy()
-            # STL decomposition
+
+            # decompose the whole window, both hist and pred
             stl = STL(window, period=24)
 
             future_series_trend = stl.fit().trend[-metadata.prediction_length :]
@@ -78,15 +86,8 @@ class STLMutliplierTask(UnivariateCRPSTask):
             future_series_resid = stl.fit().resid[-metadata.prediction_length :]
 
             # modify the appropriate parameter
-
             if self.modified_component == "trend":
-                # trend = stl.fit().trend
-                trend_modification_min = -1
-                trend_modification_max = 1
-                # pick trend modification from uniform distribution between -1 and 1
-                trend_modification = random.uniform(
-                    trend_modification_min, trend_modification_max
-                )
+                trend_modification = self.sample_mutliplier()
 
                 modified_trend = future_series_trend.copy()
 
@@ -102,16 +103,10 @@ class STLMutliplierTask(UnivariateCRPSTask):
                 # Recompose the series, modifying the trend from start_time to end_time
                 future_series = stl.fit().seasonal + modified_trend + stl.fit().resid
 
-                background = f"The trend of the series will be multiplied by {trend_modification} between {start_time} and {end_time}."
+                scenario = f"The trend of the series will be multiplied by {trend_modification} between {start_time} and {end_time}."
 
             elif self.modified_component == "seasonal":
-                # seasonal = stl.fit().seasonal
-                seasonal_modification_min = -1
-                seasonal_modification_max = 1
-                # pick seasonal modification from uniform distribution between -1 and 1
-                seasonal_modification = random.uniform(
-                    seasonal_modification_min, seasonal_modification_max
-                )
+                seasonal_modification = self.sample_mutliplier()
 
                 modified_seasonal = future_series_seasonal.copy()
 
@@ -127,16 +122,10 @@ class STLMutliplierTask(UnivariateCRPSTask):
                 # Recompose the series, modifying the seasonal component from start_time to end_time
                 future_series = stl.fit().trend + modified_seasonal + stl.fit().resid
 
-                background = f"The seasonal component of the series will be multiplied by {seasonal_modification} between {start_time} and {end_time}."
+                scenario = f"The seasonal component of the series will be multiplied by {seasonal_modification} between {start_time} and {end_time}."
 
             elif self.modified_component == "residual":
-                # resid = stl.fit().resid
-                resid_modification_min = -1
-                resid_modification_max = 1
-                # pick residual modification from uniform distribution between -1 and 1
-                resid_modification = random.uniform(
-                    resid_modification_min, resid_modification_max
-                )
+                resid_modification = self.sample_mutliplier()
 
                 modified_resid = future_series_resid.copy()
 
@@ -152,17 +141,23 @@ class STLMutliplierTask(UnivariateCRPSTask):
                 # Recompose the series, modifying the residual component from start_time to end_time
                 future_series = stl.fit().trend + stl.fit().seasonal + modified_resid
 
-                background = f"The residual component of the series will be multiplied by {resid_modification} between {start_time} and {end_time}."
+                scenario = f"The residual component of the series will be multiplied by {resid_modification} between {start_time} and {end_time}."
 
-            self.past_time = history_series
-            self.future_time = future_series
+            self.past_time = history_series.to_frame()
+            self.future_time = future_series.to_frame()
             self.constraints = None
-            self.background = background
-            self.scenario = None
+            self.background = None
+            self.scenario = scenario
             self.ground_truth = ground_truth
             self.trend = stl.fit().trend
             self.seasonal = stl.fit().seasonal
             self.residual = stl.fit().resid
+
+    def sample_mutliplier(self, multiplier_min=-1, multiplier_max=1):
+        # pick trend modification from uniform distribution between -1 and 1
+        multiplier = self.random.uniform(multiplier_min, multiplier_max)
+
+        return multiplier
 
 
 class STLTrendMultiplierTask(STLMutliplierTask):
