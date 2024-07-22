@@ -114,8 +114,13 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         context = self.influence
         relative_impact = self.impact_magnitude
         if self.direction == "negative":
-            relative_impact = -self.impact_magnitude
-        context += f" The relative impact is expected to be {relative_impact}%."
+            context += (
+                f" The relative impact is expected to be a {relative_impact}% decrease."
+            )
+        else:
+            context += (
+                f" The relative impact is expected to be a {relative_impact}% increase."
+            )
         return context
 
 
