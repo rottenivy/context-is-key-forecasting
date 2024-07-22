@@ -28,7 +28,6 @@ class OraclePredUnivariateConstraintsTask(BaseTask):
         Maximum number of constraints to be used. Default is 2.
     fixed_config: dict
         Fixed configuration for the task
-
     """
 
     def __init__(
