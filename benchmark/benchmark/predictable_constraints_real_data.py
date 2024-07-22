@@ -9,8 +9,6 @@ from gluonts.dataset.util import to_pandas
 
 from .utils import get_random_window_univar
 
-from typing import Dict, Union, Literal
-
 
 class OraclePredUnivariateConstraintsTask(BaseTask):
     """
