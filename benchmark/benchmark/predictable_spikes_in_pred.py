@@ -13,6 +13,12 @@ class PredictableSpikesInPredTask(UnivariateCRPSTask):
     The presence of the spike is included in the context.
     Time series: agnostic
     Context: synthetic
+    Parameters:
+    ----------
+    fixed_config: dict
+        A dictionary with fixed parameters for the task
+    seed: int
+        Seed for the random number generator
     """
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
@@ -72,11 +78,14 @@ class PredictableSpikesInPredTask(UnivariateCRPSTask):
                 relative_impact / 100
             )
 
-            background = f"An spike of {relative_impact}% is expected at exactly {start_time}, after which the series will return to normal."
+            scenario = f"A spike of {relative_impact}% is expected at exactly {start_time}, after which the series will return to normal."
 
         self.past_time = history_series
         self.future_time = future_series
         self.ground_truth = ground_truth
         self.constraints = None
-        self.background = background
-        self.scenario = None
+        self.background = None
+        self.scenario = scenario
+
+
+__TASKS__ = [PredictableSpikesInPredTask]
