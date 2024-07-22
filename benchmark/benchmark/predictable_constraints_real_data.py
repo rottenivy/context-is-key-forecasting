@@ -100,26 +100,26 @@ class OraclePredUnivariateConstraintsTask(BaseTask):
         constraints: dict
             Dictionary of constraints to be satisfied by the forecast
         """
-        constraints = {}
-        constraints = self.random.choice(
+        constraints_dict = {}
+        sampled_constraint_types = self.random.choice(
             self.possible_constraints,
             self.random.randint(1, self.max_constraints + 1),
             replace=False,
         )
-        for constraint in constraints:
-            if constraint == "min":
-                constraints["min"] = future_series.min()
-            elif constraint == "max":
-                constraints["max"] = future_series.max()
-            elif constraint == "median":
-                constraints["median"] = future_series.median()
-            elif constraint == "mode":
-                constraints["mode"] = future_series.mode().iloc[0]
+        for constraint_type in sampled_constraint_types:
+            if constraint_type == "min":
+                constraints_dict["min"] = future_series.min()
+            elif constraint_type == "max":
+                constraints_dict["max"] = future_series.max()
+            elif constraint_type == "median":
+                constraints_dict["median"] = future_series.median()
+            elif constraint_type == "mode":
+                constraints_dict["mode"] = future_series.mode().iloc[0]
                 ## TODO: How to handle multimodal distributions?
-            elif constraint == "mean":
-                constraints["mean"] = future_series.mean()
+            elif constraint_type == "mean":
+                constraints_dict["mean"] = future_series.mean()
 
-        return constraints
+        return constraints_dict
 
     def verbalize_context_from_constraints(self, constraints):
         """
@@ -133,7 +133,7 @@ class OraclePredUnivariateConstraintsTask(BaseTask):
         context: str
             Synthetic context that describes the constraints
         """
-        context = "The forecast should satisfy the following constraints:\n"
+        context = "The forecast should satisfy the following constraints: "
         for constraint, value in constraints.items():
             context += f"{constraint}: {value}, "
 
