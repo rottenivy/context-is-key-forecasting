@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
     results = pd.DataFrame(
         {
-            "Task": [task for task in lag_llama_results],
+            "Task": [task for task in random_results],
             "Random": [
                 np.mean([res["score"] for res in random_results[task]])
                 for task in random_results
