@@ -1,6 +1,6 @@
 tactis @ git+https://github.com/ServiceNow/TACTiS.git@tactis-2
 lag_llama @ git+https://github.com/time-series-foundation-models/lag-llama.git@main
 llm_processes @ git+https://github.com/aldro61/llm_processes.git@master
-gluonts[torch]
+gluonts[torch]>=0.14.4
 numpy
 pandas
