@@ -7,9 +7,9 @@ from .base import UnivariateCRPSTask
 from .utils import get_random_window_univar
 
 
-class SpikesUnivariateTask(UnivariateCRPSTask):
+class PredictableSpikesInPredTask(UnivariateCRPSTask):
     """
-    Adds spikes to an abitrary series.
+    Adds spikes to an arbitrary series.
     The presence of the spike is included in the context.
     Time series: agnostic
     Context: synthetic
