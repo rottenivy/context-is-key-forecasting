@@ -42,16 +42,16 @@ class PredictableGrocerPersistentShockUnivariateTask(BaseTask):
         sales_categories = ["grocery", "beer", "meat"]
         stores = dataset["store"].unique()
 
-        # pick a random sales category and store
-        sales_category = self.random.choice(sales_categories)
-        store = self.random.choice(stores)
-
-        # select a random series
-        series = dataset[dataset["store"] == store][sales_category]
-        # select a random window, keep trying until successful
         success_window = False
         counter = 0
         while not success_window and counter < 100:
+            # pick a random sales category and store
+            sales_category = self.random.choice(sales_categories)
+            store = self.random.choice(stores)
+
+            # select a random series
+            series = dataset[dataset["store"] == store][sales_category]
+            # select a random window
             try:
                 window = get_random_window_univar(
                     series,
