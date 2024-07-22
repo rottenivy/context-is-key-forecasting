@@ -142,3 +142,4 @@ class PredictableGrocerSpikesUnivariateTask(BaseTask):
         metric = np.mean(difference)
 
         return metric
+__TASKS__ = [PredictableGrocerSpikesUnivariateTask]
