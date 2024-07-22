@@ -11,8 +11,6 @@ from .utils import get_random_window_univar
 
 from typing import Dict, Union, Literal
 
-import random
-
 
 class OraclePredConstraints(BaseTask):
     """
@@ -28,11 +26,13 @@ class OraclePredConstraints(BaseTask):
             Literal["min", "max", "median", "mode", "mean"], Union[float, int]
         ] = None,
         possible_constraints=["min", "max", "median", "mode", "mean"],
+        max_constraints: int = 2,
         fixed_config: dict = None,
         seed: int = None,
     ):
         self.constraints = constraints
         self.possible_constraints = possible_constraints
+        self.max_constraints = max_constraints
 
         super().__init__(seed=seed, fixed_config=fixed_config)
 
@@ -83,8 +83,8 @@ class OraclePredConstraints(BaseTask):
             self.sampleConstraintsFromGroundTruth(future_series)
 
         # Instantiate the class variables
-        self.past_time = history_series
-        self.future_time = future_series
+        self.past_time = history_series.to_frame()
+        self.future_time = future_series.to_frame()
         self.background = None
         self.scenario = None
 
@@ -93,9 +93,10 @@ class OraclePredConstraints(BaseTask):
         Sample constraints from the ground truth
         """
         self.constraints = {}
-        constraints = random.sample(
+        constraints = self.random.choice(
             self.possible_constraints,
-            self.random.randint(1, len(self.possible_constraints) + 1),
+            self.random.randint(1, self.max_constraints + 1),
+            replace=False,
         )
         for constraint in constraints:
             if constraint == "min":
