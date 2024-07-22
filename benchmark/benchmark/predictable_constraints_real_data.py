@@ -119,7 +119,7 @@ class OraclePredUnivariateConstraintsTask(BaseTask):
         constraints: dict
             Dictionary of constraints to be satisfied by the forecast
         """
-        self.constraints = {}
+        constraints = {}
         constraints = self.random.choice(
             self.possible_constraints,
             self.random.randint(1, self.max_constraints + 1),
@@ -127,17 +127,17 @@ class OraclePredUnivariateConstraintsTask(BaseTask):
         )
         for constraint in constraints:
             if constraint == "min":
-                self.constraints["min"] = future_series.min()
+                constraints["min"] = future_series.min()
             elif constraint == "max":
-                self.constraints["max"] = future_series.max()
+                constraints["max"] = future_series.max()
             elif constraint == "median":
-                self.constraints["median"] = future_series.median()
+                constraints["median"] = future_series.median()
             elif constraint == "mode":
-                self.constraints["mode"] = future_series.mode().iloc[
-                    0
-                ]  ## TODO: generalize
+                constraints["mode"] = future_series.mode().iloc[0]  ## TODO: generalize
             elif constraint == "mean":
-                self.constraints["mean"] = future_series.mean()
+                constraints["mean"] = future_series.mean()
+
+        return constraints
 
     def evaluate(self, samples):
         """
