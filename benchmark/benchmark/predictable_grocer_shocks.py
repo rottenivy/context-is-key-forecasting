@@ -33,7 +33,7 @@ class SalesInfluences:
         return influence, random_impact
 
 
-class PredictableGrocerSpikesUnivariate(BaseTask):
+class PredictableGrocerSpikesUnivariateTask(BaseTask):
     """
     A task where the time series contains spikes that are predictable based on the
     contextual information provided with the data. The spikes should be reflected in
