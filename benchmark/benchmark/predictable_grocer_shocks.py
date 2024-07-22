@@ -6,7 +6,7 @@ import json
 
 from .utils import get_random_window_univar
 
-from .base import BaseTask, UnivariateCRPSTask
+from .base import UnivariateCRPSTask
 
 
 GROCER_SALES_INFLUENCES_PATH = "/home/toolkit/starcaster/research-starcaster/benchmark/benchmark/data/grocer_sales_influences.json"
@@ -103,6 +103,21 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         self.scenario = self.get_context_from_event()
 
     def apply_influence_to_series(self, series, relative_impact, direction):
+        """
+        Apply a relative impact to a series
+        Parameters:
+        -----------
+        series: pd.Series
+            The series to apply the impact to.
+        relative_impact: int
+            The relative impact to apply
+        direction: str
+            The direction of the impact
+        Returns:
+        --------
+        series: pd.Series
+            The series with the applied impact
+        """
         if direction == "positive":
             series += series * (relative_impact / 100)
         else:
@@ -111,6 +126,14 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         return series
 
     def get_context_from_event(self):
+        """
+        Get the context of the event.
+        Returns:
+        --------
+        context: str
+            The context of the event, including the influence and the relative impact.
+
+        """
         context = self.influence
         relative_impact = self.impact_magnitude
         if self.direction == "negative":
