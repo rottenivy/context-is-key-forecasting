@@ -80,8 +80,8 @@ class PredictableSpikesInPredTask(UnivariateCRPSTask):
 
             scenario = f"A spike of {relative_impact}% is expected at exactly {start_time}, after which the series will return to normal."
 
-        self.past_time = history_series
-        self.future_time = future_series
+        self.past_time = history_series.to_frame()
+        self.future_time = future_series.to_frame()
         self.ground_truth = ground_truth
         self.constraints = None
         self.background = None
