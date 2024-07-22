@@ -72,7 +72,7 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         ground_truth = future_series.copy()
 
         # choose an influence and a relative impact from the influence
-        time_in_days = self.random.randint(2, self.prediction_length)
+        shock_delay_in_days = self.random.randint(2, self.prediction_length)
         direction = self.random.choice(["positive", "negative"])
         size = self.random.choice(["small", "medium", "large"])
         influence_info = self.influences[sales_category][direction][size]
@@ -83,12 +83,12 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         impact_magnitude = random.randint(min_magnitude, max_magnitude)
 
         # apply the influence to the future series
-        future_series[time_in_days:] = self.apply_influence_to_series(
-            future_series[time_in_days:], impact_magnitude, direction
+        future_series[shock_delay_in_days:] = self.apply_influence_to_series(
+            future_series[shock_delay_in_days:], impact_magnitude, direction
         )
 
-        self.influence = influence_info["influence"].replace(
-            "{time_in_days}", str(time_in_days)
+        self.shock_description = influence_info["influence"].replace(
+            "{time_in_days}", str(shock_delay_in_days)
         )
         self.min_magnitude = min_magnitude
         self.max_magnitude = max_magnitude
@@ -100,7 +100,7 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         self.future_time = future_series.to_frame()
         self.constraints = None
         self.background = None
-        self.scenario = self.get_context_from_event()
+        self.scenario = self.get_context()
 
     def apply_influence_to_series(self, series, relative_impact, direction):
         """
@@ -125,7 +125,7 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
 
         return series
 
-    def get_context_from_event(self):
+    def get_context(self):
         """
         Get the context of the event.
         Returns:
@@ -134,7 +134,7 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
             The context of the event, including the influence and the relative impact.
 
         """
-        context = self.influence
+        context = self.shock_description
         relative_impact = self.impact_magnitude
         if self.direction == "negative":
             context += (
