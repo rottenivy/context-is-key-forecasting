@@ -6,14 +6,14 @@ import json
 
 from .utils import get_random_window_univar
 
-from .base import BaseTask
+from .base import BaseTask, UnivariateCRPSTask
 
 
 GROCER_SALES_INFLUENCES_PATH = "/home/toolkit/starcaster/research-starcaster/benchmark/benchmark/data/grocer_sales_influences.json"
 DOMINICK_GROCER_SALES_PATH = "/home/toolkit/starcaster/research-starcaster/benchmark/benchmark/data/filtered_dominic.csv"
 
 
-class PredictableGrocerPersistentShockUnivariateTask(BaseTask):
+class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
     """
     A task where the time series contains spikes that are predictable based on the
     contextual information provided with the data. The spikes should be reflected in
