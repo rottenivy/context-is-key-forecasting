@@ -141,9 +141,7 @@ class OraclePredUnivariateConstraintsTask(BaseTask):
         if len(samples.shape) == 3:
             samples = samples[:, :, 0]  # (n_samples, n_time)
 
-        prop_satisfied_constraints = {
-            constraint: False for constraint in self.constraints.keys()
-        }
+        prop_satisfied_constraints = {}
         for constraint, value in self.constraints.items():
             if constraint == "min":
                 good_samples = np.all(samples >= value, axis=1)
