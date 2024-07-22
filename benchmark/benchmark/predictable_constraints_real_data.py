@@ -12,7 +12,7 @@ from .utils import get_random_window_univar
 from typing import Dict, Union, Literal
 
 
-class OraclePredConstraints(BaseTask):
+class OraclePredConstraintsTask(BaseTask):
     """
     Task that creates constraints from the ground truth, makes synthetic context that
     describes these constraints and evaluates the forecast based on these constraints.
@@ -153,4 +153,4 @@ class OraclePredConstraints(BaseTask):
         return prop_satisfied_constraints["satisfaction_rate"]
 
 
-__TASKS__ = [OraclePredConstraints]
+__TASKS__ = [OraclePredConstraintsTask]
