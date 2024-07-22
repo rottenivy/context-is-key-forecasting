@@ -35,31 +35,15 @@ class OraclePredUnivariateConstraintsTask(BaseTask):
 
     def __init__(
         self,
-        constraints: Dict[
-            Literal["min", "max", "median", "mode", "mean"], Union[float, int]
-        ] = None,
         possible_constraints=["min", "max", "median", "mode", "mean"],
         max_constraints: int = 2,
         fixed_config: dict = None,
         seed: int = None,
     ):
-        self.constraints = constraints
         self.possible_constraints = possible_constraints
         self.max_constraints = max_constraints
 
         super().__init__(seed=seed, fixed_config=fixed_config)
-
-        if constraints is not None:
-            if not all(key in self.possible_constraints for key in constraints.keys()):
-                raise ValueError(
-                    f"Invalid key in constraints. Allowed constraints are {possible_constraints}."
-                )
-            if not all(
-                isinstance(value, (float, int)) for value in constraints.values()
-            ):
-                raise ValueError(
-                    "Invalid value in constraints. Allowed values are float or int."
-                )
 
     def random_instance(self):
         """
@@ -98,8 +82,7 @@ class OraclePredUnivariateConstraintsTask(BaseTask):
         future_series = window.iloc[-metadata.prediction_length :]
 
         # Generate constraints from the ground truth
-        if self.constraints is None:
-            self.sampleConstraintsFromGroundTruth(future_series)
+        self.constraints = self.sampleConstraintsFromGroundTruth(future_series)
 
         # Instantiate the class variables
         self.past_time = history_series.to_frame()
