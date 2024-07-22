@@ -118,6 +118,5 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         context += f" The relative impact is expected to be {relative_impact}%."
         return context
 
-    def evaluate(self, samples):
-        """
+
 __TASKS__ = [PredictableGrocerPersistentShockUnivariateTask]
