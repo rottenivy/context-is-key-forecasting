@@ -49,11 +49,10 @@ class PredictableGrocerSpikesUnivariateTask(BaseTask):
 
         # select a random series
         series = dataset[dataset["store"] == store][sales_category]
-
         # select a random window, keep trying until successful
         success_window = False
         counter = 0
-        while not success_window and counter < 10:
+        while not success_window and counter < 100:
             try:
                 window = get_random_window_univar(
                     series,
