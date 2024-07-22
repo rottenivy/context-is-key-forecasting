@@ -43,6 +43,18 @@ class BaseTask(ABC):
                 f"Incorrect config for {self.__class__.__name__}: {config_errors}"
             )
 
+    @property
+    def name(self) -> str:
+        """
+        Give the name of the task, for reporting purpose
+
+        Returns:
+        --------
+        name: str
+            The name of the task
+        """
+        return self.__class__.__name__
+
     def verify_config(self) -> list[str]:
         """
         Check whether the task satisfy the correct format for its parameters.

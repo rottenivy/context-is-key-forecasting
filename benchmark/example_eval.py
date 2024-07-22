@@ -41,6 +41,7 @@ def oracle_baseline(task_instance, n_samples=50):
 if __name__ == "__main__":
     n_samples = 25
 
+    # To plot the results, add: plot_folder="./figures/baseline_name/" as an argument to evaulate_all_tasks
     random_results = evaluate_all_tasks(random_baseline, n_samples=n_samples)
     oracle_results = evaluate_all_tasks(oracle_baseline, n_samples=n_samples)
     lag_llama_results = evaluate_all_tasks(lag_llama, n_samples=n_samples)
