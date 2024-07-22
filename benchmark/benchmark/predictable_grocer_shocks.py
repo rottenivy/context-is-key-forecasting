@@ -29,11 +29,10 @@ class PredictableGrocerSpikesUnivariateTask(BaseTask):
     """
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(seed=seed, fixed_config=fixed_config)
-
         self.prediction_length = np.random.randint(7, 30)
         with open(GROCER_SALES_INFLUENCES_PATH, "r") as file:
             self.influences = json.load(file)
+        super().__init__(seed=seed, fixed_config=fixed_config)
 
     def random_instance(self):
         dataset = pd.read_csv(DOMINICK_GROCER_SALES_PATH)
