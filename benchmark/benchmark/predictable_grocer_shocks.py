@@ -68,39 +68,38 @@ class PredictableGrocerSpikesUnivariateTask(BaseTask):
         # extract the history and future series
         history_series = window.iloc[: -self.prediction_length]
         future_series = window.iloc[-self.prediction_length :]
+        ground_truth = future_series.copy()
 
         # choose an influence and a relative impact from the influence
         time_in_days = self.random.randint(2, self.prediction_length)
         direction = self.random.choice(["positive", "negative"])
         size = self.random.choice(["small", "medium", "large"])
         influence_info = self.influences[sales_category][direction][size]
-        self.influence = influence_info["influence"].replace(
-            "{time_in_days}", str(time_in_days)
-        )
         impact_range = influence_info["impact"]
-        min_impact, max_impact = map(
+        min_magnitude, max_magnitude = map(
             lambda x: int(x.strip("%")), impact_range.split("-")
         )
-        sampled_relative_impact = random.randint(min_impact, max_impact)
-
-        self.min_impact = min_impact
-        self.max_impact = max_impact
-        self.relative_impact = sampled_relative_impact
-        self.direction = direction
-        self.ground_truth = future_series.copy()
+        impact_magnitude = random.randint(min_magnitude, max_magnitude)
 
         # apply the influence to the future series
         future_series[time_in_days:] = self.apply_influence_to_series(
-            future_series[time_in_days:], sampled_relative_impact, direction
+            future_series[time_in_days:], impact_magnitude, direction
         )
 
-        self.past_time = history_series
-        self.future_time = future_series
+        self.influence = influence_info["influence"].replace(
+            "{time_in_days}", str(time_in_days)
+        )
+        self.min_magnitude = min_magnitude
+        self.max_magnitude = max_magnitude
+        self.impact_magnitude = impact_magnitude
+        self.direction = direction
+        self.ground_truth = ground_truth
+
+        self.past_time = history_series.to_frame()
+        self.future_time = future_series.to_frame()
         self.constraints = None
         self.background = None
-        self.scenario = self.get_context_from_event(
-            self.influence, sampled_relative_impact, direction
-        )
+        self.scenario = self.get_context_from_event()
 
     def apply_influence_to_series(self, series, relative_impact, direction):
         if direction == "positive":
@@ -112,9 +111,10 @@ class PredictableGrocerSpikesUnivariateTask(BaseTask):
 
     def get_context_from_event(self):
         context = self.influence
+        relative_impact = self.impact_magnitude
         if self.direction == "negative":
-            flipped_impact = -self.relative_impact
-        context += f" The relative impact is expected to be {flipped_impact}%."
+            relative_impact = -self.impact_magnitude
+        context += f" The relative impact is expected to be {relative_impact}%."
         return context
 
     def evaluate(self, samples):
@@ -127,10 +127,10 @@ class PredictableGrocerSpikesUnivariateTask(BaseTask):
         if len(samples.shape) == 3:
             samples = samples[:, :, 0]
         mean_forecast_change = np.mean(np.array(samples) - np.array(self.ground_truth))
-        relative_change = mean_forecast_change / np.mean(self.ground_truth)
+        relative_change = mean_forecast_change / np.mean(self.ground_truth + 1e-6)
 
         # Calculate the relative impact of the influence
-        relative_impact = self.relative_impact / 100
+        relative_impact = self.impact_magnitude / 100
 
         if self.direction == "negative":
             relative_impact = -relative_impact
