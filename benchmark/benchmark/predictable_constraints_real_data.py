@@ -79,12 +79,12 @@ class OraclePredUnivariateConstraintsTask(BaseTask):
         history_series = window.iloc[: -metadata.prediction_length]
         future_series = window.iloc[-metadata.prediction_length :]
 
-        # Generate constraints from the ground truth
-        self.constraints = self.sampleConstraintsFromGroundTruth(future_series)
+        self._constraints = self.sampleConstraintsFromGroundTruth(future_series)
 
         # Instantiate the class variables
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()
+        self.constraints = self.verbalize_context_from_constraints(self._constraints)
         self.background = None
         self.scenario = None
 
@@ -121,6 +121,24 @@ class OraclePredUnivariateConstraintsTask(BaseTask):
 
         return constraints
 
+    def verbalize_context_from_constraints(self, constraints):
+        """
+        Generate a synthetic context that describes the constraints.
+        Parameters:
+        -----------
+        constraints: dict
+            Dictionary of constraints to be satisfied by the forecast
+        Returns:
+        --------
+        context: str
+            Synthetic context that describes the constraints
+        """
+        context = "The forecast should satisfy the following constraints:\n"
+        for constraint, value in constraints.items():
+            context += f"{constraint}: {value}, "
+
+        return context
+
     def evaluate(self, samples):
         """
         Since we don't know the ground truth distribution, the evaluation should
@@ -142,7 +160,7 @@ class OraclePredUnivariateConstraintsTask(BaseTask):
             samples = samples[:, :, 0]  # (n_samples, n_time)
 
         prop_satisfied_constraints = {}
-        for constraint, value in self.constraints.items():
+        for constraint, value in self._constraints.items():
             if constraint == "min":
                 good_samples = np.all(samples >= value, axis=1)
             elif constraint == "max":
