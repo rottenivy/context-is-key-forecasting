@@ -18,6 +18,19 @@ class OraclePredUnivariateConstraintsTask(BaseTask):
     describes these constraints and evaluates the forecast based on these constraints.
     Time series: real, electricity_hourly but dataset agnostic
     Context: synthetic, by looking at the ground truth forecast
+    Parameters:
+    -----------
+    constraints: dict
+        Dictionary of constraints to be satisfied by the forecast. If None, constraints
+        are sampled from the ground truth forecast.
+    possible_constraints: list
+        List of possible constraints to be used.
+        Default is ["min", "max", "median", "mode", "mean"]
+    max_constraints: int
+        Maximum number of constraints to be used. Default is 2.
+    fixed_config: dict
+        Fixed configuration for the task
+
     """
 
     def __init__(
@@ -49,6 +62,12 @@ class OraclePredUnivariateConstraintsTask(BaseTask):
                 )
 
     def random_instance(self):
+        """
+        Create a random instance of the OraclePredUnivariateConstraintsTask task.
+        Selects a random dataset, a random time series, and a random window.
+        Samples constraints from the ground truth forecast.
+        Instantiates the class variables.
+        """
         datasets = ["electricity_hourly"]
 
         # Select a random dataset
@@ -90,7 +109,15 @@ class OraclePredUnivariateConstraintsTask(BaseTask):
 
     def sampleConstraintsFromGroundTruth(self, future_series):
         """
-        Sample constraints from the ground truth
+        Sample constraints from the ground truth.
+        Parameters:
+        -----------
+        future_series: pd.Series
+            Ground truth forecast
+        Returns:
+        --------
+        constraints: dict
+            Dictionary of constraints to be satisfied by the forecast
         """
         self.constraints = {}
         constraints = self.random.choice(
@@ -118,8 +145,16 @@ class OraclePredUnivariateConstraintsTask(BaseTask):
         be done by comparing the forecast with the constraints
         The score is the proportion of samples that satisfy each constraint,
         averaged over all constraints.
-        When we add more complex constraints, we can add more metrics.
-        We can also look at
+        As a side-effect, sets the attribute prop_satisfied_constraints to the
+        proportion of samples that satisfy each constraint.
+        Parameters:
+        -----------
+        samples: np.ndarray
+            Samples from the inferred distribution
+        Returns:
+        --------
+        prop_satisfied_constraint: float
+            Proportion of samples that satisfy the constraints
         """
         if len(samples.shape) == 3:
             samples = samples[:, :, 0]  # (n_samples, n_time)
