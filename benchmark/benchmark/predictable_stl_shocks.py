@@ -103,7 +103,7 @@ class STLMutliplierTask(UnivariateCRPSTask):
                 # Recompose the series, modifying the trend from start_time to end_time
                 future_series = stl.fit().seasonal + modified_trend + stl.fit().resid
 
-                scenario = f"The trend of the series will be multiplied by {trend_modification} between {start_time} and {end_time}."
+                scenario = f"The trend component of the series will be multiplied by {trend_modification} between {start_time} and {end_time}."
 
             elif self.modified_component == "seasonal":
                 seasonal_modification = self.sample_mutliplier()
