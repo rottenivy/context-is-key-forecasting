@@ -13,7 +13,7 @@ GROCER_SALES_INFLUENCES_PATH = "/home/toolkit/starcaster/research-starcaster/ben
 DOMINICK_GROCER_SALES_PATH = "/home/toolkit/starcaster/research-starcaster/benchmark/benchmark/data/filtered_dominic.csv"
 
 
-class PredictableGrocerSpikesUnivariateTask(BaseTask):
+class PredictableGrocerPersistentShockUnivariateTask(BaseTask):
     """
     A task where the time series contains spikes that are predictable based on the
     contextual information provided with the data. The spikes should be reflected in
@@ -118,27 +118,4 @@ class PredictableGrocerSpikesUnivariateTask(BaseTask):
 
     def evaluate(self, samples):
         """
-        Evaluate the forecast for the grocer spike task.
-        Calculate the mean relative change of the forecast vs the ground truth,
-        and compare to the relative impact of the influence.
-        """
-        # Calculate the relative change of the forecast vs the ground truth
-        if len(samples.shape) == 3:
-            samples = samples[:, :, 0]
-        mean_forecast_change = np.mean(np.array(samples) - np.array(self.ground_truth))
-        relative_change = mean_forecast_change / np.mean(self.ground_truth + 1e-6)
-
-        # Calculate the relative impact of the influence
-        relative_impact = self.impact_magnitude / 100
-
-        if self.direction == "negative":
-            relative_impact = -relative_impact
-
-        # Calculate the difference between the relative change and the relative impact
-        difference = np.abs(relative_change - relative_impact)
-
-        # Calculate the mean difference across the prediction length
-        metric = np.mean(difference)
-
-        return metric
-__TASKS__ = [PredictableGrocerSpikesUnivariateTask]
+__TASKS__ = [PredictableGrocerPersistentShockUnivariateTask]
