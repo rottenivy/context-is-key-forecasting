@@ -114,7 +114,8 @@ class OraclePredUnivariateConstraintsTask(BaseTask):
             elif constraint == "median":
                 constraints["median"] = future_series.median()
             elif constraint == "mode":
-                constraints["mode"] = future_series.mode().iloc[0]  ## TODO: generalize
+                constraints["mode"] = future_series.mode().iloc[0]
+                ## TODO: How to handle multimodal distributions?
             elif constraint == "mean":
                 constraints["mean"] = future_series.mean()
 
