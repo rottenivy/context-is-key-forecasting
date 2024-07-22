@@ -167,8 +167,9 @@ class OraclePredUnivariateConstraintsTask(BaseTask):
             np.array(list(prop_satisfied_constraints.values()))
         )
         prop_satisfied_constraints["satisfaction_rate"] = prop_satisfied_constraint
+        self.prop_satisfied_constraints = prop_satisfied_constraints
 
-        return prop_satisfied_constraints["satisfaction_rate"]
+        return prop_satisfied_constraint
 
 
 __TASKS__ = [OraclePredUnivariateConstraintsTask]
