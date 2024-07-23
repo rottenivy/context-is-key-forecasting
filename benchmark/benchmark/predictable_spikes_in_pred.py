@@ -54,31 +54,22 @@ class PredictableSpikesInPredTask(UnivariateCRPSTask):
         history_series = window.iloc[: -metadata.prediction_length]
         future_series = window.iloc[-metadata.prediction_length :]
 
-        if dataset_name == "electricity_hourly":
-            start_hour = self.random.randint(0, metadata.prediction_length - 1)
-            start_time = f"{start_hour:02d}:00"
-            end_time = f"{(start_hour):02d}:00"
+        spike_idx = self.random.randint(0, metadata.prediction_length - 1)
 
-            history_series.index = history_series.index.to_timestamp()
-            future_series.index = future_series.index.to_timestamp()
-            ground_truth = future_series.copy()
+        history_series.index = history_series.index.to_timestamp()
+        future_series.index = future_series.index.to_timestamp()
+        ground_truth = future_series.copy()
 
-            # Add the spike
-            relative_impact = self.random.randint(1, 500)
-            is_negative = self.random.choice([True, False])
-            if is_negative:
-                relative_impact = -relative_impact
-            future_series.loc[
-                future_series.between_time(start_time, end_time).index
-            ] = future_series.loc[
-                future_series.between_time(start_time, end_time).index
-            ] + future_series.loc[
-                future_series.between_time(start_time, end_time).index
-            ] * (
-                relative_impact / 100
-            )
+        spike_datetime = future_series.index[spike_idx]
 
-            scenario = f"A fluctuation of {relative_impact}% is expected to affect the usual value of the series at exactly {start_time}, after which the series will return to normal."
+        relative_impact = self.random.randint(1, 500)
+        is_negative = self.random.choice([True, False])
+        if is_negative:
+            relative_impact = -relative_impact
+
+        future_series.loc[spike_datetime] *= 1 + relative_impact / 100
+
+        scenario = f"A fluctuation of {relative_impact}% is expected to affect the usual value of the series at exactly {spike_datetime}, after which the series will return to normal."
 
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()
