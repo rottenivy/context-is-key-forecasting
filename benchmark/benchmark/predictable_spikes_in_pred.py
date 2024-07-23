@@ -67,7 +67,7 @@ class PredictableSpikesInPredTask(UnivariateCRPSTask):
         if is_negative:
             relative_impact = -relative_impact
 
-        future_series.loc[spike_datetime] *= 1 + relative_impact / 100
+        future_series.iloc[spike_idx] *= 1 + relative_impact / 100
 
         scenario = f"A fluctuation of {relative_impact}% is expected to affect the usual value of the series at exactly {spike_datetime}, after which the series will return to normal."
 
