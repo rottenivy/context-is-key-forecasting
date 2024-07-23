@@ -129,9 +129,27 @@ class OraclePredUnivariateConstraintsTask(BaseTask):
         context: str
             Synthetic context that describes the constraints
         """
-        context = "The forecast should satisfy the following constraints: "
+        context = ""
         for constraint, value in constraints.items():
-            context += f"{constraint}: {value}, "
+            # context += f"{constraint}: {value}, "
+            if constraint == "min":
+                context += f"the minimum possible value is {value}, "
+            elif constraint == "max":
+                context += f"the maximum possible value is {value}, "
+            elif constraint == "median":
+                context += f"the median is {value}, "
+            elif constraint == "mode":
+                context += f"the mode is {value}, "
+            elif constraint == "mean":
+                context += f"the mean is {value}, "
+            else:
+                raise ValueError(f"Unknown constraint type: {constraint}")
+
+        # remove trailing whitespace and comma
+        context = context[:-2]
+
+        # add period
+        context += "."
 
         return context
 
