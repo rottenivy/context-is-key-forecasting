@@ -18,9 +18,6 @@ class OraclePredUnivariateConstraintsTask(BaseTask):
     Context: synthetic, by looking at the ground truth forecast
     Parameters:
     -----------
-    constraints: dict
-        Dictionary of constraints to be satisfied by the forecast. If None, constraints
-        are sampled from the ground truth forecast.
     possible_constraints: list
         List of possible constraints to be used.
         Default is ["min", "max", "median", "mode", "mean"]
