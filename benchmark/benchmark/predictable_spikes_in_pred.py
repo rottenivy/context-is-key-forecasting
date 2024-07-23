@@ -6,6 +6,8 @@ from tactis.gluon.dataset import get_dataset
 from .base import UnivariateCRPSTask
 from .utils import get_random_window_univar
 
+import numpy as np
+
 
 class PredictableSpikesInPredTask(UnivariateCRPSTask):
     """
@@ -67,7 +69,7 @@ class PredictableSpikesInPredTask(UnivariateCRPSTask):
         if is_negative:
             relative_impact = -relative_impact
 
-        future_series.iloc[spike_idx] *= 1 + relative_impact / 100
+        future_series.iloc[spike_idx] *= np.float32(1 + relative_impact / 100)
 
         scenario = f"A fluctuation of {relative_impact}% is expected to affect the usual value of the series at exactly {spike_datetime}, after which the series will return to normal."
 
