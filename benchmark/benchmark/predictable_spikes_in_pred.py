@@ -55,7 +55,7 @@ class PredictableSpikesInPredTask(UnivariateCRPSTask):
         future_series = window.iloc[-metadata.prediction_length :]
 
         if dataset_name == "electricity_hourly":
-            start_hour = self.random.randint(0, 24 - 1)
+            start_hour = self.random.randint(0, metadata.prediction_length - 1)
             start_time = f"{start_hour:02d}:00"
             end_time = f"{(start_hour):02d}:00"
 
@@ -78,7 +78,7 @@ class PredictableSpikesInPredTask(UnivariateCRPSTask):
                 relative_impact / 100
             )
 
-            scenario = f"A spike of {relative_impact}% is expected at exactly {start_time}, after which the series will return to normal."
+            scenario = f"A fluctuation of {relative_impact}% is expected to affect the usual value of the series at exactly {start_time}, after which the series will return to normal."
 
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()
