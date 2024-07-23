@@ -10,16 +10,21 @@ from .utils import get_random_window_univar
 from statsmodels.tsa.seasonal import STL
 
 
-class STLMutliplierTask(UnivariateCRPSTask):
+class STLModifierTask(UnivariateCRPSTask):
     """
     A task where the series is first decomposed into trend, seasonality, and residuals
-    using STL decomposition. The trend is then modified and the series is recomposed.
+    using STL decomposition. One component is then modified and the series is recomposed.
+    Possible variants include:
+    - Multiplying the trend or seasonal component (in the pred or the hist)
+    - Adding a constant value to the trend or seasonal component
+    - Modifying the slope of the trend component
+    - Messing with the frequency of the seasonal component (e.g. disregard warping)
     Time series: agnostic
     Context: synthetic
     Parameters:
     ----------
     modified_component: str
-        The component of the series that will be modified. Valid options are 'trend', 'seasonal', and 'residual'.
+        The component of the series that will be modified. Valid options are 'trend' or 'seasonal'.
     fixed_config: dict
         Fixed configuration for the task
     seed: int
@@ -34,9 +39,52 @@ class STLMutliplierTask(UnivariateCRPSTask):
     ):
         assert (
             modified_component is not None
-        ), "The modification parameter must be provided. 'trend', 'seasonal', or 'residual' are valid options."
+        ), "The modification parameter must be provided. 'trend' or 'seasonal' are valid options."
         self.modified_component = modified_component
         super().__init__(seed=seed, fixed_config=fixed_config)
+
+    def random_instance(self):
+        pass
+
+    def apply_modification(self):
+        pass
+
+    def recompose_series(self, stl_component, modified_component):
+        if self.modified_component == "trend":
+            return modified_component + self.stl.fit().seasonal + self.stl.fit().resid
+        elif self.modified_component == "seasonal":
+            return self.stl.fit().trend + modified_component + self.stl.fit().resid
+        else:
+            raise ValueError(
+                "The modification parameter must be provided. 'trend' or 'seasonal' are valid options."
+            )
+
+
+class STLPredMutliplierTask(STLModifierTask):
+    """
+    A task where the series is first decomposed into trend, seasonality, and residuals
+    using STL decomposition. One component of the series is then multiplied by a random factor.
+    Time series: agnostic
+    Context: synthetic
+    Parameters:
+    ----------
+    modified_component: str
+        The component of the series that will be modified. Valid options are 'trend' or 'seasonal'.
+    fixed_config: dict
+        Fixed configuration for the task
+    seed: int
+        Seed for the random number generator
+    """
+
+    def __init__(
+        self,
+        modified_component: str = None,
+        fixed_config: dict = None,
+        seed: int = None,
+    ):
+        super().__init__(
+            modified_component=modified_component, fixed_config=fixed_config, seed=seed
+        )
 
     def random_instance(self):
         # load dataset
@@ -67,91 +115,54 @@ class STLMutliplierTask(UnivariateCRPSTask):
         history_series = window.iloc[: -metadata.prediction_length]
         future_series = window.iloc[-metadata.prediction_length :]
 
-        if dataset_name == "electricity_hourly":
-            start_hour = self.random.randint(0, 24 - 1)
-            duration = self.random.randint(0, 24 - start_hour)
-            start_time = f"{start_hour:02d}:00"
-            end_time = f"{(start_hour + duration):02d}:00"
+        start_idx = self.random.randint(0, metadata.prediction_length - 1)
+        duration = self.random.randint(0, metadata.prediction_length - start_idx)
+        start_datetime = future_series.index[start_idx]
+        end_datetime = future_series.index[start_idx + duration]
 
-            window.index = window.index.to_timestamp()
-            history_series.index = history_series.index.to_timestamp()
-            future_series.index = future_series.index.to_timestamp()
-            ground_truth = future_series.copy()
+        history_series.index = history_series.index.to_timestamp()
+        future_series.index = future_series.index.to_timestamp()
+        window.index = window.index.to_timestamp()
+        ground_truth = future_series.copy()
 
-            # decompose the whole window, both hist and pred
-            stl = STL(window, period=24)
+        self.stl = STL(window, period=24)
 
-            future_series_trend = stl.fit().trend[-metadata.prediction_length :]
-            future_series_seasonal = stl.fit().seasonal[-metadata.prediction_length :]
-            future_series_resid = stl.fit().resid[-metadata.prediction_length :]
+        stl_component = self.get_stl_component(self.modified_component)
 
-            # modify the appropriate parameter
-            if self.modified_component == "trend":
-                trend_modification = self.sample_mutliplier()
+        future_series_component = stl_component[-metadata.prediction_length :]
 
-                modified_trend = future_series_trend.copy()
+        modified_component = self.apply_modification(
+            start_idx, duration, future_series_component
+        )
 
-                modified_trend.loc[
-                    future_series_trend.between_time(start_time, end_time).index
-                ] = (
-                    future_series_trend.loc[
-                        future_series_trend.between_time(start_time, end_time).index
-                    ]
-                    * trend_modification
-                )
+        future_series = self.recompose_series(stl_component, modified_component)
 
-                # Recompose the series, modifying the trend from start_time to end_time
-                future_series = stl.fit().seasonal + modified_trend + stl.fit().resid
+        scenario = f"The {self.modified_component} component of the series will be multiplied by {self.multiplier} between {start_datetime} and {end_datetime}."
 
-                scenario = f"The trend component of the series will be multiplied by {trend_modification} between {start_time} and {end_time}."
+        self.past_time = history_series.to_frame()
+        self.future_time = future_series.to_frame()
+        self.constraints = None
+        self.background = None
+        self.scenario = scenario
+        self.ground_truth = ground_truth
+        self.trend = self.stl.fit().trend
+        self.seasonal = self.stl.fit().seasonal
+        self.residual = self.stl.fit().resid
 
-            elif self.modified_component == "seasonal":
-                seasonal_modification = self.sample_mutliplier()
+    def apply_modification(self, start_idx, duration, component_to_modify):
+        """
+        Applies the modification to the STL component.
+        For now, it's a simple multiplication of the component by a random factor.
+        It could be expanded to include other modifications, such as:
+        - adding a constant value
+        - modifying the slope of the trend
+        - messing with the frequency of the seasonal component
+        """
+        modified_component = component_to_modify.copy()
+        self.multiplier = self.sample_mutliplier()
+        modified_component.iloc[start_idx : start_idx + duration] *= self.multiplier
 
-                modified_seasonal = future_series_seasonal.copy()
-
-                modified_seasonal.loc[
-                    future_series_seasonal.between_time(start_time, end_time).index
-                ] = (
-                    future_series_seasonal.loc[
-                        future_series_seasonal.between_time(start_time, end_time).index
-                    ]
-                    * seasonal_modification
-                )
-
-                # Recompose the series, modifying the seasonal component from start_time to end_time
-                future_series = stl.fit().trend + modified_seasonal + stl.fit().resid
-
-                scenario = f"The seasonal component of the series will be multiplied by {seasonal_modification} between {start_time} and {end_time}."
-
-            elif self.modified_component == "residual":
-                resid_modification = self.sample_mutliplier()
-
-                modified_resid = future_series_resid.copy()
-
-                modified_resid.loc[
-                    future_series_resid.between_time(start_time, end_time).index
-                ] = (
-                    future_series_resid.loc[
-                        future_series_resid.between_time(start_time, end_time).index
-                    ]
-                    * resid_modification
-                )
-
-                # Recompose the series, modifying the residual component from start_time to end_time
-                future_series = stl.fit().trend + stl.fit().seasonal + modified_resid
-
-                scenario = f"The residual component of the series will be multiplied by {resid_modification} between {start_time} and {end_time}."
-
-            self.past_time = history_series.to_frame()
-            self.future_time = future_series.to_frame()
-            self.constraints = None
-            self.background = None
-            self.scenario = scenario
-            self.ground_truth = ground_truth
-            self.trend = stl.fit().trend
-            self.seasonal = stl.fit().seasonal
-            self.residual = stl.fit().resid
+        return modified_component
 
     def sample_mutliplier(self, multiplier_min=-1, multiplier_max=1):
         # pick trend modification from uniform distribution between -1 and 1
@@ -159,8 +170,18 @@ class STLMutliplierTask(UnivariateCRPSTask):
 
         return multiplier
 
+    def get_stl_component(self, component):
+        if component == "trend":
+            return self.stl.fit().trend
+        elif component == "seasonal":
+            return self.stl.fit().seasonal
+        else:
+            raise ValueError(
+                "The modification parameter must be provided. 'trend' or 'seasonal' are valid options."
+            )
 
-class STLTrendMultiplierTask(STLMutliplierTask):
+
+class STLPredTrendMultiplierTask(STLPredMutliplierTask):
     """
     A task where the trend component of the series is multiplied by a random factor.
     Time series: agnostic
@@ -169,11 +190,17 @@ class STLTrendMultiplierTask(STLMutliplierTask):
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
         super().__init__(
-            modified_component="trend", seed=seed, fixed_config=fixed_config
+            modified_component="trend", fixed_config=fixed_config, seed=seed
         )
 
+    def modify_trend(self, trend_series, start_hour, duration, multiplier):
+        modified_trend = trend_series.copy()
+        modified_trend.iloc[start_hour : start_hour + duration] *= multiplier
 
-class STLSeasonalMultiplierTask(STLMutliplierTask):
+        return modified_trend
+
+
+class STLPredSeasonalMultiplierTask(STLPredMutliplierTask):
     """
     A task where the seasonal component of the series is multiplied by a random factor.
     Time series: agnostic
@@ -182,18 +209,5 @@ class STLSeasonalMultiplierTask(STLMutliplierTask):
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
         super().__init__(
-            modified_component="seasonal", seed=seed, fixed_config=fixed_config
-        )
-
-
-class STLResidualMultiplierTask(STLMutliplierTask):
-    """
-    A task where the residual component of the series is multiplied by a random factor.
-    Time series: agnostic
-    Context: synthetic
-    """
-
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(
-            modified_component="residual", seed=seed, fixed_config=fixed_config
+            modified_component="seasonal", fixed_config=fixed_config, seed=seed
         )
