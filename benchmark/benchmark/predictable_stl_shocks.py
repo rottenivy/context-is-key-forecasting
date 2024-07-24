@@ -161,12 +161,12 @@ class STLPredMutliplierTask(STLModifierTask):
         - messing with the frequency of the seasonal component
         """
         modified_component = component_to_modify.copy()
-        self.multiplier = self.sample_mutliplier()
+        self.multiplier = self.sample_multiplier()
         modified_component.iloc[start_idx : start_idx + duration] *= self.multiplier
 
         return modified_component
 
-    def sample_mutliplier(self, multiplier_min=-1, multiplier_max=1):
+    def sample_multiplier(self, multiplier_min=-1, multiplier_max=1):
         # pick trend modification from uniform distribution between -1 and 1
         multiplier = self.random.uniform(multiplier_min, multiplier_max)
 
@@ -183,7 +183,7 @@ class STLPredMutliplierTask(STLModifierTask):
             )
 
 
-class STLPredTrendMultiplierTask(STLPredMutliplierTask):
+class STLPredTrendMultiplierTask(STLPredMultiplierTask):
     """
     A task where the trend component of the series is multiplied by a random factor.
     Time series: agnostic
@@ -199,10 +199,7 @@ class STLPredTrendMultiplierTask(STLPredMutliplierTask):
         modified_trend = trend_series.copy()
         modified_trend.iloc[start_hour : start_hour + duration] *= multiplier
 
-        return modified_trend
-
-
-class STLPredSeasonalMultiplierTask(STLPredMutliplierTask):
+class STLPredSeasonalMultiplierTask(STLPredMultiplierTask):
     """
     A task where the seasonal component of the series is multiplied by a random factor.
     Time series: agnostic
