@@ -23,7 +23,7 @@ class STLModifierTask(UnivariateCRPSTask):
     Context: synthetic
     Parameters:
     ----------
-    modified_component: str
+    target_component_name: str
         The component of the series that will be modified. Valid options are 'trend' or 'seasonal'.
     fixed_config: dict
         Fixed configuration for the task
@@ -33,14 +33,14 @@ class STLModifierTask(UnivariateCRPSTask):
 
     def __init__(
         self,
-        modified_component: str = None,
+        target_component_name: str = None,
         fixed_config: dict = None,
         seed: int = None,
     ):
         assert (
-            modified_component is not None
+            target_component_name is not None
         ), "The modification parameter must be provided. 'trend' or 'seasonal' are valid options."
-        self.modified_component = modified_component
+        self.target_component_name = target_component_name
         super().__init__(seed=seed, fixed_config=fixed_config)
 
     def random_instance(self):
@@ -49,10 +49,10 @@ class STLModifierTask(UnivariateCRPSTask):
     def apply_modification(self):
         pass
 
-    def recompose_series(self, stl_component, modified_component):
-        if self.modified_component == "trend":
+    def recompose_series(self, modified_component):
+        if self.target_component_name == "trend":
             return modified_component + self.stl.fit().seasonal + self.stl.fit().resid
-        elif self.modified_component == "seasonal":
+        elif self.target_component_name == "seasonal":
             return self.stl.fit().trend + modified_component + self.stl.fit().resid
         else:
             raise ValueError(
@@ -60,7 +60,7 @@ class STLModifierTask(UnivariateCRPSTask):
             )
 
 
-class STLPredMutliplierTask(STLModifierTask):
+class STLPredMultiplierTask(STLModifierTask):
     """
     A task where the series is first decomposed into trend, seasonality, and residuals
     using STL decomposition. One component of the series is then multiplied by a random factor.
@@ -78,12 +78,14 @@ class STLPredMutliplierTask(STLModifierTask):
 
     def __init__(
         self,
-        modified_component: str = None,
+        target_component_name: str = None,
         fixed_config: dict = None,
         seed: int = None,
     ):
         super().__init__(
-            modified_component=modified_component, fixed_config=fixed_config, seed=seed
+            target_component_name=target_component_name,
+            fixed_config=fixed_config,
+            seed=seed,
         )
 
     def random_instance(self):
@@ -129,7 +131,7 @@ class STLPredMutliplierTask(STLModifierTask):
         seasonality = get_seasonality(metadata.freq)
         self.stl = STL(window, period=seasonality)
 
-        stl_component = self.get_stl_component(self.modified_component)
+        stl_component = self.get_stl_component(self.target_component_name)
 
         future_series_component = stl_component[-metadata.prediction_length :]
 
@@ -137,7 +139,7 @@ class STLPredMutliplierTask(STLModifierTask):
             start_idx, duration, future_series_component
         )
 
-        future_series = self.recompose_series(stl_component, modified_component)
+        future_series = self.recompose_series(modified_component)
 
         scenario = f"The {self.modified_component} component of the series will be multiplied by {self.multiplier} between {start_datetime} and {end_datetime}."
 
@@ -192,7 +194,7 @@ class STLPredTrendMultiplierTask(STLPredMultiplierTask):
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
         super().__init__(
-            modified_component="trend", fixed_config=fixed_config, seed=seed
+            target_component_name="trend", fixed_config=fixed_config, seed=seed
         )
 
     def modify_trend(self, trend_series, start_hour, duration, multiplier):
