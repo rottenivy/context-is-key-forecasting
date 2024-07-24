@@ -125,7 +125,9 @@ class STLPredMutliplierTask(STLModifierTask):
         window.index = window.index.to_timestamp()
         ground_truth = future_series.copy()
 
-        self.stl = STL(window, period=24)
+        # {'B': 5, 'D': 1, 'H': 24, 'M': 12, 'ME': 12, 'Q': 4, 'QE': 4, 'S': 3600, 'T': 1440, 'W': 1, 'h': 24, 'min': 1440, 's': 3600}
+        seasonality = get_seasonality(metadata.freq)
+        self.stl = STL(window, period=seasonality)
 
         stl_component = self.get_stl_component(self.modified_component)
 
