@@ -197,9 +197,6 @@ class STLPredTrendMultiplierTask(STLPredMultiplierTask):
             target_component_name="trend", fixed_config=fixed_config, seed=seed
         )
 
-    def modify_trend(self, trend_series, start_hour, duration, multiplier):
-        modified_trend = trend_series.copy()
-        modified_trend.iloc[start_hour : start_hour + duration] *= multiplier
 
 class STLPredSeasonalMultiplierTask(STLPredMultiplierTask):
     """
