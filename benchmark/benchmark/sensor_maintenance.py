@@ -1,10 +1,3 @@
-"""
-Tasks that involve time series whose past series contains misleading information
-that can only be detected by understanding the contextual information provided
-with the data.
-
-"""
-
 import numpy as np
 
 from tactis.gluon.dataset import get_dataset
@@ -58,21 +51,27 @@ class SensorPeriodicMaintenanceTask(UnivariateCRPSTask):
         if dataset_name == "electricity_hourly":
             # Duration: between 2 and 6 hours
             duration = self.random.randint(2, 7)
-            start_hour = self.random.randint(0, 24 - duration)
-            start_time = f"{start_hour:02d}:00"
-            end_time = f"{(start_hour + duration):02d}:00"
+            start_hour = self.random.randint(
+                0, 24 - (duration + 1)
+            )  # +1 so the drop doesn't come at the end of the history window
+            maintenance_start_date = history_series.index[start_hour]
+            maintenance_end_date = history_series.index[start_hour + duration]
 
-            # Add the maintenance period to the window
+            # Make the hour strings
+            maintenance_start_hour = f"{maintenance_start_date.hour:02d}:00"
+            maintenance_end_hour = f"{(maintenance_end_date.hour):02d}:00"
+
+            # Add the maintenance period to the prediction window
             history_series.index = history_series.index.to_timestamp()
             history_series.loc[
-                history_series.between_time(start_time, end_time).index
+                history_series.between_time(
+                    maintenance_start_hour, maintenance_end_hour
+                ).index
             ] = 0
-
-            # Convert future index to timestamp for consistency
+            # Convert history index to timestamp for consistency
             future_series.index = future_series.index.to_timestamp()
 
-            background = f"The sensor was offline for maintenance every day between {start_time} and {end_time}, which resulted in zero readings. This should be disregarded in the forecast."
-
+            background = f"The sensor was offline for maintenance every day between {maintenance_start_hour} and {maintenance_end_hour}, which resulted in zero readings. This should be disregarded in the forecast."
         else:
             raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
 
@@ -241,7 +240,74 @@ class SensorSpikeTask(UnivariateCRPSTask):
         self.scenario = None
 
 
+class SensorMaintenanceInPredictionTask(UnivariateCRPSTask):
+    """
+    A task where the prediction part contains zero readings for a period due to maintenance.
+    The maintenance periods should be reflected in the forecast.
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(seed=seed, fixed_config=fixed_config)
+
+    def random_instance(self):
+        # TODO: This task can use all datasets where the notion of a "sensor" is meaningful
+        datasets = ["electricity_hourly"]
+
+        # Select a random dataset
+        dataset_name = self.random.choice(datasets)
+        dataset = get_dataset(dataset_name, regenerate=False)
+
+        assert len(dataset.train) == len(
+            dataset.test
+        ), "Train and test sets must contain the same number of time series"
+
+        # Get the dataset metadata
+        metadata = dataset.metadata
+
+        # Select a random time series
+        ts_index = self.random.choice(len(dataset.train))
+        full_series = to_pandas(list(dataset.test)[ts_index])
+
+        # Select a random window
+        window = get_random_window_univar(
+            full_series,
+            prediction_length=metadata.prediction_length,
+            history_factor=self.random.randint(3, 7),
+            random=self.random,
+        )
+
+        # Extract the history and future series
+        history_series = window.iloc[: -metadata.prediction_length]
+        future_series = window.iloc[-metadata.prediction_length :]
+
+        if dataset_name == "electricity_hourly":
+            # Duration: between 2 and 6 hours
+            duration = self.random.randint(2, 7)
+            start_hour = self.random.randint(0, metadata.prediction_length - duration)
+            maintenance_start_date = future_series.index[start_hour]
+            maintenance_end_date = future_series.index[start_hour + duration]
+
+            # Add the maintenance period to the prediction window
+            future_series.index = future_series.index.to_timestamp()
+            future_series.iloc[start_hour : start_hour + duration] = 0
+
+            # Convert history index to timestamp for consistency
+            history_series.index = history_series.index.to_timestamp()
+
+            scenario = f"Consider that the sensor will be offline for maintenance between {maintenance_start_date} and {maintenance_end_date}, which resulted in zero readings."
+        else:
+            raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
+
+        # Instantiate the class variables
+        self.past_time = history_series.to_frame()
+        self.future_time = future_series.to_frame()
+        self.constraints = None
+        self.background = None
+        self.scenario = scenario
+
+
 __TASKS__ = [
+    SensorMaintenanceInPredictionTask,
     SensorPeriodicMaintenanceTask,
     SensorTrendAccumulationTask,
     SensorSpikeTask,
