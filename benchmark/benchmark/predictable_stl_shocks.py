@@ -1,6 +1,6 @@
 # from tactis.gluon.dataset import get_dataset
 from gluonts.dataset.util import to_pandas
-
+from gluonts.time_feature import get_seasonality
 
 from tactis.gluon.dataset import get_dataset
 
