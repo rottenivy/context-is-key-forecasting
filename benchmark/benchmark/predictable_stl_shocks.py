@@ -1,4 +1,3 @@
-# from tactis.gluon.dataset import get_dataset
 from gluonts.dataset.util import to_pandas
 from gluonts.time_feature import get_seasonality
 
@@ -207,5 +206,5 @@ class STLPredSeasonalMultiplierTask(STLPredMultiplierTask):
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
         super().__init__(
-            modified_component="seasonal", fixed_config=fixed_config, seed=seed
+            target_component_name="seasonal", fixed_config=fixed_config, seed=seed
         )
