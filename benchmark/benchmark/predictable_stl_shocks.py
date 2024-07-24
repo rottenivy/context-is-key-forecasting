@@ -67,7 +67,7 @@ class STLPredMultiplierTask(STLModifierTask):
     Context: synthetic
     Parameters:
     ----------
-    modified_component: str
+    target_component_name: str
         The component of the series that will be modified. Valid options are 'trend' or 'seasonal'.
     fixed_config: dict
         Fixed configuration for the task
@@ -140,7 +140,7 @@ class STLPredMultiplierTask(STLModifierTask):
 
         future_series = self.recompose_series(modified_component)
 
-        scenario = f"The {self.modified_component} component of the series will be multiplied by {self.multiplier} between {start_datetime} and {end_datetime}."
+        scenario = f"The {self.target_component_name} component of the series will be multiplied by {self.multiplier} between {start_datetime} and {end_datetime}."
 
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()
