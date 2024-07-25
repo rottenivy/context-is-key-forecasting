@@ -62,7 +62,7 @@ class GPTForecaster:
 
         return client
 
-    def make_prompt(self, task_instance):
+    def make_prompt(self, task_instance, max_digits=6):
         """
         Generate the prompt for the GPT model
 
@@ -77,7 +77,7 @@ class GPTForecaster:
         hist_value = task_instance.past_time.values[:, 0]
         pred_time = task_instance.future_time.index.strftime("%Y-%m-%d %H:%M:%S")
         history = "\n".join(
-            f"({x}, {np.round(y, 2)})" for x, y in zip(hist_time, hist_value)
+            f"({x}, {np.round(y, max_digits)})" for x, y in zip(hist_time, hist_value)
         )
 
         # Extract context
