@@ -8,9 +8,14 @@ from .utils import get_random_window_univar
 
 from .base import UnivariateCRPSTask
 
+# GPT-generated sales influences.
+GROCER_SALES_INFLUENCES_PATH = (
+    "/starcaster/data/benchmark/grocer/grocer_sales_influences.json"
+)
 
-GROCER_SALES_INFLUENCES_PATH = "/home/toolkit/starcaster/research-starcaster/benchmark/benchmark/data/grocer_sales_influences.json"
-DOMINICK_GROCER_SALES_PATH = "/home/toolkit/starcaster/research-starcaster/benchmark/benchmark/data/filtered_dominic.csv"
+# Filtered version of Dominick's grocer dataset.
+# Available at https://www.chicagobooth.edu/research/kilts/research-data/dominicks
+DOMINICK_GROCER_SALES_PATH = "/starcaster/data/benchmark/grocer/filtered_dominic.csv"
 
 
 class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
