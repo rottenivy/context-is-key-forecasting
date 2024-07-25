@@ -16,9 +16,9 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
     the forecast.
     Note: this does NOT use the Monash dominick's dataset, which is transformed with no
     meaningful context.
-    Context: synthetic
+    Context: synthetic (GPT-generated then edited)
     Series: modified
-    Dataset: Dominick's grocer dataset.
+    Dataset: Dominick's grocer dataset (daily)
     Parameters:
     -----------
     fixed_config: dict
