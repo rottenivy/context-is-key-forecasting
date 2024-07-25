@@ -8,11 +8,30 @@ class FNSPIDUnivariateDataLoader:
     Parameters:
     ----------
     news_data_dir : str
+        Source: https://github.com/Zdong104/FNSPID_Financial_News_Dataset
         The directory containing the news data, should have subdirectories for each
         stock symbol, with each subdirectory containing per-day CSV files of news data.
+        Each CSV file should have the following columns:
+        - Date: The publication date of the news article.
+        - Article_title: The title of the news article.
+        - Url: The URL of the news article.
+        - Article: The full text of the news article.
+        - Lsa_summary: The Latent Semantic Analysis (LSA) summary of the news article.
+        - Luhn_summary: The Luhn summary of the news article.
+        - Textrank_summary: The TextRank summary of the news article.
+        - Lexrank_summary: The LexRank summary of the news article.
     price_data_dir : str
+        Source: https://github.com/Zdong104/FNSPID_Financial_News_Dataset
         The directory containing the price data. Should have a single CSV file for each
         stock symbol containing the price data.
+        Each CSV file should have the following columns:
+        - date: The date of the price data.
+        - volume: The trading volume.
+        - open: The opening price.
+        - high: The highest price.
+        - low: The lowest price.
+        - close: The closing price.
+        - adj close: The adjusted closing price.
     """
 
     def __init__(
