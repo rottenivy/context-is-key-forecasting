@@ -8,15 +8,6 @@ from .utils import get_random_window_univar
 
 from .base import UnivariateCRPSTask
 
-# GPT-generated sales influences.
-GROCER_SALES_INFLUENCES_PATH = (
-    "/starcaster/data/benchmark/grocer/grocer_sales_influences.json"
-)
-
-# Filtered version of Dominick's grocer dataset.
-# Available at https://www.chicagobooth.edu/research/kilts/research-data/dominicks
-DOMINICK_GROCER_SALES_PATH = "/starcaster/data/benchmark/grocer/filtered_dominic.csv"
-
 
 class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
     """
@@ -34,16 +25,30 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         A dictionary containing fixed parameters for the task
     seed: int
         Seed for the random number generator
+    GROCER_SALES_INFLUENCES_PATH: str
+        Path to the JSON file containing the sales influences.
+    DOMINICK_GROCER_SALES_PATH: str
+        Path to the filtered Dominick's grocer dataset.
+        Filtered for a subset of products for which we generated influences.
     """
 
-    def __init__(self, fixed_config: dict = None, seed: int = None):
+    def __init__(
+        self,
+        fixed_config: dict = None,
+        seed: int = None,
+        grocer_sales_influences_path=(
+            "/starcaster/data/benchmark/grocer/grocer_sales_influences.json"
+        ),
+        dominick_grocer_sales_path="/starcaster/data/benchmark/grocer/filtered_dominic.csv",
+    ):
+        self.dominick_grocer_sales_path = dominick_grocer_sales_path
         self.prediction_length = np.random.randint(7, 30)
-        with open(GROCER_SALES_INFLUENCES_PATH, "r") as file:
+        with open(grocer_sales_influences_path, "r") as file:
             self.influences = json.load(file)
         super().__init__(seed=seed, fixed_config=fixed_config)
 
     def random_instance(self):
-        dataset = pd.read_csv(DOMINICK_GROCER_SALES_PATH)
+        dataset = pd.read_csv(self.dominick_grocer_sales_path)
         dataset["date"] = pd.to_datetime(dataset["date"])
         dataset = dataset.set_index("date")
 
