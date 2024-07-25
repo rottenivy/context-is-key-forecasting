@@ -34,6 +34,9 @@ class OraclePredUnivariateConstraintsTask(BaseTask):
         fixed_config: dict = None,
         seed: int = None,
     ):
+        assert max_constraints <= len(
+            possible_constraints
+        ), "max_constraints cannot be greater than the total available constraints"
         self.possible_constraints = possible_constraints
         self.max_constraints = max_constraints
 
@@ -129,7 +132,7 @@ class OraclePredUnivariateConstraintsTask(BaseTask):
         context: str
             Synthetic context that describes the constraints
         """
-        context = ""
+        context = "Consider that in your forecast, "
         for constraint, value in constraints.items():
             # context += f"{constraint}: {value}, "
             if constraint == "min":
@@ -201,4 +204,113 @@ class OraclePredUnivariateConstraintsTask(BaseTask):
         return prop_satisfied_constraint
 
 
-__TASKS__ = [OraclePredUnivariateConstraintsTask]
+class BoundedPredConstraintsTask(OraclePredUnivariateConstraintsTask):
+    """
+    A task where the data is modified to be bounded (upper or lower) in the prediction part, and the context specifies the bounds.
+    This task is dataset-independent.
+    """
+
+    def __init__(
+        self,
+        possible_constraints=["min", "max"],
+        max_constraints: int = 2,
+        fixed_config: dict = None,
+        seed: int = None,
+    ):
+        super().__init__(
+            possible_constraints=possible_constraints,
+            max_constraints=max_constraints,
+            seed=seed,
+            fixed_config=fixed_config,
+        )
+
+    def random_instance(self):
+        """
+        Create a random instance of the BoundedConstraintsTask task.
+        Selects a random dataset, a random time series, and a random window.
+        Calculates appropriate bounds from the window. Applies the bound constraints on just the prediction part, so you would need the context to perform a perfect forecast.
+        Instantiates the class variables.
+        """
+        datasets = ["electricity_hourly"]
+
+        # Select a random dataset
+        dataset_name = self.random.choice(datasets)
+        dataset = get_dataset(dataset_name, regenerate=False)
+
+        assert len(dataset.train) == len(
+            dataset.test
+        ), "Train and test sets must contain the same number of time series"
+
+        # Get the dataset metadata
+        metadata = dataset.metadata
+
+        # Select a random time series
+        ts_index = self.random.choice(len(dataset.train))
+        full_series = to_pandas(list(dataset.test)[ts_index])
+
+        # Select a random window
+        window = get_random_window_univar(
+            full_series,
+            prediction_length=metadata.prediction_length,
+            history_factor=self.random.randint(2, 5),
+            random=self.random,
+        )
+
+        # Extract the history and future series
+        history_series = window.iloc[: -metadata.prediction_length]
+        future_series = window.iloc[-metadata.prediction_length :]
+
+        # Apply bound constraints to the time series
+        self._constraints = self.calculateConstraintsFromGroundTruth(future_series)
+
+        # Instantiate the class variables
+        self.past_time = history_series.to_frame()
+        self.future_time = future_series.to_frame()
+        self.constraints = self.verbalize_context_from_constraints(self._constraints)
+        self.background = None
+        self.scenario = None
+
+    def calculateConstraintsFromGroundTruth(self, window):
+        """
+        Sample constraints from the ground truth.
+        Parameters:
+        -----------
+        window: pd.Series
+            Window
+        Returns:
+        --------
+        constraints: dict
+            Dictionary of constraints to be satisfied by the forecast
+        """
+        constraints_dict = {}
+        sampled_constraint_types = self.random.choice(
+            self.possible_constraints,
+            self.random.randint(1, self.max_constraints + 1),
+            replace=False,
+        )
+        # Define the quantiles you want to calculate (0th, 10th, ..., 100th)
+        quantiles = list(range(0, 100, 10))
+        # Define quantiles used for min and max bounding
+        min_quantile_index = 3  # 30th Quantile
+        max_quantile_index = 7  # 70th Quantile
+        # Calculate the quantile values
+        quantile_values = np.percentile(
+            window, quantiles
+        )  # TODO: Is a pandas series; may need .values
+        # Apply constraints
+        for constraint_type in sampled_constraint_types:
+            if constraint_type == "min":
+                window[window <= quantile_values[min_quantile_index]] = quantile_values[
+                    min_quantile_index
+                ]
+                constraints_dict["min"] = quantile_values[min_quantile_index]
+            elif constraint_type == "max":
+                window[window >= quantile_values[max_quantile_index]] = quantile_values[
+                    max_quantile_index
+                ]
+                constraints_dict["max"] = quantile_values[max_quantile_index]
+
+        return constraints_dict
+
+
+__TASKS__ = [OraclePredUnivariateConstraintsTask, BoundedPredConstraintsTask]
