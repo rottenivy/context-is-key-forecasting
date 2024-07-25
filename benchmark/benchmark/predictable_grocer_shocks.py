@@ -82,21 +82,18 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         size = self.random.choice(["small", "medium", "large"])
         influence_info = self.influences[sales_category][direction][size]
         impact_range = influence_info["impact"]
-        min_magnitude, max_magnitude = map(
+        self.min_magnitude, self.max_magnitude = map(
             lambda x: int(x.strip("%")), impact_range.split("-")
         )
-        impact_magnitude = random.randint(min_magnitude, max_magnitude)
+        impact_magnitude = random.randint(self.min_magnitude, self.max_magnitude)
 
         # apply the influence to the future series
         future_series[shock_delay_in_days:] = self.apply_influence_to_series(
             future_series[shock_delay_in_days:], impact_magnitude, direction
         )
 
-        self.shock_description = influence_info["influence"].replace(
-            "{time_in_days}", str(shock_delay_in_days)
-        )
-        self.min_magnitude = min_magnitude
-        self.max_magnitude = max_magnitude
+        self.min_magnitude = self.min_magnitude
+        self.max_magnitude = self.max_magnitude
         self.impact_magnitude = impact_magnitude
         self.direction = direction
         self.ground_truth = ground_truth
@@ -105,7 +102,12 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         self.future_time = future_series.to_frame()
         self.constraints = None
         self.background = None
-        self.scenario = self.get_context()
+        self.scenario = self.get_scenario_context(shock_delay_in_days, influence_info)
+
+    def get_shock_description(self, shock_delay_in_days, influence_info):
+        return influence_info["influence"].replace(
+            "{time_in_days}", str(shock_delay_in_days)
+        )
 
     def apply_influence_to_series(self, series, relative_impact, direction):
         """
@@ -130,7 +132,7 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
 
         return series
 
-    def get_context(self):
+    def get_scenario_context(self, shock_delay_in_days, influence_info):
         """
         Get the context of the event.
         Returns:
@@ -139,13 +141,17 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
             The context of the event, including the influence and the relative impact.
 
         """
-        context = self.shock_description
         relative_impact = self.impact_magnitude
         if self.direction == "negative":
-            context += f" The relative impact is expected to be a persistent {relative_impact}% decrease."
-        else:
-            context += f" The relative impact is expected to be a persistent {relative_impact}% increase."
-        return context
+            relative_impact = self.impact_magnitude * -1
+
+        shock_description = influence_info["influence"].replace(
+            "{time_in_days}", str(shock_delay_in_days)
+        )
+        shock_description = shock_description.replace(
+            "{impact}", str(relative_impact) + "%"
+        )
+        return shock_description
 
 
 __TASKS__ = [PredictableGrocerPersistentShockUnivariateTask]
