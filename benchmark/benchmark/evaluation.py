@@ -136,7 +136,7 @@ class ResultCache:
         else:
             return inspect.getsource(obj.__class__)
 
-    def get_cache_key(self, task_instance):
+    def get_cache_key(self, task_instance, n_samples):
         """
         Get cache key by hashing the task instance (including all data and code)
         as well as the method callable's source code.
@@ -165,6 +165,9 @@ class ResultCache:
         # Hash method source code
         hasher.update(self.get_method_source(self.method_callable).encode("utf-8"))
 
+        # Hash the number of samples
+        hasher.update(str(n_samples).encode("utf-8"))
+
         # Iterate over all attributes of the object
         for attr, value in task_instance.__dict__.items():
             # Hash the attribute name
@@ -178,7 +181,7 @@ class ResultCache:
 
     def __call__(self, task_instance, n_samples=DEFAULT_N_SAMPLES):
         self.logger.info("Attempting to load from cache.")
-        cache_key = self.get_cache_key(task_instance)
+        cache_key = self.get_cache_key(task_instance, n_samples)
 
         if cache_key in self.cache:
             self.logger.info("Cache hit.")
