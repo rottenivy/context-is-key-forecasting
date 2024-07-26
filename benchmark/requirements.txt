@@ -5,3 +5,4 @@ gluonts[torch]>=0.14.4
 numpy
 openai
 pandas
+statsmodels

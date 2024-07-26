@@ -208,3 +208,6 @@ class STLPredSeasonalMultiplierTask(STLPredMultiplierTask):
         super().__init__(
             target_component_name="seasonal", fixed_config=fixed_config, seed=seed
         )
+
+
+__TASKS__ = [STLPredTrendMultiplierTask, STLPredSeasonalMultiplierTask]
