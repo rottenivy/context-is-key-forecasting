@@ -6,13 +6,16 @@ import pandas as pd
 # download
 import urllib.request
 
+from benchmark.config import DOMINICK_STORAGE_PATH
+
 # Dominick's download
 # Academic research only
 dominicks_url = "https://www.chicagobooth.edu/boothsitecore/docs/dff/store-demos-customer-count/ccount_stata.zip"
 
+os.chdir(DOMINICK_STORAGE_PATH)
+
 
 def download_dominicks(dominicks_url):
-    # download
     urllib.request.urlretrieve(dominicks_url, "dominicks.zip")
 
     # unzip
@@ -28,4 +31,8 @@ def download_dominicks(dominicks_url):
 
     desired_columns = ["store", "grocery", "beer", "meat"]
     df = df[desired_columns].dropna()
-    df.dropna(inplace=True).to_csv("filtered_dominicks.csv")
+    df.dropna(inplace=True).to_csv("filtered_dominick_grocer_sales.csv")
+
+
+if __name__ == "__main__":
+    download_dominicks(dominicks_url)

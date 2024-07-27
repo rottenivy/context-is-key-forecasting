@@ -3,10 +3,15 @@ import numpy as np
 import pandas as pd
 import random
 import json
+import os
 
 from .utils import get_random_window_univar
 
 from .base import UnivariateCRPSTask
+
+from .data.utils.dominicks import download_dominicks
+
+from .config import DOMINICK_STORAGE_PATH
 
 
 class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
@@ -36,14 +41,20 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         self,
         fixed_config: dict = None,
         seed: int = None,
-        grocer_sales_influences_path=(
-            "/starcaster/data/benchmark/grocer/grocer_sales_influences.json"
-        ),
-        dominick_grocer_sales_path="/starcaster/data/benchmark/grocer/filtered_dominic.csv",
     ):
-        self.dominick_grocer_sales_path = dominick_grocer_sales_path
+        print(os.getcwd())
+        if "filtered_dominick_grocer_sales.csv" not in os.listdir(
+            DOMINICK_STORAGE_PATH
+        ):
+            download_dominicks(DOMINICK_STORAGE_PATH)
+        self.dominick_grocer_sales_path = os.path.join(
+            DOMINICK_STORAGE_PATH, "filtered_dominick_grocer_sales.csv"
+        )
+        self.grocer_sales_influences_path = os.path.join(
+            DOMINICK_STORAGE_PATH, "grocer_sales_influences.json"
+        )
         self.prediction_length = np.random.randint(7, 30)
-        with open(grocer_sales_influences_path, "r") as file:
+        with open(self.grocer_sales_influences_path, "r") as file:
             self.influences = json.load(file)
         super().__init__(seed=seed, fixed_config=fixed_config)
 
