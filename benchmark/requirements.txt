@@ -3,4 +3,6 @@ lag_llama @ git+https://github.com/time-series-foundation-models/lag-llama.git@m
 llm_processes @ git+https://github.com/aldro61/llm_processes.git@master
 gluonts[torch]>=0.14.4
 numpy
+openai
 pandas
+statsmodels
