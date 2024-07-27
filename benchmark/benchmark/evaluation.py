@@ -87,6 +87,7 @@ def evaluate_all_tasks(
     n_samples=DEFAULT_N_SAMPLES,
     plot_folder=None,
     use_cache=True,
+    cache_name=None,
 ):
     """
     Evaluates a method on all tasks for a number of seeds and samples
@@ -104,6 +105,10 @@ def evaluate_all_tasks(
         If not None, save figure for each forecast in this folde
     use_cache: bool
         If True, use cached results when available. Otherwise, re-run the evaluation.
+    cache_name: str, optional
+        Name of the method to use as cache key. If the method_callable is an instance
+        of a class, the cache key must be provided. Otherwise, the cache key is the
+        method_callable's function name.
 
     Returns:
     --------
@@ -123,7 +128,7 @@ def evaluate_all_tasks(
         plot_folder.mkdir(parents=True, exist_ok=True)
 
     if use_cache:
-        method_callable = ResultCache(method_callable)
+        method_callable = ResultCache(method_callable, method_name=cache_name)
 
     results = defaultdict(list)
     for task_cls in ALL_TASKS:

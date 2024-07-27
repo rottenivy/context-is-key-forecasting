@@ -21,13 +21,24 @@ class ResultCache:
         A callable that receives a task instance and a number of samples and returns
         a prediction samples. The callable should expect the following kwargs:
         task_instance, n_samples
+    method_name: str, optional
+        Name of the method callable. Used to create a directory in the cache.
+        Must be provided if method_callable is an instance of a class.
+    cache_path: str, optional
+        Path to the cache directory. Default is taken from RESULT_CACHE.
 
     """
 
-    def __init__(self, method_callable, cache_path=RESULT_CACHE_PATH) -> None:
+    def __init__(
+        self, method_callable, method_name=None, cache_path=RESULT_CACHE_PATH
+    ) -> None:
         self.logger = logging.getLogger("Result cache")
         self.method_callable = method_callable
-        self.cache_dir = Path(cache_path) / self.get_method_path_name(method_callable)
+        self.cache_dir = Path(cache_path) / (
+            self.get_method_path_name(method_callable)
+            if method_name is None
+            else method_name
+        )
         self.cache_path = self.cache_dir / "cache.pkl"
 
         if not self.cache_path.exists():
@@ -50,7 +61,9 @@ class ResultCache:
         if obj.__class__.__name__ == "function":
             return f"{obj.__module__}.{obj.__qualname__}"
         else:
-            return obj.__class__.__name__
+            raise ValueError(
+                "Method name must be provided if method callable is a class instance."
+            )
 
     def get_method_source(self, obj):
         """
