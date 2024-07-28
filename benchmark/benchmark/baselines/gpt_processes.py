@@ -26,19 +26,38 @@ class GPTForecaster:
     -----------
     model: str
         The name of the model to use for forecasting
-    use_context: bool
+    use_context: bool, default=True
         If True, use context in the prompt, otherwise ignore it
-    fail_on_invalid: bool
+    fail_on_invalid: bool, default=True
         If True, raise an exception if an invalid sample is encountered
         in the forecast. Otherwise, print a warning and skip the sample.
+    n_retries: int, default=3
+        The number of retries to use in rejection sampling
+    batch_size_on_retry: int, default=5
+        The batch size to use on retries
+    token_cost: dict, default=None
+            The cost of tokens used in the API call. If provided, the cost of the API call will be estimated.
+            Expected keys are "input" and "output" for the price of input and output tokens, respectively.
 
     """
 
-    def __init__(self, model, use_context=True, fail_on_invalid=True) -> None:
+    def __init__(
+        self,
+        model,
+        use_context=True,
+        fail_on_invalid=True,
+        n_retries=3,
+        batch_size_on_retry=5,
+        token_cost: dict = None,
+    ) -> None:
         self.model = model
         self.client = self.get_client()
         self.use_context = use_context
         self.fail_on_invalid = fail_on_invalid
+        self.n_retries = n_retries
+        self.batch_size_on_retry = batch_size_on_retry
+        self.token_cost = token_cost
+        self.total_cost = 0  # Accumulator for monetary value of queries
 
     def get_client(self):
         """
@@ -73,9 +92,9 @@ class GPTForecaster:
         logger.info("Building prompt for GPT model.")
 
         # Extract time series data
-        hist_time = task_instance.past_time.index.strftime("%Y-%m-%d %H:%M:%S")
+        hist_time = task_instance.past_time.index.strftime("%Y-%m-%d %H:%M:%S").values
         hist_value = task_instance.past_time.values[:, 0]
-        pred_time = task_instance.future_time.index.strftime("%Y-%m-%d %H:%M:%S")
+        pred_time = task_instance.future_time.index.strftime("%Y-%m-%d %H:%M:%S").values
         history = "\n".join(
             f"({x}, {np.round(y, max_digits)})" for x, y in zip(hist_time, hist_value)
         )
@@ -123,7 +142,7 @@ Example:
 """
         return prompt
 
-    def __call__(self, task_instance, n_samples, n_retries=3, batch_size_on_retry=5):
+    def __call__(self, task_instance, n_samples):
         """
         Infer forecasts from the GPT model
 
@@ -161,12 +180,16 @@ Example:
         # Get forecast samples via rejection sampling until we have the desired number of samples
         # or until we run out of retries
         batch_size = n_samples
+        total_tokens = {"input": 0, "output": 0}
         valid_forecasts = []
+        n_retries = self.n_retries
         while len(valid_forecasts) < n_samples and n_retries > 0:
             logger.info(f"Requesting forecast of {batch_size} samples from GPT model.")
             chat_completion = self.client.chat.completions.create(
                 model=self.model, n=batch_size, messages=messages
             )
+            total_tokens["input"] += chat_completion.usage.prompt_tokens
+            total_tokens["output"] += chat_completion.usage.completion_tokens
 
             logger.info("Parsing forecasts from completion.")
             for choice in chat_completion.choices:
@@ -202,7 +225,7 @@ Example:
                     logger.debug(f"Choice: {choice.message.content}")
 
             n_retries -= 1
-            batch_size = batch_size_on_retry
+            batch_size = self.batch_size_on_retry
 
             valid_forecasts = valid_forecasts[:n_samples]
             logger.info(f"Got {len(valid_forecasts)}/{n_samples} valid forecasts.")
@@ -214,6 +237,15 @@ Example:
             raise RuntimeError(
                 f"Failed to get {n_samples} valid forecasts. Got {len(valid_forecasts)} instead."
             )
+
+        # Estimate cost of API calls
+        logger.info(f"Total tokens used: {total_tokens}")
+        if self.token_cost is not None:
+            input_cost = total_tokens["input"] / 1000 * self.token_cost["input"]
+            output_cost = total_tokens["output"] / 1000 * self.token_cost["output"]
+            current_cost = round(input_cost + output_cost, 2)
+            logger.info(f"Forecast cost: {current_cost}$")
+            self.total_cost += current_cost
 
         # Convert the list of valid forecasts to a numpy array
         samples = np.array(valid_forecasts)[:, :, None]
