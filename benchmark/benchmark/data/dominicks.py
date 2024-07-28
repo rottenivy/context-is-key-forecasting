@@ -12,11 +12,15 @@ from benchmark.config import DOMINICK_STORAGE_PATH
 # Academic research only
 dominicks_url = "https://www.chicagobooth.edu/boothsitecore/docs/dff/store-demos-customer-count/ccount_stata.zip"
 
-os.chdir(DOMINICK_STORAGE_PATH)
-
 
 def download_dominicks(dominicks_url):
-    urllib.request.urlretrieve(dominicks_url, "dominicks.zip")
+
+    if not os.path.exists(DOMINICK_STORAGE_PATH):
+        os.makedirs(DOMINICK_STORAGE_PATH)
+
+    urllib.request.urlretrieve(
+        dominicks_url, os.path.join(DOMINICK_STORAGE_PATH, "dominicks.zip")
+    )
 
     # unzip
     with zipfile.ZipFile("dominicks.zip", "r") as zip_ref:
