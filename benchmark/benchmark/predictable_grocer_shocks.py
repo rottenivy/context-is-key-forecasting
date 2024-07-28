@@ -9,9 +9,9 @@ from .utils import get_random_window_univar
 
 from .base import UnivariateCRPSTask
 
-from .data.utils.dominicks import download_dominicks
+from benchmark.data.dominicks import download_dominicks
 
-from .config import DOMINICK_STORAGE_PATH
+from benchmark.config import DOMINICK_STORAGE_PATH
 
 
 class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
@@ -42,25 +42,28 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         fixed_config: dict = None,
         seed: int = None,
     ):
-        print(os.getcwd())
+        self.init_data()
+        self.prediction_length = np.random.randint(7, 30)
+        with open(self.grocer_sales_influences_path, "r") as file:
+            self.influences = json.load(file)
+        super().__init__(seed=seed, fixed_config=fixed_config)
+
+    def init_data(self):
         if "filtered_dominick_grocer_sales.csv" not in os.listdir(
             DOMINICK_STORAGE_PATH
         ):
-            download_dominicks(DOMINICK_STORAGE_PATH)
+            download_dominicks()
         self.dominick_grocer_sales_path = os.path.join(
             DOMINICK_STORAGE_PATH, "filtered_dominick_grocer_sales.csv"
         )
         self.grocer_sales_influences_path = os.path.join(
             DOMINICK_STORAGE_PATH, "grocer_sales_influences.json"
         )
-        self.prediction_length = np.random.randint(7, 30)
-        with open(self.grocer_sales_influences_path, "r") as file:
-            self.influences = json.load(file)
-        super().__init__(seed=seed, fixed_config=fixed_config)
 
     def random_instance(self):
         dataset = pd.read_csv(self.dominick_grocer_sales_path)
-        dataset["date"] = pd.to_datetime(dataset["date"])
+        print(dataset.columns)
+        dataset["date"] = pd.to_datetime(dataset["datetime"])
         dataset = dataset.set_index("date")
 
         sales_categories = ["grocery", "beer", "meat"]
@@ -68,27 +71,24 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
 
         success_window = False
         counter = 0
-        while not success_window:
+        while not success_window and counter < 10000:
             # pick a random sales category and store
+            counter += 1
             sales_category = self.random.choice(sales_categories)
             store = self.random.choice(stores)
 
             # select a random series
             series = dataset[dataset["store"] == store][sales_category]
             # select a random window
-            try:
-                history_factor = self.random.randint(3, 7)
-                assert len(series) > (history_factor + 1) * self.prediction_length
-                window = get_random_window_univar(
-                    series,
-                    prediction_length=self.prediction_length,
-                    history_factor=history_factor,
-                    random=self.random,
-                )
-                success_window = True
-            except:
-                counter += 1
-                raise ValueError("Could not find a valid window")
+            history_factor = self.random.randint(3, 7)
+            assert len(series) > (history_factor + 1) * self.prediction_length
+            window = get_random_window_univar(
+                series,
+                prediction_length=self.prediction_length,
+                history_factor=history_factor,
+                random=self.random,
+            )
+            success_window = True
 
         # extract the history and future series
         history_series = window.iloc[: -self.prediction_length]

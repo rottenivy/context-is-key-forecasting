@@ -6,36 +6,40 @@ import pandas as pd
 # download
 import urllib.request
 
-from benchmark.config import DOMINICK_STORAGE_PATH
+from benchmark.config import DOMINICK_STORAGE_PATH, DOMINICK_CSV_PATH
 
 # Dominick's download
 # Academic research only
 dominicks_url = "https://www.chicagobooth.edu/boothsitecore/docs/dff/store-demos-customer-count/ccount_stata.zip"
+dominicks_zipfile_name = "dominicks.zip"
+dominicks_statafile_name = "ccount.dta"
 
 
-def download_dominicks(dominicks_url):
+def download_dominicks(dominicks_url=dominicks_url):
 
     if not os.path.exists(DOMINICK_STORAGE_PATH):
         os.makedirs(DOMINICK_STORAGE_PATH)
 
-    urllib.request.urlretrieve(
-        dominicks_url, os.path.join(DOMINICK_STORAGE_PATH, "dominicks.zip")
-    )
+    dominicks_zipfile_path = os.path.join(DOMINICK_STORAGE_PATH, dominicks_zipfile_name)
+
+    urllib.request.urlretrieve(dominicks_url, os.path.join(dominicks_zipfile_path))
 
     # unzip
-    with zipfile.ZipFile("dominicks.zip", "r") as zip_ref:
-        zip_ref.extractall("dominicks")
+    with zipfile.ZipFile(dominicks_zipfile_path, "r") as zip_ref:
+        zip_ref.extractall(DOMINICK_STORAGE_PATH)
 
     # load
-    filepath = "dominicks/ccount.dta"
-    df = pd.read_stata(filepath)
+    dominicks_statafile_path = os.path.join(
+        DOMINICK_STORAGE_PATH, dominicks_statafile_name
+    )
+    df = pd.read_stata(dominicks_statafile_path)
     df = df[(df.week > 0) & (df.week <= 400)]
     df["datetime"] = pd.to_datetime(df["date"], format="%y%m%d", errors="coerce")
     df.set_index("datetime", inplace=True)
 
     desired_columns = ["store", "grocery", "beer", "meat"]
     df = df[desired_columns].dropna()
-    df.dropna(inplace=True).to_csv("filtered_dominick_grocer_sales.csv")
+    df.dropna().to_csv(DOMINICK_CSV_PATH)
 
 
 if __name__ == "__main__":
