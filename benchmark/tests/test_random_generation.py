@@ -3,23 +3,45 @@ import pytest
 from benchmark import ALL_TASKS
 
 
-@pytest.mark.parametrize("task", ALL_TASKS)
-def test_instance_randomness(task):
+def _are_instances_equal(instance_1, instance_2):
     """
-    Test that each task can produce random instances
+    Checks if two task instances are identical
 
     """
-    instance_1 = task(seed=1)
-    instance_2 = task(seed=2)
-
-    # Check that the data in the past_time and future_time are different
-    same_data = instance_1.past_time.to_csv(index=False) == instance_2.past_time.to_csv(
+    # Check if temporal data is the same across instances
+    same_history = instance_1.past_time.to_csv(
         index=False
-    )
+    ) == instance_2.past_time.to_csv(index=False)
+    same_future = instance_1.future_time.to_csv(
+        index=False
+    ) == instance_2.future_time.to_csv(index=False)
+    same_data = same_history and same_future
 
     # Check if the background, constraints, and scenario are the same
     same_background = instance_1.background == instance_2.background
     same_constraints = instance_1.constraints == instance_2.constraints
     same_scenario = instance_1.scenario == instance_2.scenario
 
-    assert not (same_data and same_background and same_constraints and same_scenario)
+    # Confirm that at least something is different
+    return same_data and same_background and same_constraints and same_scenario
+
+
+@pytest.mark.parametrize("task", ALL_TASKS)
+def test_instance_randomness(task):
+    """
+    Test that each task can produce random instances
+
+    """
+    for seed in range(10):
+        assert not _are_instances_equal(task(seed=seed), task(seed=seed + 1))
+
+
+@pytest.mark.parametrize("task", ALL_TASKS)
+def test_seed_consistency(task):
+    """
+    Test that calling the constructor with the same seed leeds to the
+    same data all the time
+
+    """
+    for seed in range(10):
+        assert _are_instances_equal(task(seed=seed), task(seed=seed))
