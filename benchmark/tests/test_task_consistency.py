@@ -9,6 +9,9 @@ import pytest
 from benchmark import ALL_TASKS
 from benchmark.base import BaseTask
 
+from benchmark.predictable_grocer_shocks import __TASKS__ as DOMINICK_TASKS
+ALL_TASKS = list(set(ALL_TASKS) - set(DOMINICK_TASKS))
+
 
 @pytest.mark.parametrize("task", ALL_TASKS)
 def test_inherits_base(task):
