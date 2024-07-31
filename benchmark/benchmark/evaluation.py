@@ -1,10 +1,17 @@
-from collections import defaultdict
+import logging
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import pathlib
+
+from collections import defaultdict
+from pathlib import Path
 
 from . import ALL_TASKS
+from .config import DEFAULT_N_SAMPLES
+from .utils.cache import ResultCache
+
+
+logger = logging.getLogger("Evaluation")
 
 
 def plot_forecast_univariate(task, samples, filename):
@@ -74,7 +81,14 @@ def plot_forecast_univariate(task, samples, filename):
     plt.savefig(filename)
 
 
-def evaluate_all_tasks(method_callable, seeds=5, n_samples=50, plot_folder=None):
+def evaluate_all_tasks(
+    method_callable,
+    seeds=5,
+    n_samples=DEFAULT_N_SAMPLES,
+    plot_folder=None,
+    use_cache=True,
+    cache_name=None,
+):
     """
     Evaluates a method on all tasks for a number of seeds and samples
 
@@ -88,7 +102,13 @@ def evaluate_all_tasks(method_callable, seeds=5, n_samples=50, plot_folder=None)
     n_samples: int
         Number of samples to generate for each prediction
     plot_folder: None or Pathlike
-        If not None, save figure for each forecast in this folder
+        If not None, save figure for each forecast in this folde
+    use_cache: bool
+        If True, use cached results when available. Otherwise, re-run the evaluation.
+    cache_name: str, optional
+        Name of the method to use as cache key. If the method_callable is an instance
+        of a class, the cache key must be provided. Otherwise, the cache key is the
+        method_callable's function name.
 
     Returns:
     --------
@@ -98,14 +118,23 @@ def evaluate_all_tasks(method_callable, seeds=5, n_samples=50, plot_folder=None)
         with metrics and relevant information.
 
     """
+    logger.info(
+        f"Evaluating method {method_callable} with {seeds} seeds and {n_samples} samples on {len(ALL_TASKS)} tasks."
+    )
+
     if plot_folder:
-        plot_folder = pathlib.Path(plot_folder)
+        logger.info(f"Saving plots to {plot_folder}")
+        plot_folder = Path(plot_folder)
         plot_folder.mkdir(parents=True, exist_ok=True)
+
+    if use_cache:
+        method_callable = ResultCache(method_callable, method_name=cache_name)
 
     results = defaultdict(list)
     for task_cls in ALL_TASKS:
         for seed in range(1, seeds + 1):
             task = task_cls(seed=seed)
+            logger.info(f"Task {task.name} - Seed {seed}")
             samples = method_callable(task_instance=task, n_samples=n_samples)
 
             results[task_cls.__name__].append(
