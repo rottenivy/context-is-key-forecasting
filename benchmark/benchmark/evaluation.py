@@ -132,8 +132,8 @@ def evaluate_all_tasks(
 
     results = defaultdict(list)
     for task_cls in ALL_TASKS:
-        logger.info(f"Task {task_cls.__name__}.")
         for seed in range(1, seeds + 1):
+            logger.info(f"Task {task_cls.name} - Seed {seed}")
             task = task_cls(seed=seed)
             samples = method_callable(task_instance=task, n_samples=n_samples)
 
