@@ -16,12 +16,8 @@ def _are_instances_equal(instance_1, instance_2):
 
     """
     # Check if temporal data is the same across instances
-    same_history = instance_1.past_time.to_csv(
-        index=False
-    ) == instance_2.past_time.to_csv(index=False)
-    same_future = instance_1.future_time.to_csv(
-        index=False
-    ) == instance_2.future_time.to_csv(index=False)
+    same_history = instance_1.past_time.equals(instance_2.past_time)
+    same_future = instance_1.future_time.equals(instance_2.future_time)
     same_data = same_history and same_future
 
     # Check if the background, constraints, and scenario are the same
