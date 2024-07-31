@@ -4,7 +4,8 @@ from benchmark import ALL_TASKS
 from benchmark.predictable_grocer_shocks import __TASKS__ as DOMINICK_TASKS
 
 for task in DOMINICK_TASKS:
-    ALL_TASKS.remove(task)
+    if task in ALL_TASKS:
+        ALL_TASKS.remove(task)
 
 print("Downloading datasets for all tasks...")
 for task in ALL_TASKS:

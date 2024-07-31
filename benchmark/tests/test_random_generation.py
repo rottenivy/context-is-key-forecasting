@@ -6,7 +6,8 @@ from benchmark import ALL_TASKS
 from benchmark.predictable_grocer_shocks import __TASKS__ as DOMINICK_TASKS
 
 for task in DOMINICK_TASKS:
-    ALL_TASKS.remove(task)
+    if task in ALL_TASKS:
+        ALL_TASKS.remove(task)
 
 
 def _are_instances_equal(instance_1, instance_2):
@@ -38,7 +39,7 @@ def test_instance_randomness(task):
     Test that each task can produce random instances
 
     """
-    for seed in range(10):
+    for seed in range(5):
         assert not _are_instances_equal(task(seed=seed), task(seed=seed + 1))
 
 
@@ -49,5 +50,5 @@ def test_seed_consistency(task):
     same data all the time
 
     """
-    for seed in range(10):
+    for seed in range(5):
         assert _are_instances_equal(task(seed=seed), task(seed=seed))

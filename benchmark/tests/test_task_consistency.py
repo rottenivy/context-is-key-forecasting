@@ -13,7 +13,8 @@ from benchmark.base import BaseTask
 from benchmark.predictable_grocer_shocks import __TASKS__ as DOMINICK_TASKS
 
 for task in DOMINICK_TASKS:
-    ALL_TASKS.remove(task)
+    if task in ALL_TASKS:
+        ALL_TASKS.remove(task)
 
 
 @pytest.mark.parametrize("task", ALL_TASKS)
