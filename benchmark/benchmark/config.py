@@ -8,7 +8,7 @@ import os
 # Model weight storage
 MODEL_STORAGE_PATH = os.environ.get("STARCASTER_MODEL_STORE", "./models")
 if not os.path.exists(MODEL_STORAGE_PATH):
-    os.makedirs(MODEL_STORAGE_PATH)
+    os.makedirs(MODEL_STORAGE_PATH, exist_ok=True)
 
 # Evaluation configuration
 DEFAULT_N_SAMPLES = 50
@@ -25,4 +25,4 @@ OPENAI_AZURE_ENDPOINT = os.environ.get("STARCASTER_OPENAI_AZURE_ENDPOINT", None)
 
 DATA_STORAGE_PATH = os.environ.get("STARCASTER_DATA_STORE", "benchmark/data")
 if not os.path.exists(DATA_STORAGE_PATH):
-    os.makedirs(DATA_STORAGE_PATH)
+    os.makedirs(DATA_STORAGE_PATH, exist_ok=True)
