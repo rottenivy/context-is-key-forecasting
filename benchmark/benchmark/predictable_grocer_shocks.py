@@ -9,9 +9,7 @@ from .utils import get_random_window_univar
 
 from .base import UnivariateCRPSTask
 
-from benchmark.data.dominicks import download_dominicks
-
-from benchmark.config import DOMINICK_STORAGE_PATH
+from benchmark.data.dominicks import download_dominicks, DOMINICK_JSON_PATH, DOMINICK_CSV_PATH
 
 
 class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
@@ -43,26 +41,27 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         seed: int = None,
     ):
         self.init_data()
-        self.prediction_length = np.random.randint(7, 30)
+        self.dominick_grocer_sales_path = DOMINICK_CSV_PATH
+        self.grocer_sales_influences_path = DOMINICK_JSON_PATH
         with open(self.grocer_sales_influences_path, "r") as file:
             self.influences = json.load(file)
+
+        self.prediction_length = np.random.randint(7, 30)
+        
         super().__init__(seed=seed, fixed_config=fixed_config)
 
     def init_data(self):
-        if "filtered_dominick_grocer_sales.csv" not in os.listdir(
-            DOMINICK_STORAGE_PATH
-        ):
+        """
+        Check integrity of data files and download if needed.
+        
+        """
+        if not os.path.exists(DOMINICK_JSON_PATH):
+            raise FileNotFoundError("Missing Dominick json file.")
+        if not os.path.exists(DOMINICK_CSV_PATH):
             download_dominicks()
-        self.dominick_grocer_sales_path = os.path.join(
-            DOMINICK_STORAGE_PATH, "filtered_dominick_grocer_sales.csv"
-        )
-        self.grocer_sales_influences_path = os.path.join(
-            DOMINICK_STORAGE_PATH, "grocer_sales_influences.json"
-        )
 
     def random_instance(self):
         dataset = pd.read_csv(self.dominick_grocer_sales_path)
-        print(dataset.columns)
         dataset["date"] = pd.to_datetime(dataset["datetime"])
         dataset = dataset.set_index("date")
 
