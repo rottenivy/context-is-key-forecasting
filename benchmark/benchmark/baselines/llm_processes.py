@@ -10,8 +10,10 @@ from llm_processes.hf_api import get_model_and_tokenizer
 from llm_processes.parse_args import llm_map, parse_command_line
 from llm_processes.run_llm_process import run_llm_process
 
+from .base import Baseline
 
-class LLMPForecaster:
+
+class LLMPForecaster(Baseline):
     def __init__(self, llm_type, use_context=True):
         f"""
         Get predictions from LLM processes
