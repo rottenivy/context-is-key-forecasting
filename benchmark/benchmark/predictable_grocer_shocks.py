@@ -107,7 +107,7 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         self.min_magnitude, self.max_magnitude = map(
             lambda x: int(x.strip("%")), impact_range.split("-")
         )
-        impact_magnitude = random.randint(self.min_magnitude, self.max_magnitude)
+        impact_magnitude = self.random.randint(self.min_magnitude, self.max_magnitude)
 
         # apply the influence to the future series
         future_series[shock_delay_in_days:] = self.apply_influence_to_series(
