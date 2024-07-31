@@ -2,13 +2,6 @@ import pytest
 
 from benchmark import ALL_TASKS
 
-# TODO: Remove this when dominick data loader is merged
-from benchmark.predictable_grocer_shocks import __TASKS__ as DOMINICK_TASKS
-
-for task in DOMINICK_TASKS:
-    if task in ALL_TASKS:
-        ALL_TASKS.remove(task)
-
 
 def _are_instances_equal(instance_1, instance_2):
     """

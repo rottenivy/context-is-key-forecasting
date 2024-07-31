@@ -9,7 +9,11 @@ from .utils import get_random_window_univar
 
 from .base import UnivariateCRPSTask
 
-from benchmark.data.dominicks import download_dominicks, DOMINICK_JSON_PATH, DOMINICK_CSV_PATH
+from benchmark.data.dominicks import (
+    download_dominicks,
+    DOMINICK_JSON_PATH,
+    DOMINICK_CSV_PATH,
+)
 
 
 class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
@@ -47,13 +51,13 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
             self.influences = json.load(file)
 
         self.prediction_length = np.random.randint(7, 30)
-        
+
         super().__init__(seed=seed, fixed_config=fixed_config)
 
     def init_data(self):
         """
         Check integrity of data files and download if needed.
-        
+
         """
         if not os.path.exists(DOMINICK_JSON_PATH):
             raise FileNotFoundError("Missing Dominick json file.")
