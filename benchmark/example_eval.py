@@ -4,6 +4,10 @@ import pandas as pd
 
 from benchmark.baselines.lag_llama import lag_llama
 from benchmark.baselines.llm_processes import LLMPForecaster
+from benchmark.baselines.statsmodels import (
+    ExponentialSmoothingForecaster,
+    ETSModelForecaster,
+)
 from benchmark.evaluation import evaluate_all_tasks
 
 
@@ -40,18 +44,31 @@ def oracle_baseline(task_instance, n_samples=50):
 
 if __name__ == "__main__":
     n_samples = 25
+    seeds = 5
 
     # To plot the results, add: plot_folder="./figures/baseline_name/" as an argument to evaulate_all_tasks
-    random_results = evaluate_all_tasks(random_baseline, n_samples=n_samples)
-    oracle_results = evaluate_all_tasks(oracle_baseline, n_samples=n_samples)
-    lag_llama_results = evaluate_all_tasks(lag_llama, n_samples=n_samples)
+    random_results = evaluate_all_tasks(
+        random_baseline, n_samples=n_samples, seeds=seeds
+    )
+    oracle_results = evaluate_all_tasks(
+        oracle_baseline, n_samples=n_samples, seeds=seeds
+    )
+    exp_smoothing_results = evaluate_all_tasks(
+        ExponentialSmoothingForecaster(), n_samples=n_samples, seeds=seeds
+    )
+    ets_results = evaluate_all_tasks(
+        ETSModelForecaster(), n_samples=n_samples, seeds=seeds
+    )
+    lag_llama_results = evaluate_all_tasks(lag_llama, n_samples=n_samples, seeds=seeds)
     llmp_llama3_8b = evaluate_all_tasks(
         LLMPForecaster(llm_type="llama-3-8B", include_context=True),
         n_samples=n_samples,
+        seeds=seeds,
     )
     llmp_llama3_8b_wo_ctx = evaluate_all_tasks(
         LLMPForecaster(llm_type="llama-3-8B", include_context=False),
         n_samples=n_samples,
+        seeds=seeds,
     )
 
     results = pd.DataFrame(
@@ -64,6 +81,14 @@ if __name__ == "__main__":
             "Oracle": [
                 np.mean([res["score"] for res in oracle_results[task]])
                 for task in oracle_results
+            ],
+            "Exp. Smooth.": [
+                np.mean([res["score"] for res in exp_smoothing_results[task]])
+                for task in exp_smoothing_results
+            ],
+            "ETS Model": [
+                np.mean([res["score"] for res in ets_results[task]])
+                for task in ets_results
             ],
             "Lag-Llama": [
                 np.mean([res["score"] for res in lag_llama_results[task]])
