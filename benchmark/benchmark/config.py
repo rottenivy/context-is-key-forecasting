@@ -24,11 +24,5 @@ OPENAI_AZURE_ENDPOINT = os.environ.get("STARCASTER_OPENAI_AZURE_ENDPOINT", None)
 
 
 DATA_STORAGE_PATH = os.environ.get("STARCASTER_DATA_STORE", "benchmark/data")
-
-DOMINICK_STORAGE_PATH = os.environ.get(
-    "STARCASTER_DOMINICK_STORE", os.path.join(DATA_STORAGE_PATH, "dominicks")
-)
-DOMINICK_CSV_PATH = os.path.join(
-    DOMINICK_STORAGE_PATH, "filtered_dominick_grocer_sales.csv"
-)
-DOMINICK_JSON_PATH = os.path.join(DOMINICK_STORAGE_PATH, "grocer_sales_influences.json")
+if not os.path.exists(DATA_STORAGE_PATH):
+    os.makedirs(DATA_STORAGE_PATH)

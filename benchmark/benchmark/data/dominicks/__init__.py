@@ -3,10 +3,17 @@ import zipfile
 import os
 import pandas as pd
 
-# download
+from importlib import resources
 import urllib.request
 
-from benchmark.config import DOMINICK_STORAGE_PATH, DOMINICK_CSV_PATH
+from benchmark.config import DATA_STORAGE_PATH
+
+
+DOMINICK_STORAGE_PATH = os.environ.get(
+    "STARCASTER_DOMINICK_STORE", os.path.join(DATA_STORAGE_PATH, "dominicks")
+)
+DOMINICK_CSV_PATH = os.path.join(DOMINICK_STORAGE_PATH, "filtered_dominick_grocer_sales.csv")
+DOMINICK_JSON_PATH = resources.files(__package__).joinpath("grocer_sales_influences.json")
 
 # Dominick's download
 # Academic research only
