@@ -6,6 +6,7 @@ Open AI based LLM Process
 import logging
 import numpy as np
 
+from .base import Baseline
 from ..config import (
     OPENAI_API_KEY,
     OPENAI_API_VERSION,
@@ -18,7 +19,7 @@ from .utils import extract_html_tags
 logger = logging.getLogger("GPT Processes")
 
 
-class GPTForecaster:
+class GPTForecaster(Baseline):
     """
     A simple baseline that uses any GPT model to produce forecastss
 
@@ -251,3 +252,10 @@ Example:
         samples = np.array(valid_forecasts)[:, :, None]
 
         return samples
+
+    @property
+    def cache_name(self):
+        args_to_include = ["model", "use_context", "fail_on_invalid", "n_retries"]
+        return f"{self.__class__.__name__}_" + "_".join(
+            [f"{k}={getattr(self, k)}" for k in args_to_include]
+        )

@@ -12,7 +12,7 @@ from llm_processes.run_llm_process import run_llm_process
 
 
 class LLMPForecaster:
-    def __init__(self, llm_type, include_context=True):
+    def __init__(self, llm_type, use_context=True):
         f"""
         Get predictions from LLM processes
 
@@ -20,7 +20,7 @@ class LLMPForecaster:
         -----------
         llm_type: str
             Type of LLM model to use. Options are: {llm_map.keys()}
-        include_context: bool
+        use_context: bool
             Whether to include context in the prompt
 
         Notes:
@@ -30,7 +30,7 @@ class LLMPForecaster:
         
         """
         self.llm_type = llm_type
-        self.include_context = include_context
+        self.use_context = use_context
 
         # LLMP relies on the disk to store input/outputs. We parameterize a few paths
         self.tmpdir = tempfile.TemporaryDirectory()
@@ -143,7 +143,7 @@ Constraints:
         self._prepare_data(task_instance)
 
         logging.info("Preparing prompt...")
-        if self.include_context:
+        if self.use_context:
             self._make_prompt(task_instance)
         else:
             if "--prefix" in self.llmp_args:
@@ -178,3 +178,10 @@ Constraints:
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
         gc.collect()
+
+    @property
+    def cache_name(self):
+        args_to_include = ["llm_type", "use_context", "fail_on_invalid", "n_retries"]
+        return f"{self.__class__.__name__}_" + "_".join(
+            [f"{k}={getattr(self, k)}" for k in args_to_include]
+        )
