@@ -5,6 +5,6 @@
 
 # Data Licenses 
 
-Dominick's:
+* Dominick's:
 [Main webpage](https://www.chicagobooth.edu/research/kilts/research-data/dominicks)
 "These data are for academic research purposes only. Users must acknowledge in their working papers and/or publications the Kilts Center for Marketing at the University of Chicago Booth School of Business."
