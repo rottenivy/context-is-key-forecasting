@@ -29,9 +29,7 @@ def get_method_cache_name(method_callable):
     elif isinstance(method_callable, Baseline):
         return method_callable.cache_name
     else:
-        raise ValueError(
-            "Unable to infer cache name for method."
-        )
+        raise ValueError("Unable to infer cache name for method.")
 
 
 def get_source(obj) -> str:
@@ -52,7 +50,11 @@ def get_source(obj) -> str:
         return inspect.getsource(obj)
     else:
         # Get all parent classes that are not built-in
-        parent_classes = [c for c in inspect.getmro(obj.__class__) if c.__module__ != builtins.__name__]
+        parent_classes = [
+            c
+            for c in inspect.getmro(obj.__class__)
+            if c.__module__ != builtins.__name__
+        ]
         # Concatenate source code of all parent classes and the method's class
         return "".join(inspect.getsource(c) for c in parent_classes + [obj.__class__])
 
