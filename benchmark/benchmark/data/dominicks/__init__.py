@@ -6,7 +6,7 @@ import pandas as pd
 from importlib import resources
 import urllib.request
 
-from benchmark.config import DATA_STORAGE_PATH
+from ...config import DATA_STORAGE_PATH
 
 
 DOMINICK_STORAGE_PATH = os.environ.get(
@@ -29,7 +29,7 @@ dominicks_statafile_name = "ccount.dta"
 def download_dominicks(dominicks_url=dominicks_url):
 
     if not os.path.exists(DOMINICK_STORAGE_PATH):
-        os.makedirs(DOMINICK_STORAGE_PATH)
+        os.makedirs(DOMINICK_STORAGE_PATH, exist_ok=True)
 
     dominicks_zipfile_path = os.path.join(DOMINICK_STORAGE_PATH, dominicks_zipfile_name)
 
