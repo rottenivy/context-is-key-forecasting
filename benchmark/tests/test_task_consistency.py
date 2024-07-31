@@ -12,7 +12,8 @@ from benchmark.base import BaseTask
 # TODO: Remove this when dominick data loader is merged
 from benchmark.predictable_grocer_shocks import __TASKS__ as DOMINICK_TASKS
 
-ALL_TASKS = list(set(ALL_TASKS) - set(DOMINICK_TASKS))
+for task in DOMINICK_TASKS:
+    ALL_TASKS.remove(task)
 
 
 @pytest.mark.parametrize("task", ALL_TASKS)

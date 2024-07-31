@@ -2,4 +2,3 @@ black
 pre-commit
 pytest
 pytest-xdist
-pytest-randomly
