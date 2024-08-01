@@ -1,12 +1,18 @@
 import numpy as np
 
 import pandas as pd
-import random
 import json
+import os
 
 from .utils import get_random_window_univar
 
 from .base import UnivariateCRPSTask
+
+from benchmark.data.dominicks import (
+    download_dominicks,
+    DOMINICK_JSON_PATH,
+    DOMINICK_CSV_PATH,
+)
 
 
 class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
@@ -36,48 +42,55 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         self,
         fixed_config: dict = None,
         seed: int = None,
-        grocer_sales_influences_path=(
-            "/starcaster/data/benchmark/grocer/grocer_sales_influences.json"
-        ),
-        dominick_grocer_sales_path="/starcaster/data/benchmark/grocer/filtered_dominic.csv",
     ):
-        self.dominick_grocer_sales_path = dominick_grocer_sales_path
-        self.prediction_length = np.random.randint(7, 30)
-        with open(grocer_sales_influences_path, "r") as file:
+        self.init_data()
+        self.dominick_grocer_sales_path = DOMINICK_CSV_PATH
+        self.grocer_sales_influences_path = DOMINICK_JSON_PATH
+        with open(self.grocer_sales_influences_path, "r") as file:
             self.influences = json.load(file)
+
         super().__init__(seed=seed, fixed_config=fixed_config)
+
+    def init_data(self):
+        """
+        Check integrity of data files and download if needed.
+
+        """
+        if not os.path.exists(DOMINICK_JSON_PATH):
+            raise FileNotFoundError("Missing Dominick json file.")
+        if not os.path.exists(DOMINICK_CSV_PATH):
+            download_dominicks()
 
     def random_instance(self):
         dataset = pd.read_csv(self.dominick_grocer_sales_path)
-        dataset["date"] = pd.to_datetime(dataset["date"])
+        dataset["date"] = pd.to_datetime(dataset["datetime"])
         dataset = dataset.set_index("date")
 
         sales_categories = ["grocery", "beer", "meat"]
         stores = dataset["store"].unique()
 
-        success_window = False
-        counter = 0
-        while not success_window:
+        self.prediction_length = self.random.randint(7, 30)
+
+        for counter in range(100000):
             # pick a random sales category and store
             sales_category = self.random.choice(sales_categories)
             store = self.random.choice(stores)
 
             # select a random series
             series = dataset[dataset["store"] == store][sales_category]
+
             # select a random window
-            try:
-                history_factor = self.random.randint(3, 7)
-                assert len(series) > (history_factor + 1) * self.prediction_length
+            history_factor = self.random.randint(3, 7)
+            if len(series) > (history_factor + 1) * self.prediction_length:
                 window = get_random_window_univar(
                     series,
                     prediction_length=self.prediction_length,
                     history_factor=history_factor,
                     random=self.random,
                 )
-                success_window = True
-            except:
-                counter += 1
-                raise ValueError("Could not find a valid window")
+                break  # Found a valid window, stop the loop
+        else:
+            raise ValueError("Could not find a valid window.")
 
         # extract the history and future series
         history_series = window.iloc[: -self.prediction_length]
@@ -93,7 +106,7 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         self.min_magnitude, self.max_magnitude = map(
             lambda x: int(x.strip("%")), impact_range.split("-")
         )
-        impact_magnitude = random.randint(self.min_magnitude, self.max_magnitude)
+        impact_magnitude = self.random.randint(self.min_magnitude, self.max_magnitude)
 
         # apply the influence to the future series
         future_series[shock_delay_in_days:] = self.apply_influence_to_series(
