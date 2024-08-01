@@ -163,3 +163,6 @@ class ResultCache:
             pickle.dump(self.cache, f)
 
         return samples
+
+    def __str__(self) -> str:
+        return str(self.method_callable)

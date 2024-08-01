@@ -166,7 +166,9 @@ def evaluate_all_tasks(
                 seed_folder.mkdir(parents=True, exist_ok=True)
 
             try:
-                logger.info(f"Task {task.name} - Seed {seed}")
+                logger.info(
+                    f"Method {method_callable} - Task {task.name} - Seed {seed}"
+                )
                 samples = method_callable(task_instance=task, n_samples=n_samples)
                 results[task_cls.__name__].append(
                     {
