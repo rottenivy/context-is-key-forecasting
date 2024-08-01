@@ -11,6 +11,10 @@ from benchmark.baselines.gpt_processes import GPTForecaster
 from benchmark.baselines.lag_llama import lag_llama
 from benchmark.baselines.llm_processes import LLMPForecaster
 from benchmark.baselines.naive import oracle_baseline, random_baseline
+from benchmark.baselines.statsmodels import (
+    ETSModelForecaster,
+    ExponentialSmoothingForecaster,
+)
 from benchmark.evaluation import evaluate_all_tasks
 
 
@@ -35,6 +39,16 @@ if __name__ == "__main__":
     )
     results["lag_llama"] = evaluate_all_tasks(
         lag_llama, n_samples=n_samples, output_folder="./benchmark_results/lag_llama/"
+    )
+    results["exp_smoothing"] = evaluate_all_tasks(
+        ExponentialSmoothingForecaster(),
+        n_samples=n_samples,
+        output_folder="./benchmark_results/exp_smoothing/",
+    )
+    results["ets"] = evaluate_all_tasks(
+        ETSModelForecaster(),
+        n_samples=n_samples,
+        output_folder="./benchmark_results/ets/",
     )
 
     # OpenAI baselines
