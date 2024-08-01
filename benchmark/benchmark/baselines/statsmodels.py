@@ -55,13 +55,15 @@ class ExponentialSmoothingForecaster(Baseline):
         """
         This method allows a forecast to be done without requiring a complete BaseTask instance.
         This is primarly meant to be called inside a BaseTask constructor when doing rejection sampling or similar approaches.
+
+        Note: If seasonal_periods is <= 0, then the seasonal component is skipped.
         """
         simulations_samples = []
         for column in past_time.columns:
             model = statsmodels.tsa.holtwinters.ExponentialSmoothing(
                 endog=past_time[column],
                 trend=self.trend,
-                seasonal=self.seasonal,
+                seasonal=self.seasonal if seasonal_periods >= 1 else None,
                 seasonal_periods=seasonal_periods,
             )
 
@@ -133,13 +135,15 @@ class ETSModelForecaster(Baseline):
         """
         This method allows a forecast to be done without requiring a complete BaseTask instance.
         This is primarly meant to be called inside a BaseTask constructor when doing rejection sampling or similar approaches.
+
+        Note: If seasonal_periods is <= 0, then the seasonal component is skipped.
         """
         simulations_samples = []
         for column in past_time.columns:
             model = statsmodels.tsa.exponential_smoothing.ets.ETSModel(
                 endog=past_time[column],
                 trend=self.trend,
-                seasonal=self.seasonal,
+                seasonal=self.seasonal if seasonal_periods >= 1 else None,
                 error=self.error,
                 seasonal_periods=seasonal_periods,
             )
