@@ -78,7 +78,7 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
 
             # select a random series
             series = dataset[dataset["store"] == store][sales_category]
-            
+
             # select a random window
             history_factor = self.random.randint(3, 7)
             if len(series) > (history_factor + 1) * self.prediction_length:
