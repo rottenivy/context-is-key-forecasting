@@ -34,6 +34,23 @@ class ExponentialSmoothingForecaster(Baseline):
         trend: Literal["add", "mul", None] = "add",
         seasonal: Literal["add", "mul", None] = "add",
     ):
+        """
+        Get predictions from an Exponential Smoothing model.
+
+        Parameters:
+        -----------
+        trend: ["add", "mul", or None]
+            Whether to add a trend component to the forecast.
+            If "add", the component is additive, and if "mul", it is multiplicative.
+        seasonal: ["add", "mul", or None]
+            Whether to add a seasonal component to the forecast.
+            If "add", the component is additive, and if "mul", it is multiplicative.
+
+        Notes:
+        ------
+        This model requires a seasonal periodicity, which it currently get from a
+        hard coded association from the data index frequency (hourly -> 24 hours periods).
+        """
         super().__init__()
 
         self.trend = trend
@@ -91,6 +108,26 @@ class ETSModelForecaster(Baseline):
         seasonal: Literal["add", "mul", None] = "add",
         error: Literal["add", "mul"] = "add",
     ):
+        """
+        Get predictions from an ETS (Error-Trend-Seasonality) model.
+
+        Parameters:
+        -----------
+        trend: ["add", "mul", or None]
+            Whether to add a trend component to the forecast.
+            If "add", the component is additive, and if "mul", it is multiplicative.
+        seasonal: ["add", "mul", or None]
+            Whether to add a seasonal component to the forecast.
+            If "add", the component is additive, and if "mul", it is multiplicative.
+        error: ["add", "mul"]
+            Configuration for the error component to the forecast.
+            If "add", the component is additive, and if "mul", it is multiplicative.
+
+        Notes:
+        ------
+        This model requires a seasonal periodicity, which it currently get from a
+        hard coded association from the data index frequency (hourly -> 24 hours periods).
+        """
         super().__init__()
 
         self.trend = trend
