@@ -169,6 +169,14 @@ class ConstrainedRandomWalk(BaseConstrainedTask):
         pred_values = np.cumsum(pred_steps, axis=1) + self.start_value
         return pred_values
 
+    @property
+    def seasonal_period(self) -> int:
+        """
+        This returns the period which should be used by statistical models for this task.
+        If negative, this means that the data either has no period, or the history is shorter than the period.
+        """
+        return -1
+
 
 class ConstrainedNoisySine(BaseConstrainedTask):
     def __init__(
@@ -227,6 +235,15 @@ class ConstrainedNoisySine(BaseConstrainedTask):
             self.num_samples, self.num_pred_values
         )
         return hist_values
+
+    @property
+    def seasonal_period(self) -> int:
+        """
+        This returns the period which should be used by statistical models for this task.
+        If negative, this means that the data either has no period, or the history is shorter than the period.
+        """
+        # The frequency is not linear
+        return -1
 
 
 __TASKS__ = [ConstrainedRandomWalk, ConstrainedNoisySine]

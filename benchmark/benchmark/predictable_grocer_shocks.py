@@ -174,5 +174,13 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         )
         return shock_description
 
+    @property
+    def seasonal_period(self) -> int:
+        """
+        This returns the period which should be used by statistical models for this task.
+        If negative, this means that the data either has no period, or the history is shorter than the period.
+        """
+        return 7
+
 
 __TASKS__ = [PredictableGrocerPersistentShockUnivariateTask]
