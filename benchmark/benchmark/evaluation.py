@@ -14,7 +14,7 @@ from .utils.cache import ResultCache
 logger = logging.getLogger("Evaluation")
 
 
-def plot_forecast_univariate(task, samples, filename):
+def plot_forecast_univariate(task, samples, path):
     """
     Plot the first variable of a forecast.
 
@@ -24,8 +24,8 @@ def plot_forecast_univariate(task, samples, filename):
         The task associated with the forecast
     samples: np.array
         The forecast of shape [samples, time dimension, number of variables]
-    filename: Pathlike
-        Where to save the figure
+    path: Pathlike
+        Directory in which to save the figure
     """
     samples = samples[:, :, 0]
     past_timesteps = task.past_time.index
@@ -78,14 +78,35 @@ def plot_forecast_univariate(task, samples, filename):
 
     plt.title(task.name)
 
-    plt.savefig(filename)
+    plt.savefig(path / "forecast.pdf")
+    plt.savefig(path / "forecast.png", bbox_inches="tight")
+
+
+def save_context(task, path):
+    """
+    Save the context of a task to a file for future reference.
+
+    """
+    with open(path / "context", "w") as f:
+        f.write(
+            f"""
+Background:
+{task.background}
+
+Constraints:
+{task.constraints}
+
+Scenario:
+{task.scenario}
+"""
+        )
 
 
 def evaluate_all_tasks(
     method_callable,
     seeds=5,
     n_samples=DEFAULT_N_SAMPLES,
-    plot_folder=None,
+    output_folder=None,
     use_cache=True,
     cache_name=None,
 ):
@@ -101,14 +122,14 @@ def evaluate_all_tasks(
         Number of seeds to evaluate the method
     n_samples: int
         Number of samples to generate for each prediction
-    plot_folder: None or Pathlike
-        If not None, save figure for each forecast in this folde
+    output_folder: None or Pathlike
+        Directory to output results (figures and task context). If not None,
+        results will not be saved.
     use_cache: bool
         If True, use cached results when available. Otherwise, re-run the evaluation.
     cache_name: str, optional
-        Name of the method to use as cache key. If the method_callable is an instance
-        of a class, the cache key must be provided. Otherwise, the cache key is the
-        method_callable's function name.
+        Name of the method to use as cache key. If not provided, will be inferred
+        automatically.
 
     Returns:
     --------
@@ -122,10 +143,12 @@ def evaluate_all_tasks(
         f"Evaluating method {method_callable} with {seeds} seeds and {n_samples} samples on {len(ALL_TASKS)} tasks."
     )
 
-    if plot_folder:
-        logger.info(f"Saving plots to {plot_folder}")
-        plot_folder = Path(plot_folder)
-        plot_folder.mkdir(parents=True, exist_ok=True)
+    if output_folder:
+        logger.info(f"Saving outputs to {output_folder}")
+        output_folder = Path(output_folder)
+        output_folder.mkdir(parents=True, exist_ok=True)
+    else:
+        logger.info("No output folder provided. Results will not be saved.")
 
     if use_cache:
         method_callable = ResultCache(method_callable, method_name=cache_name)
@@ -133,23 +156,43 @@ def evaluate_all_tasks(
     results = defaultdict(list)
     for task_cls in ALL_TASKS:
         for seed in range(1, seeds + 1):
+
+            # Instantiate the task
             task = task_cls(seed=seed)
-            logger.info(f"Task {task.name} - Seed {seed}")
-            samples = method_callable(task_instance=task, n_samples=n_samples)
 
-            results[task_cls.__name__].append(
-                {
-                    "seed": seed,
-                    "score": task.evaluate(samples),
-                }
-            )
+            if output_folder:
+                task_folder = output_folder / task.name
+                seed_folder = task_folder / f"{seed}"
+                seed_folder.mkdir(parents=True, exist_ok=True)
 
-            if plot_folder:
-                task_folder = plot_folder / task.name
-                task_folder.mkdir(parents=True, exist_ok=True)
-                task_filename = task_folder / f"{seed}.pdf"
-                plot_forecast_univariate(
-                    task=task, samples=samples, filename=task_filename
+            try:
+                logger.info(
+                    f"Method {method_callable} - Task {task.name} - Seed {seed}"
                 )
+                samples = method_callable(task_instance=task, n_samples=n_samples)
+                results[task_cls.__name__].append(
+                    {
+                        "seed": seed,
+                        "score": task.evaluate(samples),
+                    }
+                )
+
+                if output_folder:
+                    # Save forecast plots
+                    plot_forecast_univariate(
+                        task=task, samples=samples, path=seed_folder
+                    )
+
+                    # Save context
+                    save_context(task=task, path=seed_folder)
+
+            except Exception as e:
+                logger.error(
+                    f"Error evaluating task {task_cls.__name__} - Seed {seed}: {e}"
+                )
+                # Save the error to the seed folder
+                if output_folder:
+                    with open(seed_folder / "error", "w") as f:
+                        f.write(str(e))
 
     return results

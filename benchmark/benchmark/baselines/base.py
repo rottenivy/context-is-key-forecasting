@@ -30,3 +30,6 @@ class Baseline(ABC):
     @property
     def cache_name(self) -> str:
         return self.__class__.__name__
+
+    def __str__(self):
+        return self.cache_name
