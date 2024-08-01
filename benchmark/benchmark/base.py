@@ -5,6 +5,7 @@ Base classes for the benchmark
 
 import numpy as np
 import pandas as pd
+import statsmodels.tsa.tsatools
 
 from abc import ABC, abstractmethod
 
@@ -57,6 +58,20 @@ class BaseTask(ABC):
             The name of the task
         """
         return self.__class__.__name__
+
+    @property
+    def seasonal_period(self) -> int:
+        """
+        This returns the period which should be used by statistical models for this task.
+        If negative, this means that the data either has no period, or the history is shorter than the period.
+        """
+        # By default, uses the frequency of the data to guess the period.
+        # This should be overriden for tasks for which this guess fails.
+        freq = self.past_time.index.freq
+        if not freq:
+            freq = pd.infer_freq(self.past_time.index)
+        period = statsmodels.tsa.tsatools.freq_to_period(freq)
+        return period
 
     def verify_config(self) -> list[str]:
         """

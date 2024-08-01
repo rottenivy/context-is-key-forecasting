@@ -1,31 +1,12 @@
 import pandas as pd
 import numpy as np
 import statsmodels
-import statsmodels.tsa.tsatools
 import statsmodels.tsa.holtwinters
 import statsmodels.tsa.exponential_smoothing.ets
 from typing import Literal
 
 from .base import Baseline
 from ..base import BaseTask
-
-
-def get_seasonal_periods(task_instance) -> int:
-    """
-    Return the season length for the given instance, based on its data frequency.
-    This reuses the same method used internally by statsmodels when given a series with a datetime index.
-    """
-    freq = task_instance.past_time.index.freq
-    if not freq:
-        # TODO Only look at the first 3 timesteps for now, due to some task instances having holes
-        # We can remove this hack once these instances are fixed.
-        freq = pd.infer_freq(task_instance.past_time.index[:3])
-    try:
-        return statsmodels.tsa.tsatools.freq_to_period(freq)
-    except ValueError:
-        # Hard-coded exception for the solar_10_minutes dataset,
-        # since its 10 minutes frequency is unknown in statsmodels.
-        return 6
 
 
 class ExponentialSmoothingForecaster(Baseline):
@@ -60,7 +41,7 @@ class ExponentialSmoothingForecaster(Baseline):
         return self.forecast(
             past_time=task_instance.past_time,
             future_time=task_instance.future_time,
-            seasonal_periods=get_seasonal_periods(task_instance),
+            seasonal_periods=task_instance.seasonal_period,
             n_samples=n_samples,
         )
 
@@ -138,7 +119,7 @@ class ETSModelForecaster(Baseline):
         return self.forecast(
             past_time=task_instance.past_time,
             future_time=task_instance.future_time,
-            seasonal_periods=get_seasonal_periods(task_instance),
+            seasonal_periods=task_instance.seasonal_period,
             n_samples=n_samples,
         )
 
