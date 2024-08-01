@@ -33,35 +33,45 @@ if __name__ == "__main__":
         n_samples=n_samples,
         output_folder="./benchmark_results/oracle/",
     )
-    # results["lag_llama"] = evaluate_all_tasks(lag_llama, n_samples=n_samples, output_folder="./benchmark_results/lag_llama/")
+    results["lag_llama"] = evaluate_all_tasks(
+        lag_llama, n_samples=n_samples, output_folder="./benchmark_results/lag_llama/"
+    )
 
-    # # OpenAI baselines
-    # openai_costs = {
-    #     "gpt-4o": {"input": 0.005, "output": 0.015},
-    #     "gpt-35-turbo": {"input": 0.002, "output": 0.002}
-    # }
-    # open_ai_cost = 0
-    # for llm in ["gpt-4o", "gpt-35-turbo"]:
-    #     for include_context in [True, False]:
-    #         gpt_forecaster = GPTForecaster(model=llm, use_context=include_context, token_cost=openai_costs[llm])
-    #         results[f"gpt_{llm}_{'ctx' if include_context else 'no_ctx'}"] = evaluate_all_tasks(
-    #             gpt_forecaster,
-    #             n_samples=n_samples,
-    #             output_folder=f"./benchmark_results/{gpt_forecaster.cache_name}",
-    #         )
-    #         open_ai_cost += gpt_forecaster.total_cost
-    #         print(open_ai_cost)
-    #         del gpt_forecaster
+    # OpenAI baselines
+    openai_costs = {
+        "gpt-4o": {"input": 0.005, "output": 0.015},
+        "gpt-35-turbo": {"input": 0.002, "output": 0.002},
+    }
+    open_ai_cost = 0
+    for llm in ["gpt-4o", "gpt-35-turbo"]:
+        for include_context in [True, False]:
+            gpt_forecaster = GPTForecaster(
+                model=llm, use_context=include_context, token_cost=openai_costs[llm]
+            )
+            results[f"gpt_{llm}_{'ctx' if include_context else 'no_ctx'}"] = (
+                evaluate_all_tasks(
+                    gpt_forecaster,
+                    n_samples=n_samples,
+                    output_folder=f"./benchmark_results/{gpt_forecaster.cache_name}",
+                )
+            )
+            open_ai_cost += gpt_forecaster.total_cost
+            print(open_ai_cost)
+            del gpt_forecaster
 
-    # # LLMP baselines
-    # for llm in ["llama-3-8B", "phi-3-mini-128k-instruct"]:
-    #     for include_context in [True, False]:
-    #         llmp_forecaster = LLMPForecaster(llm_type=llm, include_context=include_context)
-    #         results[f"llmp_{llm}_{'ctx' if include_context else 'no_ctx'}"] = evaluate_all_tasks(
-    #             llmp_forecaster,
-    #             n_samples=n_samples,
-    #             output_folder=f"./benchmark_results/{llmp_forecaster.cache_name}",
-    #         )
+    # LLMP baselines
+    for llm in ["llama-3-8B", "phi-3-mini-128k-instruct"]:
+        for include_context in [True, False]:
+            llmp_forecaster = LLMPForecaster(
+                llm_type=llm, include_context=include_context
+            )
+            results[f"llmp_{llm}_{'ctx' if include_context else 'no_ctx'}"] = (
+                evaluate_all_tasks(
+                    llmp_forecaster,
+                    n_samples=n_samples,
+                    output_folder=f"./benchmark_results/{llmp_forecaster.cache_name}",
+                )
+            )
 
     # Compile results into Pandas dataframe
     results_ = {
