@@ -1,7 +1,6 @@
 import numpy as np
 
 import pandas as pd
-import random
 import json
 import os
 
@@ -50,8 +49,6 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         with open(self.grocer_sales_influences_path, "r") as file:
             self.influences = json.load(file)
 
-        self.prediction_length = np.random.randint(7, 30)
-
         super().__init__(seed=seed, fixed_config=fixed_config)
 
     def init_data(self):
@@ -72,26 +69,28 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         sales_categories = ["grocery", "beer", "meat"]
         stores = dataset["store"].unique()
 
-        success_window = False
-        counter = 0
-        while not success_window and counter < 10000:
+        self.prediction_length = self.random.randint(7, 30)
+
+        for counter in range(100000):
             # pick a random sales category and store
-            counter += 1
             sales_category = self.random.choice(sales_categories)
             store = self.random.choice(stores)
 
             # select a random series
             series = dataset[dataset["store"] == store][sales_category]
+            
             # select a random window
             history_factor = self.random.randint(3, 7)
-            assert len(series) > (history_factor + 1) * self.prediction_length
-            window = get_random_window_univar(
-                series,
-                prediction_length=self.prediction_length,
-                history_factor=history_factor,
-                random=self.random,
-            )
-            success_window = True
+            if len(series) > (history_factor + 1) * self.prediction_length:
+                window = get_random_window_univar(
+                    series,
+                    prediction_length=self.prediction_length,
+                    history_factor=history_factor,
+                    random=self.random,
+                )
+                break  # Found a valid window, stop the loop
+        else:
+            raise ValueError("Could not find a valid window.")
 
         # extract the history and future series
         history_series = window.iloc[: -self.prediction_length]
