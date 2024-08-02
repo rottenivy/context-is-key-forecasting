@@ -117,4 +117,4 @@ class UnivariateCRPSTask(BaseTask):
         # This is the dual of pd.Series.to_frame(), compatible with any series name
         only_column = self.future_time.columns[0]
         target = self.future_time[only_column]
-        return crps_quantile(target=target, samples=samples)[0].sum()
+        return crps_quantile(target=target, samples=samples)[0].mean()
