@@ -2,7 +2,7 @@ from tactis.gluon.dataset import get_dataset
 from gluonts.dataset.util import to_pandas
 
 from .base import UnivariateCRPSTask
-from .utils import get_random_window_univar
+from .utils import get_random_window_univar, datetime_to_str
 
 
 class ElectricityIncreaseInPredictionTask(UnivariateCRPSTask):
@@ -70,7 +70,7 @@ class ElectricityIncreaseInPredictionTask(UnivariateCRPSTask):
             # Convert future index to timestamp for consistency
             history_series.index = history_series.index.to_timestamp()
 
-            scenario = f"Consider that there was a heat wave from {spike_start_date} for {spike_duration} {'hour' if spike_duration == 1 else 'hours'}, resulting in excessive use of air conditioning, and {spike_magnitude} times the usual electricity being consumed."
+            scenario = f"Consider that there was a heat wave from {datetime_to_str(spike_start_date)} for {spike_duration} {'hour' if spike_duration == 1 else 'hours'}, resulting in excessive use of air conditioning, and {spike_magnitude} times the usual electricity being consumed."
 
         else:
             raise NotImplementedError(f"Dataset {dataset_name} is not supported.")

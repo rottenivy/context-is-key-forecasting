@@ -4,7 +4,7 @@ from tactis.gluon.dataset import get_dataset
 from gluonts.dataset.util import to_pandas
 
 from .base import UnivariateCRPSTask
-from .utils import get_random_window_univar
+from .utils import get_random_window_univar, datetime_to_str
 
 
 class DecreaseInTrafficInPrediction(UnivariateCRPSTask):
@@ -70,7 +70,7 @@ class DecreaseInTrafficInPrediction(UnivariateCRPSTask):
         history_series.index = history_series.index.to_timestamp()
 
         background = f"This is hourly traffic data."
-        scenario = f"Consider that there was an accident on the road and there was {drop_magnitude*100}% of the usual traffic from {drop_start_date} for {drop_duration} hours."  # TODO: May also specify drop end date instead of the drop duration.
+        scenario = f"Consider that there was an accident on the road and there was {drop_magnitude*100}% of the usual traffic from {datetime_to_str(drop_start_date)} for {drop_duration} hours."  # TODO: May also specify drop end date instead of the drop duration.
 
         # Instantiate the class variables
         self.past_time = history_series.to_frame()

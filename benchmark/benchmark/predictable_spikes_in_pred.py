@@ -4,7 +4,7 @@ from gluonts.dataset.util import to_pandas
 from tactis.gluon.dataset import get_dataset
 
 from .base import UnivariateCRPSTask
-from .utils import get_random_window_univar
+from .utils import get_random_window_univar, datetime_to_str
 
 import numpy as np
 
@@ -71,7 +71,7 @@ class PredictableSpikesInPredTask(UnivariateCRPSTask):
 
         future_series.iloc[spike_idx] *= np.float32(1 + relative_impact / 100)
 
-        scenario = f"A fluctuation of {relative_impact}% is expected to affect the usual value of the series at exactly {spike_datetime}, after which the series will return to normal."
+        scenario = f"A fluctuation of {relative_impact}% is expected to affect the usual value of the series at exactly {datetime_to_str(spike_datetime)}, after which the series will return to normal."
 
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()

@@ -4,7 +4,7 @@ from tactis.gluon.dataset import get_dataset
 from gluonts.dataset.util import to_pandas
 
 from .base import UnivariateCRPSTask
-from .utils import get_random_window_univar
+from .utils import get_random_window_univar, datetime_to_str
 
 
 class SensorPeriodicMaintenanceTask(UnivariateCRPSTask):
@@ -149,7 +149,7 @@ class SensorTrendAccumulationTask(UnivariateCRPSTask):
             # Convert future index to timestamp for consistency
             future_series.index = future_series.index.to_timestamp()
 
-            background = f"The sensor had a calibration problem starting from {start_point}, which resulted in an upward trend. This should be disregarded in the forecast."
+            background = f"The sensor had a calibration problem starting from {datetime_to_str(start_point)}, which resulted in an upward trend. This should be disregarded in the forecast."
 
         else:
             raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
@@ -227,7 +227,7 @@ class SensorSpikeTask(UnivariateCRPSTask):
             # Convert future index to timestamp for consistency
             future_series.index = future_series.index.to_timestamp()
 
-            background = f"The sensor experienced an unexpected glitch resulting in a spike starting from {spike_start_date} for {spike_duration} timesteps. This should be disregarded in the forecast."
+            background = f"The sensor experienced an unexpected glitch resulting in a spike starting from {datetime_to_str(spike_start_date)} for {spike_duration} timesteps. This should be disregarded in the forecast."
 
         else:
             raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
@@ -294,7 +294,7 @@ class SensorMaintenanceInPredictionTask(UnivariateCRPSTask):
             # Convert history index to timestamp for consistency
             history_series.index = history_series.index.to_timestamp()
 
-            scenario = f"Consider that the sensor will be offline for maintenance between {maintenance_start_date} and {maintenance_end_date}, which resulted in zero readings."
+            scenario = f"Consider that the sensor will be offline for maintenance between {datetime_to_str(maintenance_start_date)} and {datetime_to_str(maintenance_end_date)}, which resulted in zero readings."
         else:
             raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
 
