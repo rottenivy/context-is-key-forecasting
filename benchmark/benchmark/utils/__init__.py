@@ -5,6 +5,7 @@ Utility functions
 
 import numpy as np
 import pandas as pd
+from typing import Union
 
 
 def get_random_window_univar(
@@ -42,3 +43,22 @@ def get_random_window_univar(
     window_end = window_start + history_length + prediction_length
 
     return series.iloc[window_start:window_end]
+
+
+def datetime_to_str(dt: Union[pd.Timestamp, np.datetime64]) -> str:
+    """
+    Convert multiple possible representation of the same datetime into the same output.
+
+    Parameters
+    ----------
+    dt : pandas.Timestamp or numpy.datetime64
+        The datetime to be converted
+
+    Returns
+    -------
+    str
+        The datetime in the YYYY-MM-DD HH:MM:SS format
+    """
+    if isinstance(dt, np.datetime64):
+        dt = pd.Timestamp(dt)
+    return dt.strftime("%Y-%m-%d %H:%M:%S")
