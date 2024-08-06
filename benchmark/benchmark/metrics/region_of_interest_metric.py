@@ -121,15 +121,18 @@ class RegionOfInterestMetric(BaseRegionOfInterestMetric):
             weight, np.sum(roi_mask), np.sum(complement_mask)
         )
 
-        return self._calculate_combined_roi_metric(
+        combined_roi_metric = self._calculate_combined_roi_metric(
             roi_metric_value, complement_metric_value, roi_weights, complement_weights
         )
+        target_range = np.max(target) - np.min(target)
+        return combined_roi_metric / target_range
 
 
 class ConstraintPenaltyMetric:
     def __init__(self, constraints=None, tolerance_percentage=0.05):
         self.constraints = constraints if constraints is not None else {}
         self.tolerance_percentage = tolerance_percentage
+        self.scale_factor = np.log(2) / tolerance_percentage
 
     def _calculate_tolerance(self, target):
         target_range = np.max(target) - np.min(target)
@@ -147,7 +150,7 @@ class ConstraintPenaltyMetric:
             max_val = self.constraints["max"]
             penalty += np.sum(np.maximum(0, forecast - (max_val + tolerance)))
 
-        return penalty
+        return penalty * self.scale_factor
 
 
 class RegionOfInterestConstraintMetric:
@@ -168,9 +171,7 @@ class RegionOfInterestConstraintMetric:
         roi_metric_value = self.base_roi_metric(
             target, forecast, region_of_interest, weight
         )
-        penalty = self.constraint_penalty_metric._calculate_penalty(
-            roi_target, roi_forecast
-        )
+        penalty = self.constraint_penalty_metric._calculate_penalty(target, forecast)
 
         roi_metric_with_penalty = roi_metric_value * np.exp(penalty)
 
@@ -179,7 +180,7 @@ class RegionOfInterestConstraintMetric:
 
 # Defining a sample metric function
 def sample_metric(target, forecast):
-    return crps_quantile(target=target, samples=forecast)[0].sum()
+    return crps_quantile(target=target, samples=forecast)[0].mean()
 
 
 # Creating sample target and forecast ndarrays
@@ -188,16 +189,20 @@ forecasts = [
     [1.0, 2.0, 3.0, 4.0, 5.0],  # Perfect forecast
     [1.1, 2.1, 3.1, 4.1, 5.1],  # Slightly off, respects constraints
     [5, 4, 3, 2, 1],  # Very off, respects constraints
-    [2, 3, 4, 5, 6],  # Slightly off, does not respect constraints
+    [1, 2, 3, 4, 6],  # Slightly off, does not respect constraints
     [6, 4, 2, 0, -2],  # Very off, does not respect constraints
     [1, 3, 4, 4, 5],  # Bad forecast in region of interest
     [2, 2, 3, 4, 4],  # Bad forecast in complement
 ]
 
+tolerance_percentage = 0.05
+
 # Initialize RegionOfInterestConstraintMetric with Min and Max Constraints
 constraints = {"min": 1, "max": 5}
 roi_constraint_metric = RegionOfInterestConstraintMetric(
-    metric=sample_metric, constraints=constraints, tolerance_percentage=0.05
+    metric=sample_metric,
+    constraints=constraints,
+    tolerance_percentage=tolerance_percentage,
 )
 
 
@@ -209,7 +214,7 @@ def plot_forecast(
 
     min_val = constraints.get("min", None)
     max_val = constraints.get("max", None)
-    tolerance = 0.05 * (np.max(target) - np.min(target))
+    tolerance = tolerance_percentage * (np.max(target) - np.min(target))
 
     if min_val is not None:
         ax.axhline(y=min_val, color="r", linestyle="-", label="Min Constraint")
@@ -275,7 +280,12 @@ for i, forecast in enumerate(forecasts):
 if len(forecasts) % 2 != 0:
     axs[-1, -1].axis("off")
 
-plt.suptitle("ROI_Metric With Constraint Penalty Example")
+plt.suptitle(
+    r"$\text{ROI\_crps} = \left( \sum_{i=1}^n w_i \cdot \text{CRPS}_i \right) \times \exp\left(penalty_{constraint} * \frac{\log(2)}{\text{tolerance\_percentage}}\right)$",
+    fontsize=14,
+    y=0.995,
+)
+plt.tight_layout()
 
 txt = """
          Each plot represents a single sample forecast.
