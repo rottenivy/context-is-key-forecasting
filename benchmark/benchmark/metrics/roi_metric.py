@@ -1,11 +1,14 @@
 import numpy as np
-from crps import crps_quantile
+from benchmark.metrics.crps import crps_quantile
 
 import matplotlib.pyplot as plt
 
 
 def crps_by_quantile_mean(target, samples):
-    return crps_quantile(target, samples)[0].mean()
+    if len(target) > 0:
+        return crps_quantile(target, samples)[0].mean() / len(target)
+    else:
+        return 0
 
 
 def region_of_interest_constraint_metric(
@@ -14,7 +17,7 @@ def region_of_interest_constraint_metric(
     region_of_interest,
     roi_weight,
     roi_metric=crps_by_quantile_mean,
-    constraints=None,
+    constraints={},
     tolerance_percentage=0.05,
 ):
     """
@@ -173,10 +176,15 @@ def calculate_constraint_penalty(
                 np.maximum(0, sample_forecast - (max_val + constraint_tolerance))
             )
 
+        penalty = penalty / len(target)
+
         penalties.append(penalty)
 
     average_penalty = np.mean(penalties)
-    return average_penalty * scale_factor / tolerance_percentage
+    if tolerance_percentage == 0:
+        return average_penalty * scale_factor
+    else:
+        return average_penalty * scale_factor / tolerance_percentage
 
 
 def format_roi_mask(region_of_interest, forecast_shape):
