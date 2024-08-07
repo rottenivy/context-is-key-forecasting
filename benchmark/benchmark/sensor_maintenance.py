@@ -79,9 +79,7 @@ class SensorPeriodicMaintenanceTask(UnivariateCRPSTask):
         # Instantiate the class variables
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()
-        self.constraints = None
         self.background = background
-        self.scenario = None
 
 
 class SensorTrendAccumulationTask(UnivariateCRPSTask):
@@ -240,9 +238,7 @@ class SensorSpikeTask(UnivariateCRPSTask):
         # Instantiate the class variables
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()
-        self.constraints = None
         self.background = background
-        self.scenario = None
 
 
 class SensorMaintenanceInPredictionTask(UnivariateCRPSTask):
@@ -306,8 +302,6 @@ class SensorMaintenanceInPredictionTask(UnivariateCRPSTask):
         # Instantiate the class variables
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()
-        self.constraints = None
-        self.background = None
         self.scenario = scenario
 
 

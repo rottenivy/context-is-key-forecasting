@@ -35,6 +35,9 @@ class BaseTask(ABC):
             self.background = fixed_config["background"]
             self.scenario = fixed_config["scenario"]
         else:
+            self.constraints = None
+            self.background = None
+            self.scenario = None
             self.random_instance()
 
         config_errors = self.verify_config()
