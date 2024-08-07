@@ -168,23 +168,20 @@ def calculate_constraint_penalty(
             min_val = constraints["min"]
             penalty += np.sum(
                 np.maximum(0, (min_val - constraint_tolerance) - sample_forecast)
-            )
+            ) / (np.max(target) - np.min(target))
 
         if "max" in constraints:
             max_val = constraints["max"]
             penalty += np.sum(
                 np.maximum(0, sample_forecast - (max_val + constraint_tolerance))
-            )
+            ) / (np.max(target) - np.min(target))
 
         penalty = penalty / len(target)
 
         penalties.append(penalty)
 
     average_penalty = np.mean(penalties)
-    if tolerance_percentage == 0:
-        return average_penalty * scale_factor
-    else:
-        return average_penalty * scale_factor
+    return average_penalty * scale_factor
 
 
 def format_roi_mask(region_of_interest, forecast_shape):
