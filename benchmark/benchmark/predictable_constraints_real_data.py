@@ -132,13 +132,13 @@ class OraclePredUnivariateConstraintsTask(BaseTask):
         context: str
             Synthetic context that describes the constraints
         """
-        context = "Consider that in your forecast, "
+        context = "Assume that in the forecast, "
         for constraint, value in constraints.items():
             # context += f"{constraint}: {value}, "
             if constraint == "min":
-                context += f"the minimum possible value is {value}, "
+                context += f"the minimum possible value is {value} and anything below that being bounded to {value}, "
             elif constraint == "max":
-                context += f"the maximum possible value is {value}, "
+                context += f"the maximum possible value is {value} and anything above that being bounded to {value}, "
             elif constraint == "median":
                 context += f"the median is {value}, "
             elif constraint == "mode":
@@ -204,7 +204,9 @@ class OraclePredUnivariateConstraintsTask(BaseTask):
         return prop_satisfied_constraint
 
 
-class BoundedPredConstraintsTask(OraclePredUnivariateConstraintsTask):
+class BoundedPredConstraintsBasedOnPredQuantilesTask(
+    OraclePredUnivariateConstraintsTask
+):
     """
     A task where the data is modified to be bounded (upper or lower) in the prediction part, and the context specifies the bounds.
     This task is dataset-independent.
@@ -313,4 +315,7 @@ class BoundedPredConstraintsTask(OraclePredUnivariateConstraintsTask):
         return constraints_dict
 
 
-__TASKS__ = [OraclePredUnivariateConstraintsTask, BoundedPredConstraintsTask]
+__TASKS__ = [
+    OraclePredUnivariateConstraintsTask,
+    BoundedPredConstraintsBasedOnPredQuantilesTask,
+]
