@@ -184,7 +184,7 @@ def calculate_constraint_penalty(
     if tolerance_percentage == 0:
         return average_penalty * scale_factor
     else:
-        return average_penalty * scale_factor / tolerance_percentage
+        return average_penalty * scale_factor
 
 
 def format_roi_mask(region_of_interest, forecast_shape):
