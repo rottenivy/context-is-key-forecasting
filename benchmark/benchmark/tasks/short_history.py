@@ -10,7 +10,7 @@ from abc import abstractmethod
 from gluonts.dataset.util import to_pandas
 from gluonts.dataset.repository import get_dataset
 
-from .base import UnivariateCRPSTask
+from ..base import UnivariateCRPSTask
 
 
 class BaseHalfDaySolarForecastTask(UnivariateCRPSTask):
