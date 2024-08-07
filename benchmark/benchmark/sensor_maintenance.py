@@ -137,10 +137,12 @@ class SensorTrendAccumulationTask(UnivariateCRPSTask):
             # XXX: We make sure that the maximum increase to any value in the series if
             #      of 1.25 to 2 times the absolute mean value of the series. This ensures a
             #      significant trend without making the series explode.
-            # XXX: Assumes a constant frequency
             mean = np.abs(history_series.mean())
             factor = 1.25 + self.random.rand() * 0.75  # Random factor between 1 and 1.5
-            trend = np.linspace(0, factor * mean, n_points_slope)
+            # XXX: Assumes a constant frequency
+            trend = np.linspace(0, factor * mean, n_points_slope + 1)[
+                1:
+            ]  # Start at non-zero value
 
             # Add trend to the series
             history_series.loc[start_point:] = history_series.loc[
