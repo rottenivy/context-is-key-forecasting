@@ -17,7 +17,7 @@ def region_of_interest_constraint_metric(
     region_of_interest,
     roi_weight,
     roi_metric=crps_by_quantile_mean,
-    constraints={},
+    constraints=None,
     tolerance_percentage=0.05,
 ):
     """
@@ -49,9 +49,12 @@ def region_of_interest_constraint_metric(
     combined_roi_metric = calculate_combined_roi_metric(
         target, forecast, region_of_interest, roi_weight, roi_metric
     )
-    constraint_penalty = calculate_constraint_penalty(
-        target, forecast, constraints, tolerance_percentage
-    )
+    if constraints is not None:
+        constraint_penalty = calculate_constraint_penalty(
+            target, forecast, constraints, tolerance_percentage
+        )
+    else:
+        constraint_penalty = 0
 
     combined_roi_metric_with_penalty = combined_roi_metric * np.exp(constraint_penalty)
 
