@@ -3,6 +3,7 @@ Utility functions
 
 """
 
+import logging
 import numpy as np
 import pandas as pd
 from typing import Union
@@ -12,7 +13,9 @@ def get_random_window_univar(
     series,
     prediction_length,
     history_factor: int = 1,
+    avoid_nulls: bool = True,
     random: np.random.RandomState = np.random,
+    max_attempts: int = 100,
 ) -> pd.Series:
     """
     Get a random window of a given size from a univariate time series
@@ -25,8 +28,14 @@ def get_random_window_univar(
         The length of the portion of the window to forecast
     history_factor : int, optional, default = 1
         Factor by which the history length is larger than the prediction length
+    avoid_nulls : bool, optional, default = True
+        Whether to avoid series with a history or future where all values are
+        close to zero.
     random: numpy.random.RandomState, optional
         Random number generator
+    max_attempts: int, optional, default = 100
+        Maximum number of attempts to find a valid window. Raise an error if
+        this number is exceeded.
 
     Returns
     -------
@@ -34,15 +43,33 @@ def get_random_window_univar(
         Random window of the given size
 
     """
-    history_length = min(
-        history_factor * prediction_length, len(series) - prediction_length
-    )
+    for _ in range(max_attempts):
+        history_length = min(
+            history_factor * prediction_length, len(series) - prediction_length
+        )
 
-    # Random window selection that ensures sufficient history
-    window_start = random.randint(0, len(series) - history_length - prediction_length)
-    window_end = window_start + history_length + prediction_length
+        # Random window selection that ensures sufficient history
+        window_start = random.randint(
+            0, len(series) - history_length - prediction_length
+        )
+        window_end = window_start + history_length + prediction_length
 
-    return series.iloc[window_start:window_end]
+        window = series.iloc[window_start:window_end]
+        history = window.iloc[:history_length]
+        future = window.iloc[history_length:]
+
+        if avoid_nulls:
+            if np.allclose(history, 0) or np.allclose(future, 0):
+                logging.debug("Randomly selected window rejected due to nulls.")
+                continue  # Reject window
+
+        logging.debug("Randomly selected window accepted.")
+        break  # No criteria violated, accept window
+
+    else:
+        raise ValueError(f"Could not find a valid window after {max_attempts} attempts")
+
+    return window
 
 
 def datetime_to_str(dt: Union[pd.Timestamp, np.datetime64]) -> str:
