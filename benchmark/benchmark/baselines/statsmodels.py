@@ -60,6 +60,7 @@ class ExponentialSmoothingForecaster(Baseline):
         """
         simulations_samples = []
         for column in past_time.columns:
+            # If there is no period, then disable the seasonal component of the model (seasonal_periods will be ignored)
             model = statsmodels.tsa.holtwinters.ExponentialSmoothing(
                 endog=past_time[column],
                 trend=self.trend,
@@ -140,6 +141,7 @@ class ETSModelForecaster(Baseline):
         """
         simulations_samples = []
         for column in past_time.columns:
+            # If there is no period, then disable the seasonal component of the model (seasonal_periods will be ignored)
             model = statsmodels.tsa.exponential_smoothing.ets.ETSModel(
                 endog=past_time[column],
                 trend=self.trend,
