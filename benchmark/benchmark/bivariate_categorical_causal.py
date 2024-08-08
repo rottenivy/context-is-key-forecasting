@@ -11,6 +11,7 @@ from termcolor import colored
     plot_forecast_with_covariates(task, "causal.png")
 """
 
+
 class BivariateCategoricalLinSVAR(CausalUnivariateCRPSTask):
     """
     A task where there are two variables X and Y
