@@ -223,7 +223,8 @@ class IncreasedWithdrawalScenario(UnivariateCRPSTask):
         history_series.index = history_series.index.to_timestamp()
 
         background = f"This is the number of cash withdrawals from an automated teller machine (ATM) in an arbitrary location in England, recorded at an hourly frequency."
-        scenario = f"Consider that number of allowed ATM withdrawals were taken away from {datetime_to_str(limit_off_start_date)}, for {limit_off_duration} hours, resulting in {increase_factor} times the number of usual withdrawals during that period."
+        scenario = f"Suppose that there is a festival from {datetime_to_str(limit_off_start_date)}, for {limit_off_duration} hours leading to more people in the area, and {increase_factor} times the number of usual withdrawals during that period."
+        # Covariate task: Event or not
 
         # Instantiate the class variables
         self.past_time = history_series.to_frame()

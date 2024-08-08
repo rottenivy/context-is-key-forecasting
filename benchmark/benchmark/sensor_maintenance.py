@@ -72,7 +72,7 @@ class SensorPeriodicMaintenanceTask(UnivariateCRPSTask):
             # Convert history index to timestamp for consistency
             future_series.index = future_series.index.to_timestamp()
 
-            background = f"The sensor was offline for maintenance every day between {maintenance_start_hour} and {maintenance_end_hour}, which resulted in zero readings. This should be disregarded in the forecast."
+            background = f"The sensor was offline for maintenance every day between {maintenance_start_hour} and {maintenance_end_hour}, which resulted in zero readings. Assume that the sensor will not be in maintenance in the future."
         else:
             raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
 
@@ -155,7 +155,7 @@ class SensorTrendAccumulationTask(UnivariateCRPSTask):
             background = (
                 f"The sensor had a calibration problem starting from {datetime_to_str(start_point)} "
                 + f"which resulted in an additive linear trend increasing by {trend[1] - trend[0]:.6f} at every measurement."
-                + "This should be disregarded in the forecast."
+                + "Assume that the sensor will not have this calibration problem in the future."
             )
 
         else:
@@ -211,15 +211,14 @@ class SensorSpikeTask(UnivariateCRPSTask):
         if dataset_name == "traffic":
             # Sample a starting point in the first half of the history's index
             history_series.index = history_series.index.to_timestamp()
-            spike_start_date = self.random.choice(
-                history_series.index[
-                    len(history_series) // 2 : -4
-                ]  # Leave 3 points at the end: arbitrary
-            )  # Arbitrary start point for now
-            spike_start_point = history_series.index.get_loc(spike_start_date)
             spike_duration = self.random.choice(
                 [1, 2, 3]
             )  # Arbitrarily picked from 1,2,3
+            # Arbitrary way to select a start date: sort the values of future_series (excluding the last spike_duration+1 points), pick it from the largest 5 values
+            spike_start_point = self.random.choice(
+                np.argsort(future_series.values[: -(spike_duration + 1)])[-5:][::-1]
+            )
+            spike_start_date = future_series.index[spike_start_point]
             spike_type = self.random.choice([-1, 1])  # Upward spike or downward spike
             spike_magnitude = (
                 self.random.choice([2, 3]) * history_series.max()
@@ -232,7 +231,7 @@ class SensorSpikeTask(UnivariateCRPSTask):
             # Convert future index to timestamp for consistency
             future_series.index = future_series.index.to_timestamp()
 
-            background = f"The sensor experienced an unexpected glitch resulting in a spike starting from {datetime_to_str(spike_start_date)} for {spike_duration} timesteps. This should be disregarded in the forecast."
+            background = f"The sensor experienced an unexpected glitch resulting in a spike starting from {datetime_to_str(spike_start_date)} for {spike_duration} {'hour' if spike_duration == 1 else 'hours'}. Assume that the sensor will not have this glitch in the future."
 
         else:
             raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
