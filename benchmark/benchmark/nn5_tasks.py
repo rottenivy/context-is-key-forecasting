@@ -69,7 +69,7 @@ class CashDepletedinATMScenarioTask(UnivariateCRPSTask):
             history_series.index = history_series.index.to_timestamp()
 
         background = f"This is the number of cash withdrawals from an automated teller machine (ATM) in an arbitrary location in England, recorded at an hourly frequency."
-        scenario = f"Consider that cash was depleted in the ATM from {datetime_to_str(drop_start_date)}, for {drop_duration} hours, resulting in no withdrawals during that period."  # TODO: May also specify drop end date instead of the drop duration.
+        scenario = f"Suppose that cash will be depleted in the ATM from {datetime_to_str(drop_start_date)}, for {drop_duration} hours, leading to no withdrawals being possible during that period."  # TODO: May also specify drop end date instead of the drop duration.
 
         # Instantiate the class variables
         self.past_time = history_series.to_frame()
