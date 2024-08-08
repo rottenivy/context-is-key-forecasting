@@ -4,7 +4,7 @@ from gluonts.time_feature import get_seasonality
 from tactis.gluon.dataset import get_dataset
 
 from .base import UnivariateCRPSTask
-from .utils import get_random_window_univar
+from .utils import get_random_window_univar, datetime_to_str
 
 from statsmodels.tsa.seasonal import STL
 
@@ -140,7 +140,7 @@ class STLPredMultiplierTask(STLModifierTask):
 
         future_series = self.recompose_series(modified_component)
 
-        scenario = f"The {self.target_component_name} component of the series will be multiplied by {self.multiplier} between {start_datetime} and {end_datetime}."
+        scenario = f"The {self.target_component_name} component of the series will be multiplied by {self.multiplier} between {datetime_to_str(start_datetime)} and {datetime_to_str(end_datetime)}."
 
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()

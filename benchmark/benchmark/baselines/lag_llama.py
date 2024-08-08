@@ -118,9 +118,9 @@ def prepare_dataset(history, forecast):
     history = history.astype("float32")
     forecast = forecast.astype("float32")
     df = pd.concat((history, forecast), axis="index")
-    # TODO: The single target implies a univariate task, need to be updated (and tested)
-    # to be compatible with a multivariate task.
-    ds = PandasDataset({"F": df}, target=df.columns[0])
+    # Create a PandasDataset
+    ds = PandasDataset(dict(df))
+
     return ds
 
 

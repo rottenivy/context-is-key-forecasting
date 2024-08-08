@@ -1,10 +1,11 @@
+import logging
 import numpy as np
 
 from tactis.gluon.dataset import get_dataset
 from gluonts.dataset.util import to_pandas
 
 from .base import UnivariateCRPSTask
-from .utils import get_random_window_univar
+from .utils import get_random_window_univar, datetime_to_str
 
 
 class SensorPeriodicMaintenanceTask(UnivariateCRPSTask):
@@ -78,9 +79,7 @@ class SensorPeriodicMaintenanceTask(UnivariateCRPSTask):
         # Instantiate the class variables
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()
-        self.constraints = None
         self.background = background
-        self.scenario = None
 
 
 class SensorTrendAccumulationTask(UnivariateCRPSTask):
@@ -134,22 +133,30 @@ class SensorTrendAccumulationTask(UnivariateCRPSTask):
                 start_point
             )
 
-            # Slope: make sure the mean increases by something between 1 and 1.5
-            mean = history_series.mean()
-            min_slope = mean / (len(history_series) - n_points_slope)
-            max_slope = 1.5 * min_slope
-            slope = self.random.uniform(min_slope, max_slope)
-
-            # Add slope to history series based on number of measurements
+            # Design an artificial additive trend
+            # XXX: We make sure that the maximum increase to any value in the series if
+            #      of 1.25 to 2 times the absolute mean value of the series. This ensures a
+            #      significant trend without making the series explode.
+            mean = np.abs(history_series.mean())
+            factor = 1.25 + self.random.rand() * 0.75  # Random factor between 1 and 1.5
             # XXX: Assumes a constant frequency
+            trend = np.linspace(0, factor * mean, n_points_slope + 1)[
+                1:
+            ]  # Start at non-zero value
+
+            # Add trend to the series
             history_series.loc[start_point:] = history_series.loc[
                 start_point:
-            ] + np.float32(slope * np.arange(n_points_slope))
+            ] + np.float32(trend)
 
             # Convert future index to timestamp for consistency
             future_series.index = future_series.index.to_timestamp()
 
-            background = f"The sensor had a calibration problem starting from {start_point}, which resulted in an upward trend. This should be disregarded in the forecast."
+            background = (
+                f"The sensor had a calibration problem starting from {datetime_to_str(start_point)} "
+                + f"which resulted in an additive linear trend increasing by {trend[1] - trend[0]:.6f} at every measurement."
+                + "This should be disregarded in the forecast."
+            )
 
         else:
             raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
@@ -157,9 +164,7 @@ class SensorTrendAccumulationTask(UnivariateCRPSTask):
         # Instantiate the class variables
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()
-        self.constraints = None
         self.background = background
-        self.scenario = None
 
 
 class SensorSpikeTask(UnivariateCRPSTask):
@@ -227,7 +232,7 @@ class SensorSpikeTask(UnivariateCRPSTask):
             # Convert future index to timestamp for consistency
             future_series.index = future_series.index.to_timestamp()
 
-            background = f"The sensor experienced an unexpected glitch resulting in a spike starting from {spike_start_date} for {spike_duration} timesteps. This should be disregarded in the forecast."
+            background = f"The sensor experienced an unexpected glitch resulting in a spike starting from {datetime_to_str(spike_start_date)} for {spike_duration} timesteps. This should be disregarded in the forecast."
 
         else:
             raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
@@ -235,9 +240,7 @@ class SensorSpikeTask(UnivariateCRPSTask):
         # Instantiate the class variables
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()
-        self.constraints = None
         self.background = background
-        self.scenario = None
 
 
 class SensorMaintenanceInPredictionTask(UnivariateCRPSTask):
@@ -294,15 +297,13 @@ class SensorMaintenanceInPredictionTask(UnivariateCRPSTask):
             # Convert history index to timestamp for consistency
             history_series.index = history_series.index.to_timestamp()
 
-            scenario = f"Consider that the sensor will be offline for maintenance between {maintenance_start_date} and {maintenance_end_date}, which resulted in zero readings."
+            scenario = f"Consider that the sensor will be offline for maintenance between {datetime_to_str(maintenance_start_date)} and {datetime_to_str(maintenance_end_date)}, which resulted in zero readings."
         else:
             raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
 
         # Instantiate the class variables
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()
-        self.constraints = None
-        self.background = None
         self.scenario = scenario
 
 

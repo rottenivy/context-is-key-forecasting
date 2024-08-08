@@ -7,7 +7,7 @@ from tactis.gluon.dataset import get_dataset
 from gluonts.dataset.util import to_pandas
 
 from .base import UnivariateCRPSTask
-from .utils import get_random_window_univar
+from .utils import get_random_window_univar, datetime_to_str
 
 
 class CashDepletedinATMScenarioTask(UnivariateCRPSTask):
@@ -69,7 +69,7 @@ class CashDepletedinATMScenarioTask(UnivariateCRPSTask):
             history_series.index = history_series.index.to_timestamp()
 
         background = f"This is the number of cash withdrawals from an automated teller machine (ATM) in an arbitrary location in England, recorded at an hourly frequency."
-        scenario = f"Consider that cash was depleted in the ATM from {drop_start_date}, for {drop_duration} hours, resulting in no withdrawals during that period."  # TODO: May also specify drop end date instead of the drop duration.
+        scenario = f"Consider that cash was depleted in the ATM from {datetime_to_str(drop_start_date)}, for {drop_duration} hours, resulting in no withdrawals during that period."  # TODO: May also specify drop end date instead of the drop duration.
 
         # Instantiate the class variables
         self.past_time = history_series.to_frame()
@@ -144,7 +144,7 @@ class ATMUnderPeriodicMaintenanceTask(UnivariateCRPSTask):
         future_series.index = future_series.index.to_timestamp()
 
         background = f"This is the number of cash withdrawals from an automated teller machine (ATM) in an arbitrary location in England, recorded at an hourly frequency."  # This is generic background information common to all NN5 tasks
-        background += f" The ATM was under maintenance for {drop_duration} hours, periodically every {drop_spacing} days, starting from {drop_start_date}. This should be disregarded in the forecast."
+        background += f" The ATM was under maintenance for {drop_duration} hours, periodically every {drop_spacing} days, starting from {datetime_to_str(drop_start_date)}. This should be disregarded in the forecast."
 
         # Instantiate the class variables
         self.past_time = history_series.to_frame()
@@ -223,7 +223,7 @@ class IncreasedWithdrawalScenario(UnivariateCRPSTask):
         history_series.index = history_series.index.to_timestamp()
 
         background = f"This is the number of cash withdrawals from an automated teller machine (ATM) in an arbitrary location in England, recorded at an hourly frequency."
-        scenario = f"Consider that number of allowed ATM withdrawals were taken away from {limit_off_start_date}, for {limit_off_duration} hours, resulting in {increase_factor} times the number of usual withdrawals during that period."
+        scenario = f"Consider that number of allowed ATM withdrawals were taken away from {datetime_to_str(limit_off_start_date)}, for {limit_off_duration} hours, resulting in {increase_factor} times the number of usual withdrawals during that period."
 
         # Instantiate the class variables
         self.past_time = history_series.to_frame()

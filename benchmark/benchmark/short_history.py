@@ -61,6 +61,15 @@ class BaseHalfDaySolarForecastTask(UnivariateCRPSTask):
         """
         pass
 
+    @property
+    def seasonal_period(self) -> int:
+        """
+        This returns the period which should be used by statistical models for this task.
+        If negative, this means that the data either has no period, or the history is shorter than the period.
+        """
+        # Not enough history for a single period
+        return -1
+
 
 class MinimalInfoHalfDaySolarForecastTask(BaseHalfDaySolarForecastTask):
     """
