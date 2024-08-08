@@ -55,5 +55,74 @@ def plot_forecast_univariate(task, filename):
     plt.savefig(filename)
 
 
+def plot_forecast_with_covariates(task, filename):
+    """
+    Plot the first variable of a forecast, along with all covariates.
+
+    Parameters:
+    -----------
+    task: a BaseTask
+        The task associated with the forecast
+    filename: Pathlike
+        Where to save the figure
+    """
+    past_timesteps = task.past_time.index
+    past_values = task.past_time.to_numpy()[:, 0]
+    future_timesteps = task.future_time.index
+    future_values = task.future_time.to_numpy()[:, 0]
+    past_covariates = task.past_covariates.to_numpy()
+    future_covariates = task.future_covariates.to_numpy()
+    num_covariates = past_covariates.shape[1]
+
+    fig, axes = plt.subplots(
+        num_covariates + 1, 1, figsize=(10, 5 * num_covariates), sharex=True
+    )
+
+    for k in range(num_covariates + 1):
+
+        if k == 0:  # Forecast variable
+            past, future = past_values, future_values
+            title = "Forecast variable"
+        else:
+            past, future = past_covariates[:, k - 1], future_covariates[:, k - 1]
+            title = f"Covariate {k}"
+
+        past_line = axes[k].plot(
+            past_timesteps,
+            past,
+            color=(1, 0, 0),
+            linewidth=2,
+            zorder=5,
+            label="history",
+        )
+
+        future_line = axes[k].plot(
+            future_timesteps,
+            future,
+            color=(0, 0, 1),
+            linewidth=2,
+            zorder=5,
+            label="prediction",
+        )
+
+        axes[k].grid()
+        axes[k].set_title(title)
+
+        if k == 0:
+            lines = [past_line[0], future_line[0]]
+            lables = ["history", "prediction"]
+
+    # Add x-label to the last subplot
+    axes[-1].set_xlabel("Time")
+
+    fig.legend(lines, lables, loc="upper right")
+
+    plt.suptitle(
+        "\n".join(textwrap.wrap(task.scenario, width=40))
+    )  # Change this to task.background or task.constraint depending on task
+    plt.tight_layout()
+    plt.savefig(filename)
+
+
 task = SensorMaintenanceInPredictionTask()  # Change this to required task
 plot_forecast_univariate(task, f"task_example_plotting.png")
