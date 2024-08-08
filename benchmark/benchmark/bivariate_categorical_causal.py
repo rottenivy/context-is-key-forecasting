@@ -5,6 +5,11 @@ from scipy.sparse import csr_matrix
 import networkx as nx
 from termcolor import colored
 
+"""
+    Usage:
+    task = BivariateCategoricalLinSVAR(seed=1)
+    plot_forecast_with_covariates(task, "causal.png")
+"""
 
 class BivariateCategoricalLinSVAR(CausalUnivariateCRPSTask):
     """
