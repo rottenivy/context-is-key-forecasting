@@ -125,7 +125,7 @@ class BaseTask(ABC):
 class UnivariateCRPSTask(BaseTask):
     """
     A base class for tasks that require forecasting a single series and that use CRPS for evaluation
-
+    We use the last column of `future_time` as the ground truth for evaluation
     """
 
     def evaluate(self, samples):
@@ -133,6 +133,6 @@ class UnivariateCRPSTask(BaseTask):
             samples = samples[:, :, 0]
 
         # This is the dual of pd.Series.to_frame(), compatible with any series name
-        only_column = self.future_time.columns[0]
+        only_column = self.future_time.columns[-1]
         target = self.future_time[only_column]
         return crps_quantile(target=target, samples=samples)[0].mean()
