@@ -8,6 +8,40 @@ from .utils import get_random_window_univar, datetime_to_str
 
 from statsmodels.tsa.seasonal import STL
 
+from abc import ABC, abstractmethod
+
+
+class STLNoDescriptionContext:
+
+    def get_background_context():
+        return None
+
+
+class STLShortDescriptionContext:
+
+    def get_background_context():
+        return """This task applies a multiplier to a component of the STL decomposition
+        of the series."""
+
+
+class STLMediumDescriptionContext:
+
+    def get_background_context():
+        return """This task applies a multiplier to a component of the STL decomposition
+        of the series. The seasonal-trend decomposition with LOESS (STL) is a method for 
+        decomposing a time series into trend, seasonal, and residual components."""
+
+
+class STLLongDescriptionContext:
+
+    def get_background_context():
+        return """This task applies a multiplier to a component of the STL decomposition
+        of the series. The seasonal-trend decomposition with LOESS (STL) is a method for 
+        decomposing a time series into trend, seasonal, and residual components. The 
+        trend component represents the long-term progression of the series, the seasonal 
+        component represents the seasonal variation, and the residual component 
+        represents the noise in the series. """
+
 
 class STLModifierTask(UnivariateCRPSTask):
     """
@@ -53,6 +87,8 @@ class STLModifierTask(UnivariateCRPSTask):
             return modified_component + self.stl.fit().seasonal + self.stl.fit().resid
         elif self.target_component_name == "seasonal":
             return self.stl.fit().trend + modified_component + self.stl.fit().resid
+        elif self.target_component_name == "residual":
+            return self.stl.fit().trend + self.stl.fit().seasonal + modified_component
         else:
             raise ValueError(
                 "The modification parameter must be provided. 'trend' or 'seasonal' are valid options."
@@ -87,6 +123,10 @@ class STLPredMultiplierTask(STLModifierTask):
             seed=seed,
         )
 
+    @abstractmethod
+    def get_background_context(self):
+        pass
+
     def random_instance(self):
         # load dataset
         datasets = ["electricity_hourly"]
@@ -117,7 +157,7 @@ class STLPredMultiplierTask(STLModifierTask):
         future_series = window.iloc[-metadata.prediction_length :]
 
         start_idx = self.random.randint(0, metadata.prediction_length - 1)
-        duration = self.random.randint(0, metadata.prediction_length - start_idx)
+        duration = self.random.randint(1, metadata.prediction_length - start_idx)
         start_datetime = future_series.index[start_idx]
         end_datetime = future_series.index[start_idx + duration]
 
@@ -140,17 +180,23 @@ class STLPredMultiplierTask(STLModifierTask):
 
         future_series = self.recompose_series(modified_component)
 
-        scenario = f"The {self.target_component_name} component of the series will be multiplied by {self.multiplier} between {datetime_to_str(start_datetime)} and {datetime_to_str(end_datetime)}."
+        scenario = self.get_scenario_context(start_datetime, end_datetime)
 
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()
-        self.constraints = None
-        self.background = None
+        self.constraints = self.get_constraints_context()
+        self.background = self.get_background_context()
         self.scenario = scenario
         self.ground_truth = ground_truth
         self.trend = self.stl.fit().trend
         self.seasonal = self.stl.fit().seasonal
         self.residual = self.stl.fit().resid
+
+    def get_constraints_context(self):
+        return None
+
+    def get_scenario_context(self, start_datetime, end_datetime):
+        return f"The {self.target_component_name} component of the series will be multiplied by {self.multiplier} between {start_datetime} and {end_datetime}."
 
     def apply_modification(self, start_idx, duration, component_to_modify):
         """
@@ -178,6 +224,8 @@ class STLPredMultiplierTask(STLModifierTask):
             return self.stl.fit().trend
         elif component == "seasonal":
             return self.stl.fit().seasonal
+        elif component == "residual":
+            return self.stl.fit().resid
         else:
             raise ValueError(
                 "The modification parameter must be provided. 'trend' or 'seasonal' are valid options."
@@ -210,4 +258,465 @@ class STLPredSeasonalMultiplierTask(STLPredMultiplierTask):
         )
 
 
-__TASKS__ = [STLPredTrendMultiplierTask, STLPredSeasonalMultiplierTask]
+class STLPredResidualMultiplierTask(STLPredMultiplierTask):
+    """
+    A task where the residual component of the series is multiplied by a random factor.
+    Time series: agnostic
+    Context: synthetic
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(
+            target_component_name="residual", fixed_config=fixed_config, seed=seed
+        )
+
+
+class STLPredTrendMultiplierWithNoDescriptionTask(STLPredTrendMultiplierTask):
+    """
+    A task where the trend component of the series is multiplied by a random factor.
+    No description of the STL decomposition is provided.
+    Time series: agnostic
+    Context: synthetic
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(fixed_config=fixed_config, seed=seed)
+
+    def get_background_context(self):
+        return STLNoDescriptionContext.get_background_context()
+
+
+class STLPredTrendMultiplierWithShortDescriptionTask(STLPredTrendMultiplierTask):
+    """
+    A task where the trend component of the series is multiplied by a random factor.
+    A short description of the STL decomposition is provided.
+    Time series: agnostic
+    Context: synthetic
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(fixed_config=fixed_config, seed=seed)
+
+    def get_background_context(self):
+        return STLShortDescriptionContext.get_background_context()
+
+
+class STLPredTrendMultiplierWithMediumDescriptionTask(STLPredTrendMultiplierTask):
+    """
+    A task where the trend component of the series is multiplied by a random factor.
+    A medium description of the STL decomposition is provided.
+    Time series: agnostic
+    Context: synthetic
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(fixed_config=fixed_config, seed=seed)
+
+    def get_background_context(self):
+        return STLMediumDescriptionContext.get_background_context()
+
+
+class STLPredTrendMultiplierWithLongDescriptionTask(STLPredTrendMultiplierTask):
+    """
+    A task where the trend component of the series is multiplied by a random factor.
+    A long description of the STL decomposition is provided.
+    Time series: agnostic
+    Context: synthetic
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(fixed_config=fixed_config, seed=seed)
+
+    def get_background_context(self):
+        return STLLongDescriptionContext.get_background_context()
+
+
+class STLPredSeasonalMultiplierWithNoDescriptionTask(STLPredSeasonalMultiplierTask):
+    """
+    A task where the seasonal component of the series is multiplied by a random factor.
+    No description of the STL decomposition is provided.
+    Time series: agnostic
+    Context: synthetic
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(fixed_config=fixed_config, seed=seed)
+
+    def get_background_context(self):
+        return STLNoDescriptionContext.get_background_context()
+
+
+class STLPredSeasonalMultiplierWithShortDescriptionTask(STLPredSeasonalMultiplierTask):
+    """
+    A task where the seasonal component of the series is multiplied by a random factor.
+    A short description of the STL decomposition is provided.
+    Time series: agnostic
+    Context: synthetic
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(fixed_config=fixed_config, seed=seed)
+
+    def get_background_context(self):
+        return STLShortDescriptionContext.get_background_context()
+
+
+class STLPredSeasonalMultiplierWithMediumDescriptionTask(STLPredSeasonalMultiplierTask):
+    """
+    A task where the seasonal component of the series is multiplied by a random factor.
+    A medium description of the STL decomposition is provided.
+    Time series: agnostic
+    Context: synthetic
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(fixed_config=fixed_config, seed=seed)
+
+    def get_background_context(self):
+        return STLMediumDescriptionContext.get_background_context()
+
+
+class STLPredSeasonalMultiplierWithLongDescriptionTask(STLPredSeasonalMultiplierTask):
+    """
+    A task where the seasonal component of the series is multiplied by a random factor.
+    A long description of the STL decomposition is provided.
+    Time series: agnostic
+    Context: synthetic
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(fixed_config=fixed_config, seed=seed)
+
+    def get_background_context(self):
+        return STLLongDescriptionContext.get_background_context()
+
+
+class STLPredResidualMultiplierWithNoDescriptionTask(STLPredResidualMultiplierTask):
+    """
+    A task where the residual component of the series is multiplied by a random factor.
+    No description of the STL decomposition is provided.
+    Time series: agnostic
+    Context: synthetic
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(fixed_config=fixed_config, seed=seed)
+
+    def get_background_context(self):
+        return STLNoDescriptionContext.get_background_context()
+
+
+class STLPredResidualMultiplierWithShortDescriptionTask(STLPredResidualMultiplierTask):
+    """
+    A task where the residual component of the series is multiplied by a random factor.
+    A short description of the STL decomposition is provided.
+    Time series: agnostic
+    Context: synthetic
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(fixed_config=fixed_config, seed=seed)
+
+    def get_background_context(self):
+        return STLShortDescriptionContext.get_background_context()
+
+
+class STLPredResidualMultiplierWithMediumDescriptionTask(STLPredResidualMultiplierTask):
+    """
+    A task where the residual component of the series is multiplied by a random factor.
+    A medium description of the STL decomposition is provided.
+    Time series: agnostic
+    Context: synthetic
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(fixed_config=fixed_config, seed=seed)
+
+    def get_background_context(self):
+        return STLMediumDescriptionContext.get_background_context()
+
+
+class STLPredResidualMultiplierWithLongDescriptionTask(STLPredResidualMultiplierTask):
+    """
+    A task where the residual component of the series is multiplied by a random factor.
+    A long description of the STL decomposition is provided.
+    Time series: agnostic
+    Context: synthetic
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(fixed_config=fixed_config, seed=seed)
+
+    def get_background_context(self):
+        return STLLongDescriptionContext.get_background_context()
+
+
+class STLPredTrendRemovedTask(STLPredTrendMultiplierTask):
+    """
+    A task where the trend component of the series is removed.
+    Time series: agnostic
+    Context: synthetic
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(fixed_config=fixed_config, seed=seed)
+
+    def sample_multiplier(self, multiplier_min=-1, multiplier_max=1):
+        return 0
+
+    def get_scenario_context(self, start_datetime, end_datetime):
+        return (
+            super()
+            .get_scenario_context(start_datetime, end_datetime)
+            .replace("multiplied by 0", "removed")
+        )
+
+
+class STLPredSeasonalRemovedTask(STLPredSeasonalMultiplierTask):
+    """
+    A task where the seasonal component of the series is removed.
+    Time series: agnostic
+    Context: synthetic
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(fixed_config=fixed_config, seed=seed)
+
+    def sample_multiplier(self, multiplier_min=-1, multiplier_max=1):
+        return 0
+
+    def get_scenario_context(self, start_datetime, end_datetime):
+        return (
+            super()
+            .get_scenario_context(start_datetime, end_datetime)
+            .replace("multiplied by 0", "removed")
+        )
+
+
+class STLPredResidualRemovedTask(STLPredResidualMultiplierTask):
+    """
+    A task where the residual component of the series is removed.
+    Time series: agnostic
+    Context: synthetic
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(fixed_config=fixed_config, seed=seed)
+
+    def sample_multiplier(self, multiplier_min=-1, multiplier_max=1):
+        return 0
+
+    def get_scenario_context(self, start_datetime, end_datetime):
+        return (
+            super()
+            .get_scenario_context(start_datetime, end_datetime)
+            .replace("multiplied by 0", "removed")
+        )
+
+
+class STLPredTrendRemovedWithNoDescriptionTask(STLPredTrendRemovedTask):
+    """
+    A task where the trend component of the series is removed.
+    No description of the STL decomposition is provided.
+    Time series: agnostic
+    Context: synthetic
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(fixed_config=fixed_config, seed=seed)
+
+    def get_background_context(self):
+        return STLNoDescriptionContext.get_background_context()
+
+
+class STLPredTrendRemovedWithShortDescriptionTask(STLPredTrendRemovedTask):
+    """
+    A task where the trend component of the series is removed.
+    A short description of the STL decomposition is provided.
+    Time series: agnostic
+    Context: synthetic
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(fixed_config=fixed_config, seed=seed)
+
+    def get_background_context(self):
+        return STLShortDescriptionContext.get_background_context()
+
+
+class STLPredTrendRemovedWithMediumDescriptionTask(STLPredTrendRemovedTask):
+    """
+    A task where the trend component of the series is removed.
+    A medium description of the STL decomposition is provided.
+    Time series: agnostic
+    Context: synthetic
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(fixed_config=fixed_config, seed=seed)
+
+    def get_background_context(self):
+        return STLMediumDescriptionContext.get_background_context()
+
+
+class STLPredTrendRemovedWithLongDescriptionTask(STLPredTrendRemovedTask):
+    """
+    A task where the trend component of the series is removed.
+    A long description of the STL decomposition is provided.
+    Time series: agnostic
+    Context: synthetic
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(fixed_config=fixed_config, seed=seed)
+
+    def get_background_context(self):
+        return STLLongDescriptionContext.get_background_context()
+
+
+class STLPredSeasonalRemovedWithNoDescriptionTask(STLPredSeasonalRemovedTask):
+    """
+    A task where the seasonal component of the series is removed.
+    No description of the STL decomposition is provided.
+    Time series: agnostic
+    Context: synthetic
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(fixed_config=fixed_config, seed=seed)
+
+    def get_background_context(self):
+        return STLNoDescriptionContext.get_background_context()
+
+
+class STLPredSeasonalRemovedWithShortDescriptionTask(STLPredSeasonalRemovedTask):
+    """
+    A task where the seasonal component of the series is removed.
+    A short description of the STL decomposition is provided.
+    Time series: agnostic
+    Context: synthetic
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(fixed_config=fixed_config, seed=seed)
+
+    def get_background_context(self):
+        return STLShortDescriptionContext.get_background_context()
+
+
+class STLPredSeasonalRemovedWithMediumDescriptionTask(STLPredSeasonalRemovedTask):
+    """
+    A task where the seasonal component of the series is removed.
+    A medium description of the STL decomposition is provided.
+    Time series: agnostic
+    Context: synthetic
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(fixed_config=fixed_config, seed=seed)
+
+    def get_background_context(self):
+        return STLMediumDescriptionContext.get_background_context()
+
+
+class STLPredSeasonalRemovedWithLongDescriptionTask(STLPredSeasonalRemovedTask):
+    """
+    A task where the seasonal component of the series is removed.
+    A long description of the STL decomposition is provided.
+    Time series: agnostic
+    Context: synthetic
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(fixed_config=fixed_config, seed=seed)
+
+    def get_background_context(self):
+        return STLLongDescriptionContext.get_background_context()
+
+
+class STLPredResidualRemovedWithNoDescriptionTask(STLPredResidualRemovedTask):
+    """
+    A task where the residual component of the series is removed.
+    No description of the STL decomposition is provided.
+    Time series: agnostic
+    Context: synthetic
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(fixed_config=fixed_config, seed=seed)
+
+    def get_background_context(self):
+        return STLNoDescriptionContext.get_background_context()
+
+
+class STLPredResidualRemovedWithShortDescriptionTask(STLPredResidualRemovedTask):
+    """
+    A task where the residual component of the series is removed.
+    A short description of the STL decomposition is provided.
+    Time series: agnostic
+    Context: synthetic
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(fixed_config=fixed_config, seed=seed)
+
+    def get_background_context(self):
+        return STLShortDescriptionContext.get_background_context()
+
+
+class STLPredResidualRemovedWithMediumDescriptionTask(STLPredResidualRemovedTask):
+    """
+    A task where the residual component of the series is removed.
+    A medium description of the STL decomposition is provided.
+    Time series: agnostic
+    Context: synthetic
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(fixed_config=fixed_config, seed=seed)
+
+    def get_background_context(self):
+        return STLMediumDescriptionContext.get_background_context()
+
+
+class STLPredResidualRemovedWithLongDescriptionTask(STLPredResidualRemovedTask):
+    """
+    A task where the residual component of the series is removed.
+    A long description of the STL decomposition is provided.
+    Time series: agnostic
+    Context: synthetic
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(fixed_config=fixed_config, seed=seed)
+
+    def get_background_context(self):
+        return STLLongDescriptionContext.get_background_context()
+
+
+__TASKS__ = [
+    STLPredTrendMultiplierWithNoDescriptionTask,
+    STLPredTrendMultiplierWithShortDescriptionTask,
+    STLPredTrendMultiplierWithMediumDescriptionTask,
+    STLPredTrendMultiplierWithLongDescriptionTask,
+    STLPredSeasonalMultiplierWithNoDescriptionTask,
+    STLPredSeasonalMultiplierWithShortDescriptionTask,
+    STLPredSeasonalMultiplierWithMediumDescriptionTask,
+    STLPredSeasonalMultiplierWithLongDescriptionTask,
+    STLPredResidualMultiplierWithNoDescriptionTask,
+    STLPredResidualMultiplierWithShortDescriptionTask,
+    STLPredResidualMultiplierWithMediumDescriptionTask,
+    STLPredResidualMultiplierWithLongDescriptionTask,
+    STLPredTrendRemovedWithNoDescriptionTask,
+    STLPredTrendRemovedWithShortDescriptionTask,
+    STLPredTrendRemovedWithMediumDescriptionTask,
+    STLPredTrendRemovedWithLongDescriptionTask,
+    STLPredSeasonalRemovedWithNoDescriptionTask,
+    STLPredSeasonalRemovedWithShortDescriptionTask,
+    STLPredSeasonalRemovedWithMediumDescriptionTask,
+    STLPredSeasonalRemovedWithLongDescriptionTask,
+    STLPredResidualRemovedWithNoDescriptionTask,
+    STLPredResidualRemovedWithShortDescriptionTask,
+    STLPredResidualRemovedWithMediumDescriptionTask,
+    STLPredResidualRemovedWithLongDescriptionTask,
+]
