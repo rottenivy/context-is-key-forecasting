@@ -136,7 +136,7 @@ class SpeedFromLoadTask(WindTunnelTask):
         self,
         seed: int = None,
         fixed_config: dict = None,
-        datadir: str = "/mnt/starcaster/data/causal_chambers/",
+        datadir: str = DATA_STORAGE_PATH,
     ):
 
         self.possible_windows = [
