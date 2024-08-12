@@ -86,6 +86,7 @@ class STLPredMultiplierTask(STLModifierTask):
             fixed_config=fixed_config,
             seed=seed,
         )
+        self.context_flags["c_f"] = True
 
     def random_instance(self):
         # load dataset
