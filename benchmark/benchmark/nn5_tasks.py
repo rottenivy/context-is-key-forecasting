@@ -5,6 +5,7 @@ Machines (ATM) in the UK.
 
 from tactis.gluon.dataset import get_dataset
 from gluonts.dataset.util import to_pandas
+import numpy as np
 
 from .base import UnivariateCRPSTask
 from .utils import get_random_window_univar, datetime_to_str
@@ -69,7 +70,7 @@ class CashDepletedinATMScenarioTask(UnivariateCRPSTask):
             history_series.index = history_series.index.to_timestamp()
 
         background = f"This is the number of cash withdrawals from an automated teller machine (ATM) in an arbitrary location in England, recorded at an hourly frequency."
-        scenario = f"Suppose that cash will be depleted in the ATM from {datetime_to_str(drop_start_date)}, for {drop_duration} hours, leading to no withdrawals being possible during that period."  # TODO: May also specify drop end date instead of the drop duration.
+        scenario = f"Consider that cash was depleted in the ATM from {datetime_to_str(drop_start_date)}, for {drop_duration} {'hour' if drop_duration == 1 else 'hours'}, resulting in no withdrawals during that period."  # TODO: May also specify drop end date instead of the drop duration.
 
         # Instantiate the class variables
         self.past_time = history_series.to_frame()
@@ -108,7 +109,7 @@ class ATMUnderPeriodicMaintenanceTask(UnivariateCRPSTask):
         ts_index = self.random.choice(len(dataset.train))
         full_series = to_pandas(list(dataset.test)[ts_index])
 
-        history_factor = self.random.randint(7, 11)
+        history_factor = self.random.randint(3, 7)
         # Select a random window
         window = get_random_window_univar(
             full_series,
@@ -127,12 +128,12 @@ class ATMUnderPeriodicMaintenanceTask(UnivariateCRPSTask):
             list(range(4, 7))
         )  # Arbitrarily picked from 4-6 hours
         drop_spacing = 24 * self.random.choice(
-            list(range(3, 7))
-        )  # Arbitrarily picked from 3-6 days (hence multiplied by 24)
+            list(range(2, 5))
+        )  # Arbitrarily picked from 2-4 days (hence multiplied by 24)
         drop_start_date = self.random.choice(
             history_series.index[
                 : 24 * 1
-            ]  # Starting point is anywhere from start of series to 1 day. This is done so we can get multiple such drops in the series going forward in the history.
+            ]  # Starting point is anywhere from start of series to 1 day before the end. This is done so we can get multiple such drops in the series going forward in the history.
         )
         drop_start_point = history_series.index.get_loc(drop_start_date)
         start_point = drop_start_point
@@ -143,8 +144,91 @@ class ATMUnderPeriodicMaintenanceTask(UnivariateCRPSTask):
         # Convert future index to timestamp for consistency
         future_series.index = future_series.index.to_timestamp()
 
-        background = f"This is the number of cash withdrawals from an automated teller machine (ATM) in an arbitrary location in England, recorded at an hourly frequency."  # This is generic background information common to all NN5 tasks
-        background += f" The ATM was under maintenance for {drop_duration} hours, periodically every {drop_spacing} days, starting from {datetime_to_str(drop_start_date)}. This should be disregarded in the forecast."
+        background = f"This is the number of cash withdrawals from an automated teller machine (ATM) in an arbitrary location in England."  # This is generic background information common to all NN5 tasks
+        background += f" The ATM was under maintenance for {drop_duration} {'hour' if drop_duration == 1 else 'hours'}, periodically every {drop_spacing} days, starting from {datetime_to_str(drop_start_date)}, resulting in no withdrawals recorded. Assume that the ATM will not be in maintenance in the future."
+
+        # Instantiate the class variables
+        self.past_time = history_series.to_frame()
+        self.future_time = future_series.to_frame()
+        self.constraints = None
+        self.background = background
+        self.scenario = None
+
+
+class ATMUnderPeriodicMaintenanceWithRandomValuesTask(UnivariateCRPSTask):
+    """
+    This task considers that an ATM is under periodic maintenance in the history repeatedly at certain intervals, which leads to misleading history. The context provides background information about this period.
+    This period should be ignored by the forecasting algorithm in its forecasts.
+
+    NOTE: This task is too hard right now since the randomly sampled data looks too similar to the other data. So it's hard even for humans. Hence, not putting it in __TASKS__ for now.
+    """
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        super().__init__(seed=seed, fixed_config=fixed_config)
+
+    def random_instance(self):
+        datasets = [
+            "nn5_daily_without_missing"
+        ]  # nn5_daily_without_missing has a prediction length of 56 (~~2 days)
+
+        # Select a dataset
+        dataset_name = self.random.choice(datasets)
+        dataset = get_dataset(dataset_name, regenerate=False)
+
+        assert len(dataset.train) == len(
+            dataset.test
+        ), "Train and test sets must contain the same number of time series"
+
+        # Get the dataset metadata
+        metadata = dataset.metadata
+
+        # Select a random time series
+        ts_index = self.random.choice(len(dataset.train))
+        full_series = to_pandas(list(dataset.test)[ts_index])
+
+        history_factor = self.random.randint(3, 7)
+        # Select a random window
+        window = get_random_window_univar(
+            full_series,
+            prediction_length=metadata.prediction_length,
+            history_factor=history_factor,
+            random=self.random,
+        )
+
+        # Extract the history and future series
+        history_series = window.iloc[: -metadata.prediction_length]
+        future_series = window.iloc[-metadata.prediction_length :]
+
+        history_series.index = history_series.index.to_timestamp()
+
+        drop_duration = self.random.choice(
+            list(range(4, 7))
+        )  # Arbitrarily picked from 4-6 hours
+        drop_spacing = 24 * self.random.choice(
+            list(range(2, 5))
+        )  # Arbitrarily picked from 2-4 days (hence multiplied by 24)
+        drop_start_date = self.random.choice(
+            history_series.index[
+                : 24 * 1
+            ]  # Starting point is anywhere from start of series to 1 day before the end. This is done so we can get multiple such drops in the series going forward in the history.
+        )
+        drop_start_point = history_series.index.get_loc(drop_start_date)
+        start_point = drop_start_point
+        # Calculate the probability distribution of the original array
+        unique_values, counts_values = np.unique(
+            history_series.to_numpy(), return_counts=True
+        )
+        # Add drops to the data
+        while start_point + drop_duration < len(history_series.index):
+            history_series.iloc[start_point : start_point + drop_duration] = (
+                self.random.choice(unique_values, size=drop_duration)
+            )
+            start_point += drop_spacing
+        # Convert future index to timestamp for consistency
+        future_series.index = future_series.index.to_timestamp()
+
+        background = f"This is the number of cash withdrawals from an automated teller machine (ATM) in an arbitrary location in England."  # This is generic background information common to all NN5 tasks
+        background += f" The ATM was under maintenance for {drop_duration} {'hour' if drop_duration == 1 else 'hours'}, periodically every {drop_spacing} days, starting from {datetime_to_str(drop_start_date)}, resulting in corrupted values in the data. Assume that the ATM will not be in maintenance in the future."
 
         # Instantiate the class variables
         self.past_time = history_series.to_frame()
@@ -223,7 +307,7 @@ class IncreasedWithdrawalScenario(UnivariateCRPSTask):
         history_series.index = history_series.index.to_timestamp()
 
         background = f"This is the number of cash withdrawals from an automated teller machine (ATM) in an arbitrary location in England, recorded at an hourly frequency."
-        scenario = f"Suppose that there is a festival from {datetime_to_str(limit_off_start_date)}, for {limit_off_duration} hours leading to more people in the area, and {increase_factor} times the number of usual withdrawals during that period."
+        scenario = f"Suppose that there is a festival from {datetime_to_str(limit_off_start_date)}, for {limit_off_duration} {'hour' if limit_off_duration == 1 else 'hours'} leading to more people in the area, and {increase_factor} times the number of usual withdrawals during that period."
         # Covariate task: Event or not
 
         # Instantiate the class variables
