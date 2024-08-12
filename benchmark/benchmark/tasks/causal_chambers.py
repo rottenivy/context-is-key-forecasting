@@ -5,6 +5,7 @@ from causalchamber.datasets import Dataset
 from collections import namedtuple
 
 from ..base import UnivariateCRPSTask
+from ..config import DATA_STORAGE_PATH
 
 Window = namedtuple("Window", ["seed", "history_start", "future_start", "time_end"])
 
@@ -17,7 +18,7 @@ class WindTunnelTask(UnivariateCRPSTask):
         seed: int = None,
         fixed_config: dict = None,
         dataset_name: str = "wt_changepoints_v1",
-        datadir: str = "/mnt/starcaster/data/causal_chambers/",
+        datadir: str = DATA_STORAGE_PATH,
     ):
 
         self.dataset = Dataset(dataset_name, root=datadir, download=True)
@@ -28,15 +29,22 @@ class WindTunnelTask(UnivariateCRPSTask):
         super().__init__(seed=seed, fixed_config=fixed_config)
 
     def _get_number_instances(self):
-        """Returns number of different instances/windows this task comprises"""
+        """
+        Returns number of different instances/windows this task comprises
+        """
         return len(self.possible_windows)
 
     def _get_instance_by_idx(self, idx: int, downsample: str = None):
-        """Returns instance corresponding to specified index, downsampled if required.
+        """
+        Returns instance corresponding to specified index, downsampled if required.
 
-        Args:
-            idx (int): Instance index.
-            downsample (str, optional): Downsampling rule (see https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.resample.html). Defaults to None.
+        Parameters
+        ----------
+        idx : int
+            Instance index.
+        downsample : str, optional
+            Downsampling rule (see https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.resample.html), by default None
+
         """
 
         window = self.possible_windows[idx]
@@ -66,10 +74,13 @@ class WindTunnelTask(UnivariateCRPSTask):
         return window, past_time, future_time, text_covariates
 
     def random_instance(self, downsample: str = "1s"):
-        """Sets random downsampled instance/window as task instance.
+        """
+        Sets random downsampled instance/window as task instance.
 
-        Args:
-            downsample (str, optional): Downsampling rule (see https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.resample.html). Defaults to "1s".
+        Parameters
+        ----------
+            downsample : str, optional
+                Downsampling rule (see https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.resample.html), by default "1s".
         """
 
         window_idx = self.random.choice(self._get_number_instances())
@@ -78,6 +89,21 @@ class WindTunnelTask(UnivariateCRPSTask):
         )
 
     def verbalize_covariate(self, observations: pd.DataFrame, round_freq: str = "s"):
+        """
+        Verbalizes the numerical covariate given time series where change points are marked in the intervention variate.
+
+        Parameters
+        ----------
+        observations : pd.DataFrame
+            Time series that contains the covariate and intervention variate over time
+        round_freq : str, optional
+            Frequency to which rounding time to, to avoid too long strings, by default "s"
+
+        Returns
+        -------
+        str
+            verbalized covariate
+        """
 
         covariate = observations[self.covariate_name]
         # intervention column = 0 when load is constant and = 1 when it changes wrt previous timestep
@@ -104,7 +130,7 @@ class WindTunnelTask(UnivariateCRPSTask):
         return ans
 
 
-class SpeedFromLoad(WindTunnelTask):
+class SpeedFromLoadTask(WindTunnelTask):
 
     def __init__(
         self,

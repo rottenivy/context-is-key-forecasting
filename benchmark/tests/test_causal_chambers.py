@@ -5,12 +5,15 @@ Unit tests for causal chambers tasks
 
 import pandas as pd
 
-from benchmark.tasks.causal_chambers import SpeedFromLoad
+from benchmark.tasks.causal_chambers import SpeedFromLoadTask
 
 
 def test_deterministic_instance():
+    """
+    Tests that two instances are loaded correctly: time series have the right history and prediction lengths, have exactly two variates and are verbalized correctly.
+    """
 
-    task = SpeedFromLoad()
+    task = SpeedFromLoadTask()
     assert task._get_number_instances() == 10
 
     idx = 0
@@ -39,9 +42,12 @@ def test_deterministic_instance():
 
 
 def test_downsampling():
+    """
+    Tests random instances are loaded and downsampled correctly (keeping 1 over 6-7 original timesteps)
+    """
 
     for _ in range(50):
-        task = SpeedFromLoad()
+        task = SpeedFromLoadTask()
         task.random_instance()
 
         # downsampling to 1s, while original frequency should be ~7 Hertz
