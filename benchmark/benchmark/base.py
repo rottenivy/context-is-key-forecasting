@@ -156,7 +156,9 @@ class UnivariateCRPSTask(BaseTask):
         """
         errors = super().verify_config()
         if self.region_of_interest is None and self.roi_weight != 0:
-            errors.append("region_of_interest is not set, yet roi_weight is 0")
+            errors.append("region_of_interest is not set, yet roi_weight is not 0")
+        if self.region_of_interest is not None and self.roi_weight == 0:
+            errors.append("region_of_interest is set, yet roi_weight is 0")
         if self.roi_weight < 0 or self.roi_weight > 1:
             errors.append(f"roi weight ({self.roi_weight}) is not between 0 and 1")
         return errors
