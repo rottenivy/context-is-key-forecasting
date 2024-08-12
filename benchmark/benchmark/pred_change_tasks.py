@@ -7,7 +7,7 @@ from .base import UnivariateCRPSTask
 from .utils import get_random_window_univar, datetime_to_str
 
 
-class DecreaseInTrafficInPrediction(UnivariateCRPSTask):
+class DecreaseInTrafficInPredictionTask(UnivariateCRPSTask):
     """
     A task where the traffic was lower than usual in prediction part,
     due to an accident.
@@ -82,4 +82,4 @@ class DecreaseInTrafficInPrediction(UnivariateCRPSTask):
         self.scenario = scenario
 
 
-__TASKS__ = [DecreaseInTrafficInPrediction]
+__TASKS__ = [DecreaseInTrafficInPredictionTask]
