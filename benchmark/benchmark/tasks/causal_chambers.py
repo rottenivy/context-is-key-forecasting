@@ -63,7 +63,7 @@ class WindTunnelTask(UnivariateCRPSTask):
             past_time = past_time.resample(downsample).min()
             future_time = future_time.resample(downsample).min()
         
-        return past_time, future_time, text_covariates
+        return window, past_time, future_time, text_covariates
 
 
     def random_instance(self, downsample: str = "1s"):
@@ -74,7 +74,7 @@ class WindTunnelTask(UnivariateCRPSTask):
         """
 
         window_idx = self.random.choice(self._get_number_instances())
-        self.past_time, self.future_time, self.covariates = self._get_instance_by_idx(window_idx, downsample)
+        self.window, self.past_time, self.future_time, self.covariates = self._get_instance_by_idx(window_idx, downsample)
         
 
     def verbalize_covariate(self, observations: pd.DataFrame, round_freq: str = 's'):
