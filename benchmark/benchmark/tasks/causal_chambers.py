@@ -26,11 +26,20 @@ class WindTunnelTask(UnivariateCRPSTask):
         self.target_name = target_name
 
         super().__init__(seed=seed, fixed_config=fixed_config)
+    
+    def _get_number_instances(self):
+        """ Returns number of different instances/windows this task comprises"""
+        return len(self.possible_windows)
 
-    def random_instance(self, downsample: str = "1s"):
+    def _get_instance_by_idx(self, idx: int, downsample : str = None):
+        """ Returns instance corresponding to specified index, downsampled if required.
 
-        window_idx = self.random.choice(len(self.possible_windows))
-        window = self.possible_windows[window_idx]
+        Args:
+            idx (int): Instance index.
+            downsample (str, optional): Downsampling rule (see https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.resample.html). Defaults to None.
+        """
+
+        window = self.possible_windows[idx]
 
         experiment = self.dataset.get_experiment(name=f"load_in_seed_{window.seed}")
         observations = experiment.as_pandas_dataframe()
@@ -41,29 +50,46 @@ class WindTunnelTask(UnivariateCRPSTask):
         selected_variables.index = pd.to_datetime(observations.timestamp, unit="s")
 
         # select past and future
-        self.past_time = selected_variables[window.history_start : window.future_start]
-        self.future_time = selected_variables[window.future_start : window.time_end]
+        past_time = selected_variables[window.history_start : window.future_start]
+        future_time = selected_variables[window.future_start : window.time_end]
 
         # get verbalized covariates
-        self.covariates = self.verbalize_covariate(
+        text_covariates = self.verbalize_covariate(
             observations.iloc[window.history_start : window.time_end]
         )
 
-        # downsample numerical variates, not averaging to avoid introducing new values
-        self.past_time = self.past_time.resample(downsample).min()
-        self.future_time = self.future_time.resample(downsample).min()
+        if downsample is not None:
+            # downsample numerical variates, not averaging to avoid introducing new values
+            past_time = past_time.resample(downsample).min()
+            future_time = future_time.resample(downsample).min()
+        
+        return past_time, future_time, text_covariates
 
-    def verbalize_covariate(self, observations: pd.DataFrame):
+
+    def random_instance(self, downsample: str = "1s"):
+        """ Sets random downsampled instance/window as task instance.
+
+        Args:
+            downsample (str, optional): Downsampling rule (see https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.resample.html). Defaults to "1s".
+        """
+
+        window_idx = self.random.choice(self._get_number_instances())
+        self.past_time, self.future_time, self.covariates = self._get_instance_by_idx(window_idx, downsample)
+        
+
+    def verbalize_covariate(self, observations: pd.DataFrame, round_freq: str = 's'):
 
         covariate = observations[self.covariate_name]
         # intervention column = 0 when load is constant and = 1 when it changes wrt previous timestep
         change_points = list(observations[observations.intervention == 1].index)
 
         # timestep 0 is always tagged as change point, but we don't need it
+        # timestep 0 is not present when window starts at a later timestep
         if 0 in change_points:
             change_points.remove(0)
 
-        timestamps = pd.to_datetime(observations.timestamp, unit="s")
+        # get datetimes from unix times, drop date as it is constant
+        timestamps = pd.to_datetime(observations.timestamp, unit="s").dt.round(freq=round_freq).dt.time
 
         ans = f"The load is set to: {covariate.iloc[0]:.1f}"
         for c in change_points:
