@@ -18,6 +18,7 @@ class SensorPeriodicMaintenanceTask(UnivariateCRPSTask):
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
         super().__init__(seed=seed, fixed_config=fixed_config)
+        self.context_flags["c_cov"] = True
 
     def random_instance(self):
         datasets = ["electricity_hourly"]
@@ -92,6 +93,7 @@ class SensorTrendAccumulationTask(UnivariateCRPSTask):
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
         super().__init__(seed=seed, fixed_config=fixed_config)
+        self.context_flags["c_cov"] = True
 
     def random_instance(self):
         datasets = ["traffic"]
@@ -177,6 +179,7 @@ class SensorSpikeTask(UnivariateCRPSTask):
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
         super().__init__(seed=seed, fixed_config=fixed_config)
+        self.context_flags["c_cov"] = True
 
     def random_instance(self):
         datasets = ["traffic"]
@@ -251,6 +254,7 @@ class SensorMaintenanceInPredictionTask(UnivariateCRPSTask):
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
         super().__init__(seed=seed, fixed_config=fixed_config)
+        self.context_flags["c_cov"] = True
 
     def random_instance(self):
         # TODO: This task can use all datasets where the notion of a "sensor" is meaningful
