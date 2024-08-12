@@ -91,6 +91,7 @@ class ATMUnderPeriodicMaintenanceTask(UnivariateCRPSTask):
         super().__init__(seed=seed, fixed_config=fixed_config)
         self.context_flags["c_i"] = True
         self.context_flags["c_cov"] = True
+        # XXX: No c_h since the context doesn't say what hapenned due to maintenance
 
     def random_instance(self):
         datasets = [
@@ -166,6 +167,7 @@ class IncreasedWithdrawalScenario(UnivariateCRPSTask):
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
         super().__init__(seed=seed, fixed_config=fixed_config)
+        self.context_flags["c_cov"] = True
         self.context_flags["c_i"] = True
         self.context_flags["c_f"] = True
 
