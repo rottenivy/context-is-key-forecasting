@@ -41,6 +41,7 @@ class OraclePredUnivariateConstraintsTask(BaseTask):
         self.max_constraints = max_constraints
 
         super().__init__(seed=seed, fixed_config=fixed_config)
+        self.context_flags["c_f"] = True
 
     def random_instance(self):
         """
