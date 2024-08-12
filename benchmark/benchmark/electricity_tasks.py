@@ -1,5 +1,6 @@
 from tactis.gluon.dataset import get_dataset
 from gluonts.dataset.util import to_pandas
+import numpy as np
 
 from .base import UnivariateCRPSTask
 from .utils import get_random_window_univar, datetime_to_str
@@ -52,12 +53,11 @@ class ElectricityIncreaseInPredictionTask(UnivariateCRPSTask):
         if dataset_name == "electricity_hourly":
             # Sample a starting point in the first half of the prediction
             future_series.index = future_series.index.to_timestamp()
-            spike_start_date = self.random.choice(
-                future_series.index[
-                    len(future_series) // 2 : -4
-                ]  # Leave 3 points at the end: arbitrary
+            # Arbitrary way to select a start date: sort the values of future_series (excluding the last 4 points), pick it from the largest 5 values
+            spike_start_point = self.random.choice(
+                np.argsort(future_series.values[:-4])[-5:][::-1]
             )
-            spike_start_point = future_series.index.get_loc(spike_start_date)
+            spike_start_date = future_series.index[spike_start_point]
             spike_duration = self.random.choice(
                 [1, 2, 3]
             )  # Arbitrarily picked from 1,2,3
@@ -72,7 +72,10 @@ class ElectricityIncreaseInPredictionTask(UnivariateCRPSTask):
             # Convert future index to timestamp for consistency
             history_series.index = history_series.index.to_timestamp()
 
-            scenario = f"Consider that there was a heat wave from {datetime_to_str(spike_start_date)} for {spike_duration} {'hour' if spike_duration == 1 else 'hours'}, resulting in excessive use of air conditioning, and {spike_magnitude} times the usual electricity being consumed."
+            background = (
+                f"This is the electricity consumption recorded in Kilowatt (kW)."
+            )
+            scenario = f"Suppose that there is a heat wave from {datetime_to_str(spike_start_date)} for {spike_duration} {'hour' if spike_duration == 1 else 'hours'}, leading to excessive use of air conditioning, and {spike_magnitude} times the usual electricity being consumed."
 
         else:
             raise NotImplementedError(f"Dataset {dataset_name} is not supported.")

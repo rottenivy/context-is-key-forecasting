@@ -10,7 +10,7 @@ from abc import abstractmethod
 from gluonts.dataset.util import to_pandas
 from gluonts.dataset.repository import get_dataset
 
-from .base import UnivariateCRPSTask
+from ..base import UnivariateCRPSTask
 
 
 class BaseHalfDaySolarForecastTask(UnivariateCRPSTask):
@@ -33,12 +33,16 @@ class BaseHalfDaySolarForecastTask(UnivariateCRPSTask):
 
         # The solar_10_minutes dataset is for the whole year of 2006.
         # Select a day for the forecast between 2006-07-01 (182nd day) and 2006-12-31 (365th day).
-        day = self.random.randint(low=181, high=365)
+        day = self.random.randint(low=181, high=366)
+        # Select the start of the forecast period, from 10:30 to 13:30.
+        forecast_time = self.random.randint(low=10 * 6 + 3, high=13 * 6 + 3 + 1)
         # history = first 12 hours of the day, target = second 12 hours of the day
         full_history_series = full_series.iloc[: (day * 24 * 6)]
-        history_series = full_series.iloc[(day * 24 * 6) : (day * 24 * 6) + 12 * 6]
+        history_series = full_series.iloc[
+            (day * 24 * 6) : (day * 24 * 6) + forecast_time
+        ]
         future_series = full_series.iloc[
-            (day * 24 * 6) + 12 * 6 : (day * 24 * 6) + 24 * 6
+            (day * 24 * 6) + forecast_time : (day * 24 * 6) + 24 * 6
         ]
 
         background = self.get_background(
@@ -60,6 +64,15 @@ class BaseHalfDaySolarForecastTask(UnivariateCRPSTask):
         Generate a textual hint for the model to know about the potential shape of the daily solar intensity.
         """
         pass
+
+    @property
+    def seasonal_period(self) -> int:
+        """
+        This returns the period which should be used by statistical models for this task.
+        If negative, this means that the data either has no period, or the history is shorter than the period.
+        """
+        # Not enough history for a single period
+        return -1
 
 
 class MinimalInfoHalfDaySolarForecastTask(BaseHalfDaySolarForecastTask):

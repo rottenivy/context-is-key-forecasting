@@ -72,6 +72,8 @@ def plot_forecast_univariate(task, samples, path):
         timesteps, values, color=(0, 0, 0), linewidth=2, zorder=5, label="ground truth"
     )
 
+    plt.xticks(rotation=90)
+
     handles, labels = plt.gca().get_legend_handles_labels()
     order = [4, 0, 1, 2, 3]
     plt.legend([handles[idx] for idx in order], [labels[idx] for idx in order])
