@@ -156,3 +156,6 @@ class SpeedFromLoadTask(WindTunnelTask):
         self.constraints = "The load is between 0 and 1. At full load (=1), the fan turns at a maximum speed of 3000 rpm."
 
         super().__init__("rpm_in", seed, fixed_config, "wt_changepoints_v1", datadir)
+
+
+__TASKS__ = [SpeedFromLoadTask]
