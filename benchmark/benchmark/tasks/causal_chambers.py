@@ -110,8 +110,16 @@ class SpeedFromLoad(WindTunnelTask):
     ):
 
         self.possible_windows = [
-            Window(4, 0, 952, 1180),
+            Window(4, 0, 952, 1100),
             Window(3, 300, 807, 1420),
+            Window(7, 0, 613, 1000),
+            Window(4, 0, 1886, 2000),
+            Window(5, 0, 502, 600),
+            Window(6, 0, 686, 880),
+            Window(2, 0, 440, 700),
+            Window(0, 0, 1159, 1300),
+            Window(1, 0, 779, 900),
+            Window(1, 0, 779, 1400)
         ]
 
         self.background = "The wind tunnel is a chamber with one controllable fan that pushes air through it. We can control the load of the fan (corresponding to the duty cycle of the pulse-width-modulation signal) and measure its speed (in revolutions per minute). The fan is designed so its steady-state speed scales broadly linearly with the load. Unless completely powered off, the fan never operates below a certain speed, corresponding to a minimum effective load between 0.1 and 0.2."

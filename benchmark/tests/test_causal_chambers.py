@@ -11,7 +11,7 @@ from benchmark.tasks.causal_chambers import WindTunnelTask, SpeedFromLoad
 def test_deterministic_instance():
 
     task = SpeedFromLoad()
-    assert task._get_number_instances() == 2
+    assert task._get_number_instances() == 10
 
     idx = 0
     window, past_time, future_time, covariates = task._get_instance_by_idx(idx)
@@ -39,9 +39,10 @@ def test_deterministic_instance():
 
 def test_downsampling():
 
-    task = SpeedFromLoad()
-    task.random_instance()
+    for _ in range(50):
+        task = SpeedFromLoad()
+        task.random_instance()
 
-    # downsampling to 1s, while original frequency should be ~7 Hertz
-    assert len(task.past_time.index) < (task.window.future_start - task.window.history_start) / 6
-    assert len(task.future_time.index) < (task.window.time_end - task.window.future_start) / 6
+        # downsampling to 1s, while original frequency should be ~7 Hertz
+        assert len(task.past_time.index) < (task.window.future_start - task.window.history_start) / 6
+        assert len(task.future_time.index) < (task.window.time_end - task.window.future_start) / 6
