@@ -11,6 +11,35 @@ from abc import ABC, abstractmethod
 from .metrics.crps import crps_quantile
 
 
+class ContextFlags(dict):
+    """
+    Custom dictionnary to store context flags
+
+    """
+
+    allowed_keys = ["c_i", "c_h", "c_f", "c_cov", "c_causal"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Initialize all flags to False
+        for key in self.allowed_keys:
+            self[key] = False
+
+    def __setitem__(self, key, value):
+        # Check if flag is valid
+        if key not in self.allowed_keys:
+            raise KeyError(
+                f"Invalid context type: {key}. Allowed types: {self.allowed_keys}."
+            )
+        # Check if value if boolean
+        if not isinstance(value, bool):
+            raise ValueError(
+                f"Context flag must be a boolean, not a {value.__class__.__name__}."
+            )
+        super().__setitem__(key, value)
+
+
 class BaseTask(ABC):
     """
     Base class for a task
@@ -39,6 +68,9 @@ class BaseTask(ABC):
             self.background = None
             self.scenario = None
             self.random_instance()
+
+        # Context flags
+        self.context_flags = ContextFlags()
 
         config_errors = self.verify_config()
         if config_errors:
