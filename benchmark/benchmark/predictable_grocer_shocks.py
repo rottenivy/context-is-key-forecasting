@@ -50,6 +50,8 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
             self.influences = json.load(file)
 
         super().__init__(seed=seed, fixed_config=fixed_config)
+        self.context_flags["c_cov"] = True
+        self.context_flags["c_f"] = True
 
     def init_data(self):
         """
