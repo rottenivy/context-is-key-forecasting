@@ -11,13 +11,14 @@ class ElectricityIncreaseInPredictionTask(UnivariateCRPSTask):
     due to a heat wave and people using a lot of air conditioning.
     The spikes should be deducted from the context and reflected in the forecast.
     TODO: A multivariate extension of this task, where weather is another time series
+
     """
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
         super().__init__(seed=seed, fixed_config=fixed_config)
+        self.context_flags["c_f"] = True
 
     def random_instance(self):
-        # TODO: This task can use all datasets where the notion of a "sensor" is meaningful
         datasets = ["electricity_hourly"]
 
         # Select a random dataset
