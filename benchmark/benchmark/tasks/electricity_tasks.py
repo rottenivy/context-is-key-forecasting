@@ -2,8 +2,8 @@ from tactis.gluon.dataset import get_dataset
 from gluonts.dataset.util import to_pandas
 import numpy as np
 
-from .base import UnivariateCRPSTask
-from .utils import get_random_window_univar, datetime_to_str
+from ..base import UnivariateCRPSTask
+from ..utils import get_random_window_univar, datetime_to_str
 
 
 class ElectricityIncreaseInPredictionTask(UnivariateCRPSTask):
