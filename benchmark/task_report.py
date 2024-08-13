@@ -1,6 +1,8 @@
 import base64
+import matplotlib.pyplot as plt
 import pandas as pd
 import plotly.graph_objects as go
+import seaborn as sns
 
 from benchmark import ALL_TASKS
 from benchmark.base import ALLOWED_SKILLS
@@ -57,7 +59,7 @@ def get_task_context_info(tasks):
     )
 
 
-def get_task_skill_info(tasks):
+def get_task_skill_info(tasks, omit=[]):
     """
     Get a DataFrame with information about which tasks evaluate which skill
 
@@ -67,35 +69,36 @@ def get_task_skill_info(tasks):
         tmp = {}
         tmp["task"] = task_cls.__name__
         tmp.update(
-            {skill.capitalize(): skill in task_cls._skills for skill in ALLOWED_SKILLS}
+            {
+                skill.capitalize(): skill in task_cls._skills
+                for skill in ALLOWED_SKILLS
+                if skill not in omit
+            }
         )
         task_info.append(tmp)
 
     return pd.DataFrame(task_info).set_index("task")
 
 
-def list_tasks_per_context_type(task_info):
+def list_tasks_per_column(task_info):
     """
-    Produce an HTML list where each context type is a heading and the tasks
-    with a True value for that context type are listed under it as a bullet list
+    Produce an HTML list where each column is a heading and the tasks
+    with a True value for that column are listed under it as a bullet list
 
     """
-    # Get the list of context types
-    context_types = task_info.columns
-
     # Initialize the HTML string
     html = ""
 
     # Loop over the context types
-    for context_type in context_types:
+    for col in task_info.columns:
         # Add the context type as a heading
-        html += f"<h3 class='text-primary'>{context_type}</h3>\n"
+        html += f"<h3 class='text-primary'>{col}</h3>\n"
 
         # Get the tasks using the context type
-        tasks = task_info[task_info[context_type]].index
+        tasks = task_info[task_info[col]].index
 
         if len(tasks) == 0:
-            html += "<p>No tasks use this context type</p>\n"
+            html += "<p>No tasks</p>\n"
         else:
             # Add the tasks as a bullet list
             html += "<ul class='list-group'>\n"
@@ -177,12 +180,18 @@ def create_task_summary_page(tasks):
             f.write(summary.format(task_name=task_name, seeds=seeds))
 
 
-def plot_task_info_heatmap(task_info):
+def plot_task_heatmap(task_info, plot_topic="Context Type"):
     """
     Render the task info matrix as a heatmap using Plotly.
     """
     # Convert boolean values to integers
     task_info_int = task_info.astype(int)
+
+    # Check if all values are zero
+    if (task_info_int.values == 0).all():
+        colorscale = [[0, "white"], [1, "white"]]
+    else:
+        colorscale = [[0, "white"], [1, "red"]]
 
     # Create a heatmap using Plotly
     fig = go.Figure(
@@ -190,14 +199,14 @@ def plot_task_info_heatmap(task_info):
             z=task_info_int.values,
             x=task_info.columns,
             y=task_info.index,
-            colorscale=[[0, "white"], [1, "red"]],
+            colorscale=colorscale,
             showscale=False,
         )
     )
 
     fig.update_layout(
-        title="Context Type by Task",
-        xaxis_title="Context Types",
+        title=f"{plot_topic} by Task",
+        xaxis_title=plot_topic,
         yaxis_title="Tasks",
         xaxis=dict(tickangle=-90),
         template="plotly_white",
@@ -210,7 +219,7 @@ def plot_task_info_heatmap(task_info):
     return fig.to_html(full_html=False, include_plotlyjs="cdn")
 
 
-def plot_tasks_per_context_type(task_info):
+def plot_task_barchart(task_info, plot_topic="Context Type"):
     """
     Plot the number of tasks using each context type using Plotly.
     """
@@ -225,8 +234,8 @@ def plot_tasks_per_context_type(task_info):
     )
 
     fig.update_layout(
-        title="Number of Tasks Using Each Context Type",
-        xaxis_title="Context Type",
+        title=f"Number of Tasks by {plot_topic}",
+        xaxis_title=plot_topic,
         yaxis_title="Number of Tasks",
         template="plotly_white",
     )
@@ -235,22 +244,28 @@ def plot_tasks_per_context_type(task_info):
 
 
 if __name__ == "__main__":
-    tasks = ALL_TASKS[:10]
+    tasks = ALL_TASKS[:5]
     task_context_info = get_task_context_info(tasks)
-    task_skill_info = get_task_skill_info(tasks)
+    task_skill_info = get_task_skill_info(
+        tasks, omit=["forecasting", "natural language processing"]
+    )
     generation_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     # Stats by context source
-    task_by_context_bar = plot_tasks_per_context_type(task_context_info)
-    task_context_heatmap = plot_task_info_heatmap(task_context_info)
-    task_by_context_list = list_tasks_per_context_type(task_context_info)
+    task_by_context_bar = plot_task_barchart(
+        task_context_info, plot_topic="Context Type"
+    )
+    task_context_heatmap = plot_task_heatmap(
+        task_context_info, plot_topic="Context Type"
+    )
+    task_by_context_list = list_tasks_per_column(task_context_info)
 
     # # Stats by skill
-    # task_by_skill_bar = _figure_to_html(plot_tasks_per_skill(task_skill_info))
-    # task_skill_heatmap = _figure_to_html(task_info_heatmap(task_skill_info))
-    # task_by_skill_list = list_tasks_per_skill(task_skill_info)
+    task_by_skill_bar = plot_task_barchart(task_skill_info, plot_topic="Skill")
+    task_skill_heatmap = plot_task_heatmap(task_skill_info, plot_topic="Skill")
+    task_by_skill_list = list_tasks_per_column(task_skill_info)
 
-    create_task_summary_page(tasks)
+    # create_task_summary_page(tasks)
 
     report = f"""
 <!DOCTYPE html>
@@ -272,6 +287,13 @@ if __name__ == "__main__":
             padding: 20px;
             margin-bottom: 20px;
         }}
+        .subsection {{
+            background-color: #f1f1f1;
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            padding: 15px;
+            margin-bottom: 15px;
+        }}
         .section h2 {{
             border-bottom: 2px solid #007bff;
             padding-bottom: 10px;
@@ -289,6 +311,11 @@ if __name__ == "__main__":
         .collapse.show + h2::after {{
             transform: rotate(-180deg);  /* Rotate caret icon */
         }}
+        .subsection h3 {{
+            border-bottom: 1px solid #007bff;
+            padding-bottom: 5px;
+            cursor: pointer;
+        }}
         .list-group-item {{
             background-color: #f8f9fa;
         }}
@@ -304,11 +331,26 @@ if __name__ == "__main__":
         <div class="section">
             <h2 class="text-primary" data-bs-toggle="collapse" data-bs-target="#visualizations-section">Visualizations</h2>
             <div class="collapse show" id="visualizations-section">
-                <div class="mb-4">
-                    {task_by_context_bar}
+                <!-- Context Type Plots -->
+                <div class="subsection">
+                    <h3 class="text-secondary">Tasks by Context Type</h3>
+                    <div class="mb-4">
+                        {task_by_context_bar}
+                    </div>
+                    <div class="mb-4">
+                        {task_context_heatmap}
+                    </div>
                 </div>
-                <div class="mb-4">
-                    {task_context_heatmap}
+
+                <!-- Skill Type Plots -->
+                <div class="subsection">
+                    <h3 class="text-secondary">Tasks by Skill Type</h3>
+                    <div class="mb-4">
+                        {task_by_skill_bar}
+                    </div>
+                    <div class="mb-4">
+                        {task_skill_heatmap}
+                    </div>
                 </div>
             </div>
         </div>
@@ -320,6 +362,16 @@ if __name__ == "__main__":
                     There is a total of {len(task_context_info)} tasks in the benchmark.
                 </div>
                 {task_by_context_list}
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="text-primary" data-bs-toggle="collapse" data-bs-target="#tasks-by-skill-section">Tasks by Skill</h2>
+            <div class="collapse" id="tasks-by-skill-section">
+                <div class="mb-4">
+                    There is a total of {len(task_skill_info)} tasks in the benchmark.
+                </div>
+                {task_by_skill_list}
             </div>
         </div>
     </div>
