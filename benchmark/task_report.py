@@ -205,14 +205,14 @@ def task_info_heatmap(task_info):
 
 
 if __name__ == "__main__":
-    task_info = get_task_info(ALL_TASKS)
+    task_info = get_task_info(ALL_TASKS[:5])
     generation_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     task_by_context_bar = _figure_to_html(plot_tasks_per_context_type(task_info))
     task_info_heatmap = _figure_to_html(task_info_heatmap(task_info))
     task_by_context_list = list_tasks_per_context_type(task_info)
 
-    create_task_summary_page(ALL_TASKS)
+    create_task_summary_page(ALL_TASKS[:5])
 
     report = f"""
 <!DOCTYPE html>
