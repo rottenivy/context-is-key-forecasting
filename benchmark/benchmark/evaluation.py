@@ -2,6 +2,7 @@ import logging
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import traceback
 
 from collections import defaultdict
 from pathlib import Path
@@ -82,6 +83,7 @@ def plot_forecast_univariate(task, samples, path):
 
     plt.savefig(path / "forecast.pdf")
     plt.savefig(path / "forecast.png", bbox_inches="tight")
+    plt.close()
 
 
 def save_context(task, path):
@@ -196,5 +198,7 @@ def evaluate_all_tasks(
                 if output_folder:
                     with open(seed_folder / "error", "w") as f:
                         f.write(str(e))
+                        f.write("\n")
+                        f.write(traceback.format_exc())
 
     return results

@@ -81,6 +81,8 @@ class SensorPeriodicMaintenanceTask(UnivariateCRPSTask):
         self.future_time = future_series.to_frame()
         self.background = background
 
+        # TODO: Add ROI parameters to add focus to the times where there would have been maintenance in the prediction region
+
 
 class SensorTrendAccumulationTask(UnivariateCRPSTask):
     """
@@ -241,6 +243,11 @@ class SensorSpikeTask(UnivariateCRPSTask):
         self.future_time = future_series.to_frame()
         self.background = background
 
+        # ROI metric parameters
+        self.region_of_interest = slice(
+            spike_start_point, spike_start_point + spike_duration
+        )
+
 
 class SensorMaintenanceInPredictionTask(UnivariateCRPSTask):
     """
@@ -304,6 +311,9 @@ class SensorMaintenanceInPredictionTask(UnivariateCRPSTask):
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()
         self.scenario = scenario
+
+        # ROI metric parameters
+        self.region_of_interest = slice(start_hour, start_hour + duration)
 
 
 __TASKS__ = [

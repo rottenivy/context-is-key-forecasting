@@ -1,16 +1,14 @@
 import scipy
 import numpy as np
-import pandas as pd
-from abc import abstractmethod
 
-from .base import BaseTask
+from .base import UnivariateCRPSTask
 from tactis.gluon.dataset import get_dataset
 from gluonts.dataset.util import to_pandas
 
 from .utils import get_random_window_univar
 
 
-class OraclePredUnivariateConstraintsTask(BaseTask):
+class OraclePredUnivariateConstraintsTask(UnivariateCRPSTask):
     """
     Task that creates constraints from the ground truth, makes synthetic context that
     describes these constraints and evaluates the forecast based on these constraints.
@@ -20,7 +18,7 @@ class OraclePredUnivariateConstraintsTask(BaseTask):
     -----------
     possible_constraints: list
         List of possible constraints to be used.
-        Default is ["min", "max", "median", "mode", "mean"]
+        Default is ["min", "max"]
     max_constraints: int
         Maximum number of constraints to be used. Default is 2.
     fixed_config: dict
@@ -29,7 +27,7 @@ class OraclePredUnivariateConstraintsTask(BaseTask):
 
     def __init__(
         self,
-        possible_constraints=["min", "max", "median", "mode", "mean"],
+        possible_constraints=["min", "max"],
         max_constraints: int = 2,
         fixed_config: dict = None,
         seed: int = None,
@@ -78,12 +76,15 @@ class OraclePredUnivariateConstraintsTask(BaseTask):
         history_series = window.iloc[: -metadata.prediction_length]
         future_series = window.iloc[-metadata.prediction_length :]
 
-        self._constraints = self.sampleConstraintsFromGroundTruth(future_series)
+        # ROI metrics parameter
+        self.metric_constraints = self.sampleConstraintsFromGroundTruth(future_series)
 
         # Instantiate the class variables
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()
-        self.constraints = self.verbalize_context_from_constraints(self._constraints)
+        self.constraints = self.verbalize_context_from_constraints(
+            self.metric_constraints
+        )
         self.background = None
         self.scenario = None
 
@@ -110,13 +111,6 @@ class OraclePredUnivariateConstraintsTask(BaseTask):
                 constraints_dict["min"] = future_series.min()
             elif constraint_type == "max":
                 constraints_dict["max"] = future_series.max()
-            elif constraint_type == "median":
-                constraints_dict["median"] = future_series.median()
-            elif constraint_type == "mode":
-                constraints_dict["mode"] = future_series.mode().iloc[0]
-                ## TODO: How to handle multimodal distributions?
-            elif constraint_type == "mean":
-                constraints_dict["mean"] = future_series.mean()
 
         return constraints_dict
 
@@ -155,53 +149,6 @@ class OraclePredUnivariateConstraintsTask(BaseTask):
         context += "."
 
         return context
-
-    def evaluate(self, samples):
-        """
-        Since we don't know the ground truth distribution, the evaluation should
-        be done by comparing the forecast with the constraints
-        The score is the proportion of samples that satisfy each constraint,
-        averaged over all constraints.
-        As a side-effect, sets the attribute prop_satisfied_constraints to the
-        proportion of samples that satisfy each constraint.
-        Parameters:
-        -----------
-        samples: np.ndarray
-            Samples from the inferred distribution
-        Returns:
-        --------
-        prop_satisfied_constraint: float
-            Proportion of samples that satisfy the constraints
-        """
-        if len(samples.shape) == 3:
-            samples = samples[:, :, 0]  # (n_samples, n_time)
-
-        prop_satisfied_constraints = {}
-        for constraint, value in self._constraints.items():
-            if constraint == "min":
-                good_samples = np.all(samples >= value, axis=1)
-            elif constraint == "max":
-                good_samples = np.all(samples <= value, axis=1)
-            elif constraint == "median":
-                good_samples = np.abs(np.median(samples, axis=1) - value) < 1e-6
-            elif constraint == "mode":
-                good_samples = (
-                    np.abs(scipy.stats.mode(samples, axis=1).mode.flatten() - value)
-                    < 1e-6
-                )
-            elif constraint == "mean":
-                good_samples = np.abs(np.mean(samples, axis=1) - value) < 1e-6
-
-            prop_satisfied_constraint = np.mean(good_samples)
-            prop_satisfied_constraints[constraint] = prop_satisfied_constraint
-
-        prop_satisfied_constraint = np.mean(
-            np.array(list(prop_satisfied_constraints.values()))
-        )
-        prop_satisfied_constraints["satisfaction_rate"] = prop_satisfied_constraint
-        self.prop_satisfied_constraints = prop_satisfied_constraints
-
-        return prop_satisfied_constraint
 
 
 class BoundedPredConstraintsBasedOnPredQuantilesTask(
@@ -262,13 +209,17 @@ class BoundedPredConstraintsBasedOnPredQuantilesTask(
         history_series = window.iloc[: -metadata.prediction_length]
         future_series = window.iloc[-metadata.prediction_length :]
 
-        # Apply bound constraints to the time series
-        self._constraints = self.calculateConstraintsFromGroundTruth(future_series)
+        # ROI metrics parameter
+        self.metric_constraints = self.calculateConstraintsFromGroundTruth(
+            future_series
+        )
 
         # Instantiate the class variables
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()
-        self.constraints = self.verbalize_context_from_constraints(self._constraints)
+        self.constraints = self.verbalize_context_from_constraints(
+            self.metric_constraints
+        )
         self.background = None
         self.scenario = None
 
