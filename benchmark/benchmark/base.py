@@ -15,6 +15,16 @@ from .utils.plot import plot_task
 
 
 ALLOWED_CONTEXT_SOURCES = ["c_h", "c_i", "c_f", "c_cov", "c_causal"]
+ALLOWED_SKILLS = [
+    "forecasting",
+    "natural language processing",
+    "instruction following",
+    "retrieval: context",
+    "reasoning: analogy",
+    "reasoning: deduction",
+    "reasoning: math",
+    "reasoning: causal",
+]
 
 
 class BaseTask(ABC):
@@ -31,6 +41,7 @@ class BaseTask(ABC):
     """
 
     _context_sources = []
+    _skills = ["forecasting", "natural language processing"]
 
     def __init__(self, seed: int = None, fixed_config: Optional[dict] = None):
         self.random = np.random.RandomState(seed)
@@ -103,7 +114,11 @@ class BaseTask(ABC):
         # ... check that the context sources are valid
         for source in self._context_sources:
             if source not in ALLOWED_CONTEXT_SOURCES:
-                errors.append(f"Invalid context source: {source}")
+                errors.append(f"Invalid task context source: {source}")
+        # ... check that the skills are valid
+        for skill in self._skills:
+            if skill not in ALLOWED_SKILLS:
+                errors.append(f"Invalid task skill: {skill}")
         return errors
 
     @abstractmethod
