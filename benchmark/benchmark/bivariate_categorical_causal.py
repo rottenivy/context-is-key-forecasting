@@ -75,12 +75,10 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
             ha += 1
             # Halfway point
             if double_regimes:
-                print(ha, regime_length, time_elapsed)
                 if (
                     remaining_length > T // 2
                     and remaining_length - regime_length <= T // 2
                 ):
-                    print("Right")
                     first_half = T // 2 - time_elapsed
                     second_half = regime_length - first_half
 
