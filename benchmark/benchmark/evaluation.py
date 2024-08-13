@@ -27,6 +27,7 @@ def plot_forecast_univariate(task, samples, path):
         The forecast of shape [samples, time dimension, number of variables]
     path: Pathlike
         Directory in which to save the figure
+
     """
     samples = samples[:, :, 0]
 
@@ -70,11 +71,11 @@ def plot_forecast_univariate(task, samples, path):
     order = [2, 0, 1, 3, 4, 5, 6]
     ax.legend([handles[idx] for idx in order], [labels[idx] for idx in order])
 
-    plt.title(task.name)
+    ax.set_title(task.name)
 
-    plt.savefig(path / "forecast.pdf")
-    plt.savefig(path / "forecast.png", bbox_inches="tight")
-    plt.close()
+    fig.savefig(path / "forecast.pdf")
+    fig.savefig(path / "forecast.png", bbox_inches="tight")
+    plt.close(fig)
 
 
 def save_context(task, path):

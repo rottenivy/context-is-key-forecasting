@@ -1,9 +1,9 @@
 import base64
-import matplotlib.pyplot as plt
 import pandas as pd
-import seaborn as sns
+import plotly.graph_objects as go
 
 from benchmark import ALL_TASKS
+from benchmark.base import ALLOWED_SKILLS
 from datetime import datetime
 from io import BytesIO
 
@@ -37,7 +37,7 @@ def _figure_to_html(figure):
     return figure_html
 
 
-def get_task_info(tasks):
+def get_task_context_info(tasks):
     """
     Get a DataFrame with information about which tasks use which context flags
 
@@ -57,23 +57,21 @@ def get_task_info(tasks):
     )
 
 
-def plot_tasks_per_context_type(task_info):
+def get_task_skill_info(tasks):
     """
-    Plot the number of tasks using each context type
+    Get a DataFrame with information about which tasks evaluate which skill
 
     """
-    # Count the number of tasks using each context type
-    context_counts = task_info.sum()
+    task_info = []
+    for task_cls in tasks:
+        tmp = {}
+        tmp["task"] = task_cls.__name__
+        tmp.update(
+            {skill.capitalize(): skill in task_cls._skills for skill in ALLOWED_SKILLS}
+        )
+        task_info.append(tmp)
 
-    # Create a bar plot
-    context_counts.plot(kind="bar", color="blue")
-    plt.xlabel("Context Type")
-    plt.ylabel("Number of Tasks")
-    plt.title("Number of Tasks Using Each Context Type")
-
-    plt.tight_layout()
-
-    return plt.gcf()
+    return pd.DataFrame(task_info).set_index("task")
 
 
 def list_tasks_per_context_type(task_info):
@@ -179,53 +177,80 @@ def create_task_summary_page(tasks):
             f.write(summary.format(task_name=task_name, seeds=seeds))
 
 
-def task_info_heatmap(task_info):
+def plot_task_info_heatmap(task_info):
     """
-    Render the task info matrix as a heatmap
+    Render the task info matrix as a heatmap using Plotly.
     """
     # Convert boolean values to integers
     task_info_int = task_info.astype(int)
 
-    # Create the heatmap
-    plt.figure()
-    ax = sns.heatmap(
-        task_info_int,
-        cmap=sns.color_palette(["white", "red"]),
-        cbar=False,
-        linewidths=0.5,
-        linecolor="black",
-        yticklabels=True,
-        xticklabels=True,
+    # Create a heatmap using Plotly
+    fig = go.Figure(
+        data=go.Heatmap(
+            z=task_info_int.values,
+            x=task_info.columns,
+            y=task_info.index,
+            colorscale=[[0, "white"], [1, "red"]],
+            showscale=False,
+        )
     )
 
-    # Add a border around the heatmap
-    for _, spine in ax.spines.items():
-        spine.set_visible(True)
-        spine.set_linewidth(1)
-        spine.set_color("black")
+    fig.update_layout(
+        title="Context Type by Task",
+        xaxis_title="Context Types",
+        yaxis_title="Tasks",
+        xaxis=dict(tickangle=-90),
+        template="plotly_white",
+        margin=dict(l=200, r=20, t=50, b=50),  # Adjust margins if needed
+    )
 
-    # Rotate the x-tick labels
-    plt.xticks(rotation=90)
+    fig.update_xaxes(showgrid=False)
+    fig.update_yaxes(showgrid=False)
 
-    plt.title("Context Type by Task")
-    plt.xlabel("Context Types")
-    plt.ylabel("Tasks")
+    return fig.to_html(full_html=False, include_plotlyjs="cdn")
 
-    plt.tight_layout()
-    plt.gcf().set_size_inches(10, task_info.shape[0])
 
-    return plt.gcf()
+def plot_tasks_per_context_type(task_info):
+    """
+    Plot the number of tasks using each context type using Plotly.
+    """
+    # Count the number of tasks using each context type
+    context_counts = task_info.sum()
+
+    # Create a bar plot using Plotly
+    fig = go.Figure(
+        data=[
+            go.Bar(x=context_counts.index, y=context_counts.values, marker_color="blue")
+        ]
+    )
+
+    fig.update_layout(
+        title="Number of Tasks Using Each Context Type",
+        xaxis_title="Context Type",
+        yaxis_title="Number of Tasks",
+        template="plotly_white",
+    )
+
+    return fig.to_html(full_html=False, include_plotlyjs="cdn")
 
 
 if __name__ == "__main__":
-    task_info = get_task_info(ALL_TASKS)
+    tasks = ALL_TASKS[:10]
+    task_context_info = get_task_context_info(tasks)
+    task_skill_info = get_task_skill_info(tasks)
     generation_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    task_by_context_bar = _figure_to_html(plot_tasks_per_context_type(task_info))
-    task_info_heatmap = _figure_to_html(task_info_heatmap(task_info))
-    task_by_context_list = list_tasks_per_context_type(task_info)
+    # Stats by context source
+    task_by_context_bar = plot_tasks_per_context_type(task_context_info)
+    task_context_heatmap = plot_task_info_heatmap(task_context_info)
+    task_by_context_list = list_tasks_per_context_type(task_context_info)
 
-    create_task_summary_page(ALL_TASKS)
+    # # Stats by skill
+    # task_by_skill_bar = _figure_to_html(plot_tasks_per_skill(task_skill_info))
+    # task_skill_heatmap = _figure_to_html(task_info_heatmap(task_skill_info))
+    # task_by_skill_list = list_tasks_per_skill(task_skill_info)
+
+    create_task_summary_page(tasks)
 
     report = f"""
 <!DOCTYPE html>
@@ -250,6 +275,19 @@ if __name__ == "__main__":
         .section h2 {{
             border-bottom: 2px solid #007bff;
             padding-bottom: 10px;
+            cursor: pointer;
+            position: relative;
+        }}
+        .section h2::after {{
+            content: "\\25BC";  /* Downward pointing caret */
+            font-size: 1rem;
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            transition: transform 0.3s ease;
+        }}
+        .collapse.show + h2::after {{
+            transform: rotate(-180deg);  /* Rotate caret icon */
         }}
         .list-group-item {{
             background-color: #f8f9fa;
@@ -264,21 +302,24 @@ if __name__ == "__main__":
         </div>
 
         <div class="section">
-            <h2 class="text-primary">Tasks by Context Type</h2>
-            <div class="mb-4">
-                There is a total of {len(task_info)} tasks in the benchmark.
+            <h2 class="text-primary" data-bs-toggle="collapse" data-bs-target="#visualizations-section">Visualizations</h2>
+            <div class="collapse show" id="visualizations-section">
+                <div class="mb-4">
+                    {task_by_context_bar}
+                </div>
+                <div class="mb-4">
+                    {task_context_heatmap}
+                </div>
             </div>
-
-            {task_by_context_list}
         </div>
 
         <div class="section">
-            <h2 class="text-primary">Visualizations</h2>
-            <div class="mb-4">
-                {task_by_context_bar}
-            </div>
-            <div class="mb-4">
-                {task_info_heatmap}
+            <h2 class="text-primary" data-bs-toggle="collapse" data-bs-target="#tasks-by-context-section">Tasks by Context Type</h2>
+            <div class="collapse" id="tasks-by-context-section">
+                <div class="mb-4">
+                    There is a total of {len(task_context_info)} tasks in the benchmark.
+                </div>
+                {task_by_context_list}
             </div>
         </div>
     </div>
