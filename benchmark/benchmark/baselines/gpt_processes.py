@@ -94,7 +94,7 @@ class GPTForecaster(Baseline):
 
         # Extract time series data
         hist_time = task_instance.past_time.index.strftime("%Y-%m-%d %H:%M:%S").values
-        hist_value = task_instance.past_time.values[:, 0]
+        hist_value = task_instance.past_time.values[:, -1]
         pred_time = task_instance.future_time.index.strftime("%Y-%m-%d %H:%M:%S").values
         history = "\n".join(
             f"({x}, {np.round(y, max_digits)})" for x, y in zip(hist_time, hist_value)

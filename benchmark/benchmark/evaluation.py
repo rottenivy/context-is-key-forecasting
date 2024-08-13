@@ -30,9 +30,9 @@ def plot_forecast_univariate(task, samples, path):
     """
     samples = samples[:, :, 0]
     past_timesteps = task.past_time.index
-    past_values = task.past_time.to_numpy()[:, 0]
+    past_values = task.past_time.to_numpy()[:, -1]
     future_timesteps = task.future_time.index
-    future_values = task.future_time.to_numpy()[:, 0]
+    future_values = task.future_time.to_numpy()[:, -1]
 
     # The fill_between method is only ok with pd.DatetimeIndex
     if isinstance(past_timesteps, pd.PeriodIndex):

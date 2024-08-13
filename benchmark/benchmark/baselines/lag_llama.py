@@ -149,7 +149,10 @@ def lag_llama(task_instance, n_samples, batch_size=1, device=None):
         device = torch_default_device()
 
     # Package the dataset in the format expected by the Lag-Llama model
-    dataset = prepare_dataset(task_instance.past_time, task_instance.future_time)
+    dataset = prepare_dataset(
+        task_instance.past_time[[task_instance.past_time.columns[-1]]],
+        task_instance.future_time[[task_instance.future_time.columns[-1]]],
+    )
 
     # Generate forecasts using the Lag-Llama model
     forecasts, _ = get_lag_llama_predictions(
@@ -161,5 +164,5 @@ def lag_llama(task_instance, n_samples, batch_size=1, device=None):
     )
 
     return np.stack([f.samples for f in forecasts], axis=-1).astype(
-        task_instance.past_time.dtypes.iloc[0]
+        task_instance.past_time.dtypes.iloc[-1]
     )
