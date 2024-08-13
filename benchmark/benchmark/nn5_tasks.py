@@ -85,7 +85,7 @@ class ATMUnderPeriodicMaintenanceTask(UnivariateCRPSTask):
     This period should be ignored by the forecasting algorithm in its forecasts.
     """
 
-    # XXX: No c_h since the context doesn't say what hapenned due to maintenance
+    # XXX: No c_h since the context doesn't say what happened due to maintenance
     _context_sources = ["c_i", "c_cov"]
 
     def random_instance(self):
