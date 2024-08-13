@@ -135,6 +135,7 @@ class WindTunnelTask(UnivariateCRPSTask):
 class SpeedFromLoadTask(WindTunnelTask):
 
     _context_sources = WindTunnelTask._context_sources + ["c_causal", "c_i"]
+    _skills = WindTunnelTask._skills + ["reasoning: causal", "instruction following"]
 
     def __init__(
         self,

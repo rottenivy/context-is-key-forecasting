@@ -17,7 +17,8 @@ class CashDepletedinATMScenarioTask(UnivariateCRPSTask):
     The depletion occurs in the prediction horizon, and should be deductable by a model from the text context.
     """
 
-    _context_sources = ["c_i", "c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_f"]
+    _skills = UnivariateCRPSTask._skills + ["instruction following"]
 
     def random_instance(self):
         datasets = [
@@ -86,7 +87,8 @@ class ATMUnderPeriodicMaintenanceTask(UnivariateCRPSTask):
     """
 
     # XXX: No c_h since the context doesn't say what happened due to maintenance
-    _context_sources = ["c_i", "c_cov"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_cov"]
+    _skills = UnivariateCRPSTask._skills + ["instruction following"]
 
     def random_instance(self):
         datasets = [
@@ -243,7 +245,8 @@ class IncreasedWithdrawalScenario(UnivariateCRPSTask):
     This is a scenario that occurs in the prediction horizon, and should be deductable by a model from the text context.
     """
 
-    _context_sources = ["c_cov", "c_i", "c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_i", "c_f"]
+    _skills = UnivariateCRPSTask._skills + ["instruction following"]
 
     def random_instance(self):
         datasets = [
@@ -304,8 +307,12 @@ class IncreasedWithdrawalScenario(UnivariateCRPSTask):
         # Convert history index to timestamp for consistency
         history_series.index = history_series.index.to_timestamp()
 
+        event_type = self.random.choice(
+            ["festival", "holiday", "celebration", "party", "music concert", "carnival"]
+        )
         background = f"This is the number of cash withdrawals from an automated teller machine (ATM) in an arbitrary location in England, recorded at an hourly frequency."
-        scenario = f"Suppose that there is a festival from {datetime_to_str(limit_off_start_date)}, for {limit_off_duration} {'hour' if limit_off_duration == 1 else 'hours'} leading to more people in the area, and {increase_factor} times the number of usual withdrawals during that period."
+        # TODO: Could be modified to involve deduction by saying "leading to x many more people in the area" --> should believe x times number of withdrawals
+        scenario = f"Suppose that there is a {event_type} from {datetime_to_str(limit_off_start_date)}, for {limit_off_duration} {'hour' if limit_off_duration == 1 else 'hours'} leading to more people in the area, and {increase_factor} times the number of usual withdrawals during that period."
         # Covariate task: Event or not
 
         # Instantiate the class variables
