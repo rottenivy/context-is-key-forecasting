@@ -160,6 +160,9 @@ def create_task_summary_page(tasks):
             <p class="text-center"><strong>Background:</strong> {task.background}</p>
             <p class="text-center"><strong>Constraints:</strong> {task.constraints}</p>
             <p class="text-center"><strong>Scenario:</strong> {task.scenario}</p>
+            <p class="text-center">
+                {_figure_to_html(task.plot())}
+            </p>
         </div>
     """
         with open(f"{task_name}.html", "w") as f:
