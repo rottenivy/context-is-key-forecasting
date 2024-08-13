@@ -7,3 +7,4 @@ numpy
 openai
 pandas
 statsmodels
+causalchamber==0.1.1
