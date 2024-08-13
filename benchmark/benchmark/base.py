@@ -134,8 +134,10 @@ class UnivariateCRPSTask(BaseTask):
         if fixed_config is not None:
             self.region_of_interest = fixed_config["region_of_interest"]
             self.roi_weight = fixed_config["roi_weight"]
-            self.roi_constraints = fixed_config["roi_constraints"]
-            self.roi_tolerance = fixed_config["roi_tolerance"]
+            self.metric_constraints = fixed_config["metric_constraints"]
+            self.metric_constraints_tolerance = fixed_config[
+                "metric_constraints_tolerance"
+            ]
         else:
             # These will be filled during by random_instance(), called in BaseTask.__init__
             self.region_of_interest = None
