@@ -67,15 +67,15 @@ def plot_forecast_with_covariates(task, filename):
         Where to save the figure
     """
     past_timesteps = task.past_time.index
-    past_values = task.past_time.to_numpy()[:, 0]
+    past_values = task.past_time.to_numpy()[:, -1]
     future_timesteps = task.future_time.index
-    future_values = task.future_time.to_numpy()[:, 0]
-    past_covariates = task.past_covariates.to_numpy()
-    future_covariates = task.future_covariates.to_numpy()
+    future_values = task.future_time.to_numpy()[:, -1]
+    past_covariates = task.past_time.to_numpy()[:, :-1]
+    future_covariates = task.future_time.to_numpy()[:, :-1]
     num_covariates = past_covariates.shape[1]
 
     fig, axes = plt.subplots(
-        num_covariates + 1, 1, figsize=(10, 5 * num_covariates), sharex=True
+        num_covariates + 1, 1, figsize=(10, 8 * num_covariates), sharex=True
     )
 
     for k in range(num_covariates + 1):
@@ -117,8 +117,12 @@ def plot_forecast_with_covariates(task, filename):
 
     fig.legend(lines, lables, loc="upper right")
 
+    scenario = "\n".join(textwrap.wrap(task.scenario, width=40))
+    background = "\n".join(textwrap.wrap(task.background, width=40))
+    causal_context = "\n".join(textwrap.wrap(task.causal_context, width=40))
+
     plt.suptitle(
-        "\n".join(textwrap.wrap(task.scenario, width=40))
+        f"Background: {background}\nCausal context: {causal_context}\nScenario: {scenario}"
     )  # Change this to task.background or task.constraint depending on task
     plt.tight_layout()
     plt.savefig(filename)
