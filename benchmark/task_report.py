@@ -148,6 +148,10 @@ def create_task_summary_page(tasks):
 </head>
 <body>
     <div class="container">
+        <div class="section">
+            <h1 class="text-center text-primary">{task_name}</h1>
+        </div>
+
         <!-- Back Button -->
         <button class="btn btn-secondary back-button" onclick="history.back()">Go Back</button>
 
@@ -167,7 +171,7 @@ def create_task_summary_page(tasks):
 
             seeds += f"""
         <div class="section">
-            <h1 class="text-center text-primary">Seed {seed}</h1>
+            <h2 class="text-center text-primary">Seed {seed}</h2>
             <p class="text-center"><strong>Background:</strong> {task.background}</p>
             <p class="text-center"><strong>Constraints:</strong> {task.constraints}</p>
             <p class="text-center"><strong>Scenario:</strong> {task.scenario}</p>
