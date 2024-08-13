@@ -10,6 +10,7 @@ import statsmodels.tsa.tsatools
 from abc import ABC, abstractmethod
 
 from .metrics.crps import crps_quantile
+from .utils.plot import plot_task
 
 
 class ContextFlags(dict):
@@ -152,6 +153,18 @@ class BaseTask(ABC):
 
         """
         pass
+
+    def plot(self):
+        """
+        Plot the task
+
+        Returns:
+        --------
+        fig: matplotlib.figure.Figure
+            The figure containing the plot
+
+        """
+        return plot_task(self)
 
 
 class UnivariateCRPSTask(BaseTask):
