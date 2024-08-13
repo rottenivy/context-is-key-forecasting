@@ -80,9 +80,7 @@ class MinimalInfoHalfDaySolarForecastTask(BaseHalfDaySolarForecastTask):
     Version of the task where only the minimal background information is given.
     """
 
-    def __init__(self, seed: int = None):
-        super().__init__(seed)
-        self.context_flags["c_i"] = True
+    _context_sources = ["c_i"]
 
     def get_background(
         self, full_history_series: pd.Series, forecast_date: pd.Timestamp
@@ -97,9 +95,7 @@ class LocaleInfoHalfDaySolarForecastTask(BaseHalfDaySolarForecastTask):
     Version of the task where the state in which the data was collected is mentioned.
     """
 
-    def __init__(self, seed: int = None):
-        super().__init__(seed)
-        self.context_flags["c_i"] = True
+    _context_sources = ["c_i"]
 
     def get_background(
         self, full_history_series: pd.Series, forecast_date: pd.Timestamp
@@ -112,10 +108,7 @@ class ZenithInfoHalfDaySolarForecastTask(BaseHalfDaySolarForecastTask):
     Version of the task where the average time at which the daily maximum is reached is mentioned.
     """
 
-    def __init__(self, seed: int = None):
-        super().__init__(seed)
-        self.context_flags["c_i"] = True
-        self.context_flags["c_h"] = True
+    _context_sources = ["c_i", "c_h"]
 
     def get_background(
         self, full_history_series: pd.Series, forecast_date: pd.Timestamp
@@ -202,9 +195,7 @@ class MinimalInfoDayOfWeekTrafficForecastTask(BaseDayOfWeekTrafficForecastTask):
     Secondary difficulty: being able to detect that given history is only for weekdays.
     """
 
-    def __init__(self, seed: int = None):
-        super().__init__(seed)
-        self.context_flags["c_i"] = True
+    _context_sources = ["c_i"]
 
     def get_background(
         self, full_history_series: pd.Series, forecast_date: pd.Timestamp
@@ -220,10 +211,7 @@ class ExplicitDayOfWeekTrafficForecastTask(BaseDayOfWeekTrafficForecastTask):
     Secondary difficulty: using a world model to guess at the amplitude of the reduction.
     """
 
-    def __init__(self, seed: int = None):
-        super().__init__(seed)
-        self.context_flags["c_i"] = True
-        self.context_flags["c_cov"] = True
+    _context_sources = ["c_i", "c_cov"]
 
     def get_background(
         self, full_history_series: pd.Series, forecast_date: pd.Timestamp
@@ -241,10 +229,7 @@ class WeekendShiftDayOfWeekTrafficForecastTask(BaseDayOfWeekTrafficForecastTask)
     Main difficulty: using a world model to guess that the traffic is lower during the weekend.
     """
 
-    def __init__(self, seed: int = None):
-        super().__init__(seed)
-        self.context_flags["c_i"] = True
-        self.context_flags["c_h"] = True
+    _context_sources = ["c_i", "c_h"]
 
     def get_background(
         self, full_history_series: pd.Series, forecast_date: pd.Timestamp

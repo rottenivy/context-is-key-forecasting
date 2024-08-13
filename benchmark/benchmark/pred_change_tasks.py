@@ -14,10 +14,7 @@ class DecreaseInTrafficInPredictionTask(UnivariateCRPSTask):
     This should be deducted from the context and reflected in the forecast.
     """
 
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(seed=seed, fixed_config=fixed_config)
-        self.context_flags["c_cov"] = True
-        self.context_flags["c_f"] = True
+    _context_sources = ["c_cov", "c_f"]
 
     def random_instance(self):
         datasets = ["traffic"]

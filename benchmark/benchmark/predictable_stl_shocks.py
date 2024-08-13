@@ -28,7 +28,7 @@ class STLMediumDescriptionContext:
 
     def get_background_context():
         return """This task applies a multiplier to a component of the STL decomposition
-        of the series. The seasonal-trend decomposition with LOESS (STL) is a method for 
+        of the series. The seasonal-trend decomposition with LOESS (STL) is a method for
         decomposing a time series into trend, seasonal, and residual components."""
 
 
@@ -36,10 +36,10 @@ class STLLongDescriptionContext:
 
     def get_background_context():
         return """This task applies a multiplier to a component of the STL decomposition
-        of the series. The seasonal-trend decomposition with LOESS (STL) is a method for 
-        decomposing a time series into trend, seasonal, and residual components. The 
-        trend component represents the long-term progression of the series, the seasonal 
-        component represents the seasonal variation, and the residual component 
+        of the series. The seasonal-trend decomposition with LOESS (STL) is a method for
+        decomposing a time series into trend, seasonal, and residual components. The
+        trend component represents the long-term progression of the series, the seasonal
+        component represents the seasonal variation, and the residual component
         represents the noise in the series. """
 
 
@@ -111,6 +111,8 @@ class STLPredMultiplierTask(STLModifierTask):
         Seed for the random number generator
     """
 
+    _context_sources = ["c_f"]
+
     def __init__(
         self,
         target_component_name: str = None,
@@ -122,7 +124,6 @@ class STLPredMultiplierTask(STLModifierTask):
             fixed_config=fixed_config,
             seed=seed,
         )
-        self.context_flags["c_f"] = True
 
     @abstractmethod
     def get_background_context(self):

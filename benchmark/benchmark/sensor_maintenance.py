@@ -16,10 +16,7 @@ class SensorPeriodicMaintenanceTask(UnivariateCRPSTask):
 
     """
 
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(seed=seed, fixed_config=fixed_config)
-        self.context_flags["c_cov"] = True
-        self.context_flags["c_h"] = True
+    _context_sources = ["c_cov", "c_h"]
 
     def random_instance(self):
         datasets = ["electricity_hourly"]
@@ -94,10 +91,7 @@ class SensorTrendAccumulationTask(UnivariateCRPSTask):
 
     """
 
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(seed=seed, fixed_config=fixed_config)
-        self.context_flags["c_cov"] = True
-        self.context_flags["c_h"] = True
+    _context_sources = ["c_cov", "c_h"]
 
     def random_instance(self):
         datasets = ["traffic"]
@@ -181,10 +175,7 @@ class SensorSpikeTask(UnivariateCRPSTask):
     # TODO: Support more spikes: in which case single-timesteps spikes would be trivial; but it is non-trivial to handle multi-length spikes
     """
 
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(seed=seed, fixed_config=fixed_config)
-        self.context_flags["c_cov"] = True
-        self.context_flags["c_h"] = True
+    _context_sources = ["c_cov", "c_h"]
 
     def random_instance(self):
         datasets = ["traffic"]
@@ -261,10 +252,7 @@ class SensorMaintenanceInPredictionTask(UnivariateCRPSTask):
     The maintenance periods should be reflected in the forecast.
     """
 
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(seed=seed, fixed_config=fixed_config)
-        self.context_flags["c_cov"] = True
-        self.context_flags["c_f"] = True
+    _context_sources = ["c_cov", "c_f"]
 
     def random_instance(self):
         # TODO: This task can use all datasets where the notion of a "sensor" is meaningful

@@ -71,6 +71,7 @@ def plot_task(task):
 
     # Minor style tweaks
     plt.xticks(rotation=90)
+    plt.legend()
     plt.tight_layout()
 
     return plt.gcf()

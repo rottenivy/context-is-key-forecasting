@@ -25,6 +25,8 @@ class OraclePredUnivariateConstraintsTask(UnivariateCRPSTask):
         Fixed configuration for the task
     """
 
+    _context_sources = ["c_f"]
+
     def __init__(
         self,
         possible_constraints=["min", "max"],
@@ -39,7 +41,6 @@ class OraclePredUnivariateConstraintsTask(UnivariateCRPSTask):
         self.max_constraints = max_constraints
 
         super().__init__(seed=seed, fixed_config=fixed_config)
-        self.context_flags["c_f"] = True
 
     def random_instance(self):
         """

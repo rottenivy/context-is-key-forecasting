@@ -42,11 +42,14 @@ def get_task_info(tasks):
     Get a DataFrame with information about which tasks use which context flags
 
     """
+    context_sources = CONTEXT_PRETTY_NAMES.keys()
     task_info = []
     for task_cls in tasks:
         tmp = {}
         tmp["task"] = task_cls.__name__
-        tmp.update(task_cls().context_flags)
+        tmp.update(
+            {source: source in task_cls._context_sources for source in context_sources}
+        )
         task_info.append(tmp)
 
     return (

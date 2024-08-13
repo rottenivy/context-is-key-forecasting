@@ -38,6 +38,8 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         Filtered for a subset of products for which we generated influences.
     """
 
+    _context_sources = ["c_cov", "c_f"]
+
     def __init__(
         self,
         fixed_config: dict = None,
@@ -50,8 +52,6 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
             self.influences = json.load(file)
 
         super().__init__(seed=seed, fixed_config=fixed_config)
-        self.context_flags["c_cov"] = True
-        self.context_flags["c_f"] = True
 
     def init_data(self):
         """

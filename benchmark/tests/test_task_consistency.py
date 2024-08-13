@@ -40,3 +40,12 @@ def test_some_context_exists(task):
     assert (
         task_instance.background or task_instance.constraints or task_instance.scenario
     )
+
+
+@pytest.mark.parametrize("task", ALL_TASKS)
+def test_at_least_one_context_source_active(task):
+    """
+    Test the task marks at least one kind of context as being used
+
+    """
+    assert len(task._context_sources) > 0

@@ -17,10 +17,7 @@ class CashDepletedinATMScenarioTask(UnivariateCRPSTask):
     The depletion occurs in the prediction horizon, and should be deductable by a model from the text context.
     """
 
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(seed=seed, fixed_config=fixed_config)
-        self.context_flags["c_i"] = True
-        self.context_flags["c_f"] = True
+    _context_sources = ["c_i", "c_f"]
 
     def random_instance(self):
         datasets = [
@@ -88,11 +85,8 @@ class ATMUnderPeriodicMaintenanceTask(UnivariateCRPSTask):
     This period should be ignored by the forecasting algorithm in its forecasts.
     """
 
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(seed=seed, fixed_config=fixed_config)
-        self.context_flags["c_i"] = True
-        self.context_flags["c_cov"] = True
-        # XXX: No c_h since the context doesn't say what hapenned due to maintenance
+    # XXX: No c_h since the context doesn't say what hapenned due to maintenance
+    _context_sources = ["c_i", "c_cov"]
 
     def random_instance(self):
         datasets = [
@@ -249,11 +243,7 @@ class IncreasedWithdrawalScenario(UnivariateCRPSTask):
     This is a scenario that occurs in the prediction horizon, and should be deductable by a model from the text context.
     """
 
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(seed=seed, fixed_config=fixed_config)
-        self.context_flags["c_cov"] = True
-        self.context_flags["c_i"] = True
-        self.context_flags["c_f"] = True
+    _context_sources = ["c_cov", "c_i", "c_f"]
 
     def random_instance(self):
         datasets = [
