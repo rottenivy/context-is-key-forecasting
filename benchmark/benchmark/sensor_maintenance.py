@@ -247,7 +247,6 @@ class SensorSpikeTask(UnivariateCRPSTask):
         self.region_of_interest = slice(
             spike_start_point, spike_start_point + spike_duration
         )
-        self.roi_weight = 0.5
 
 
 class SensorMaintenanceInPredictionTask(UnivariateCRPSTask):
@@ -315,7 +314,6 @@ class SensorMaintenanceInPredictionTask(UnivariateCRPSTask):
 
         # ROI metric parameters
         self.region_of_interest = slice(start_hour, start_hour + duration)
-        self.roi_weight = 0.5
 
 
 __TASKS__ = [

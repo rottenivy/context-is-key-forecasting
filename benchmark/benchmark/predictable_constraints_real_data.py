@@ -77,12 +77,14 @@ class OraclePredUnivariateConstraintsTask(UnivariateCRPSTask):
         future_series = window.iloc[-metadata.prediction_length :]
 
         # ROI metrics parameter
-        self.roi_constraints = self.sampleConstraintsFromGroundTruth(future_series)
+        self.metric_constraints = self.sampleConstraintsFromGroundTruth(future_series)
 
         # Instantiate the class variables
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()
-        self.constraints = self.verbalize_context_from_constraints(self.roi_constraints)
+        self.constraints = self.verbalize_context_from_constraints(
+            self.metric_constraints
+        )
         self.background = None
         self.scenario = None
 
@@ -208,12 +210,16 @@ class BoundedPredConstraintsBasedOnPredQuantilesTask(
         future_series = window.iloc[-metadata.prediction_length :]
 
         # ROI metrics parameter
-        self.roi_constraints = self.calculateConstraintsFromGroundTruth(future_series)
+        self.metric_constraints = self.calculateConstraintsFromGroundTruth(
+            future_series
+        )
 
         # Instantiate the class variables
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()
-        self.constraints = self.verbalize_context_from_constraints(self.roi_constraints)
+        self.constraints = self.verbalize_context_from_constraints(
+            self.metric_constraints
+        )
         self.background = None
         self.scenario = None
 

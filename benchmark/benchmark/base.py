@@ -139,9 +139,9 @@ class UnivariateCRPSTask(BaseTask):
         else:
             # These will be filled during by random_instance(), called in BaseTask.__init__
             self.region_of_interest = None
-            self.roi_weight = 0
-            self.roi_constraints = None
-            self.roi_tolerance = 0.05
+            self.roi_weight = 0.5
+            self.metric_constraints = None
+            self.metric_constraints_tolerance = 0.05
 
         super().__init__(seed=seed, fixed_config=fixed_config)
 
@@ -155,10 +155,6 @@ class UnivariateCRPSTask(BaseTask):
             A list of textual descriptions of all errors in the format
         """
         errors = super().verify_config()
-        if self.region_of_interest is None and self.roi_weight != 0:
-            errors.append("region_of_interest is not set, yet roi_weight is not 0")
-        if self.region_of_interest is not None and self.roi_weight == 0:
-            errors.append("region_of_interest is set, yet roi_weight is 0")
         if self.roi_weight < 0 or self.roi_weight > 1:
             errors.append(f"roi weight ({self.roi_weight}) is not between 0 and 1")
         return errors
@@ -175,6 +171,6 @@ class UnivariateCRPSTask(BaseTask):
             forecast=samples,
             region_of_interest=self.region_of_interest,
             roi_weight=self.roi_weight,
-            constraints=self.roi_constraints,
-            tolerance_percentage=self.roi_tolerance,
+            constraints=self.metric_constraints,
+            tolerance_percentage=self.metric_constraints_tolerance,
         )
