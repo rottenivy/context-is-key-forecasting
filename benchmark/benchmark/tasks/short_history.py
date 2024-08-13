@@ -21,9 +21,6 @@ class BaseHalfDaySolarForecastTask(UnivariateCRPSTask):
     learns the daily shape of the signal.
     """
 
-    def __init__(self, seed: int = None):
-        super().__init__(seed=seed)
-
     def random_instance(self):
         dataset = get_dataset("solar_10_minutes", regenerate=False)
 
@@ -81,6 +78,7 @@ class MinimalInfoHalfDaySolarForecastTask(BaseHalfDaySolarForecastTask):
     """
 
     _context_sources = ["c_i"]
+    _skills = BaseHalfDaySolarForecastTask._skills + ["reasoning: deduction"]
 
     def get_background(
         self, full_history_series: pd.Series, forecast_date: pd.Timestamp
@@ -96,6 +94,7 @@ class LocaleInfoHalfDaySolarForecastTask(BaseHalfDaySolarForecastTask):
     """
 
     _context_sources = ["c_i"]
+    _skills = BaseHalfDaySolarForecastTask._skills + ["reasoning: deduction"]
 
     def get_background(
         self, full_history_series: pd.Series, forecast_date: pd.Timestamp
@@ -109,6 +108,7 @@ class ZenithInfoHalfDaySolarForecastTask(BaseHalfDaySolarForecastTask):
     """
 
     _context_sources = ["c_i", "c_h"]
+    _skills = BaseHalfDaySolarForecastTask._skills + ["reasoning: deduction"]
 
     def get_background(
         self, full_history_series: pd.Series, forecast_date: pd.Timestamp
@@ -141,9 +141,6 @@ class BaseDayOfWeekTrafficForecastTask(UnivariateCRPSTask):
     The dataset has a strong daily periodicity, but with different patterns for the weekend.
     The task comes with a textual description which can helps the model guesses the difference.
     """
-
-    def __init__(self, seed: int = None):
-        super().__init__(seed=seed)
 
     def random_instance(self):
         dataset = get_dataset("traffic", regenerate=False)
@@ -196,6 +193,7 @@ class MinimalInfoDayOfWeekTrafficForecastTask(BaseDayOfWeekTrafficForecastTask):
     """
 
     _context_sources = ["c_i"]
+    _skills = BaseDayOfWeekTrafficForecastTask._skills + ["reasoning: deduction"]
 
     def get_background(
         self, full_history_series: pd.Series, forecast_date: pd.Timestamp
@@ -212,6 +210,7 @@ class ExplicitDayOfWeekTrafficForecastTask(BaseDayOfWeekTrafficForecastTask):
     """
 
     _context_sources = ["c_i", "c_cov"]
+    _skills = BaseDayOfWeekTrafficForecastTask._skills + ["reasoning: deduction"]
 
     def get_background(
         self, full_history_series: pd.Series, forecast_date: pd.Timestamp
@@ -230,6 +229,7 @@ class WeekendShiftDayOfWeekTrafficForecastTask(BaseDayOfWeekTrafficForecastTask)
     """
 
     _context_sources = ["c_i", "c_h"]
+    _skills = BaseDayOfWeekTrafficForecastTask._skills + ["reasoning: deduction"]
 
     def get_background(
         self, full_history_series: pd.Series, forecast_date: pd.Timestamp
