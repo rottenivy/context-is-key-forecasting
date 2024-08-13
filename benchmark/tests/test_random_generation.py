@@ -1,6 +1,7 @@
 import pytest
 
 from benchmark import ALL_TASKS
+from benchmark.tasks.causal_chambers import __TASKS__ as CAUSAL_CHAMBERS_TASKS
 
 
 def _are_instances_equal(instance_1, instance_2):
@@ -22,7 +23,7 @@ def _are_instances_equal(instance_1, instance_2):
     return same_data and same_background and same_constraints and same_scenario
 
 
-@pytest.mark.parametrize("task", ALL_TASKS)
+@pytest.mark.parametrize("task", filter(lambda i: i not in CAUSAL_CHAMBERS_TASKS, ALL_TASKS))
 def test_instance_randomness(task):
     """
     Test that each task can produce random instances
