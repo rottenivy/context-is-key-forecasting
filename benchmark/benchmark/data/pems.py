@@ -20,7 +20,7 @@ traffic_url = "https://huggingface.co/datasets/yatsbm/TrafficFresh/resolve/main/
 hf_token = ""
 
 
-def download_traffic_data(hf_token="", traffic_url=traffic_url):
+def download_raw_traffic_data(hf_token="", traffic_url=traffic_url):
     # Check if the file already exists
     if os.path.exists(TRAFFIC_CSV_PATH):
         print(f"File already exists at {TRAFFIC_CSV_PATH}. Skipping download.")
@@ -72,9 +72,13 @@ def split_and_save_wide_dataframes(
         sensor_df.to_csv(output_file, index=False)
 
 
+def download_traffic_files(hf_token, traffic_url):
+    download_raw_traffic_data(hf_token, traffic_url)
+    split_and_save_wide_dataframes()
+
+
 if __name__ == "__main__":
-    download_traffic_data(
+    download_traffic_files(
         hf_token,
         traffic_url,
     )
-    split_and_save_wide_dataframes()
