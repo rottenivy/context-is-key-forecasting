@@ -17,7 +17,7 @@ TRAFFIC_CSV_PATH = os.path.join(TRAFFIC_STORAGE_PATH, "traffic_merged_sensor_dat
 TRAFFIC_SPLIT_PATH = os.path.join(TRAFFIC_STORAGE_PATH, "traffic_split_sensor_data")
 
 traffic_url = "https://huggingface.co/datasets/yatsbm/TrafficFresh/resolve/main/traffic_merged_sensor_data.csv"
-hf_token = "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"
+hf_token = ""
 
 
 def download_traffic_data(hf_token="", traffic_url=traffic_url):
