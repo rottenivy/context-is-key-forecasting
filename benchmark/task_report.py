@@ -244,7 +244,7 @@ def plot_task_barchart(task_info, plot_topic="Context Type"):
 
 
 if __name__ == "__main__":
-    tasks = ALL_TASKS
+    tasks = ALL_TASKS[:3]
     task_context_info = get_task_context_info(tasks)
     task_skill_info = get_task_skill_info(
         tasks, omit=["forecasting", "natural language processing"]
