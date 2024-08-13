@@ -140,10 +140,17 @@ def create_task_summary_page(tasks):
         .list-group-item {{
             background-color: #f8f9fa;
         }}
+        .back-button {{
+            margin-bottom: 20px;
+        }}
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Back Button -->
+        <button class="btn btn-secondary back-button" onclick="history.back()">Go Back</button>
+
+        <!-- Content -->
         {seeds}
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
