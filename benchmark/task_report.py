@@ -110,9 +110,60 @@ def create_task_summary_page(tasks):
     Create a summary page for the benchmark tasks
 
     """
-    for task in tasks:
-        with open(f"{task.name}.html", "w") as f:
-            f.write("Hello world!")
+    summary = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Task - {task_name}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {{
+            background-color: #f8f9fa;
+        }}
+        .container {{
+            margin-top: 20px;
+        }}
+        .section {{
+            background-color: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            padding: 20px;
+            margin-bottom: 20px;
+        }}
+        .section h2 {{
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }}
+        .list-group-item {{
+            background-color: #f8f9fa;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        {seeds}
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+"""
+
+    for task_cls in tasks:
+        task_name = task_cls.__name__
+        seeds = ""
+        for seed in range(1, 4):
+            task = task_cls(seed=seed)
+
+            seeds += f"""
+        <div class="section">
+            <h1 class="text-center text-primary">Seed {seed}</h1>
+            <p class="text-center"><strong>Background:</strong> {task.background}</p>
+            <p class="text-center"><strong>Constraints:</strong> {task.constraints}</p>
+            <p class="text-center"><strong>Scenario:</strong> {task.scenario}</p>
+        </div>
+    """
+        with open(f"{task_name}.html", "w") as f:
+            f.write(summary.format(task_name=task_name, seeds=seeds))
 
 
 def task_info_heatmap(task_info):
@@ -123,7 +174,7 @@ def task_info_heatmap(task_info):
     task_info_int = task_info.astype(int)
 
     # Create the heatmap
-    plt.figure()
+    plt.figure(figsize=(10, len(task_info) // 2))
     ax = sns.heatmap(
         task_info_int,
         cmap=sns.color_palette(["white", "red"]),
@@ -153,14 +204,14 @@ def task_info_heatmap(task_info):
 
 
 if __name__ == "__main__":
-    task_info = get_task_info(ALL_TASKS)
+    task_info = get_task_info(ALL_TASKS[:4])
     generation_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     task_by_context_bar = _figure_to_html(plot_tasks_per_context_type(task_info))
     task_info_heatmap = _figure_to_html(task_info_heatmap(task_info))
     task_by_context_list = list_tasks_per_context_type(task_info)
 
-    create_task_summary_page(ALL_TASKS)
+    create_task_summary_page(ALL_TASKS[:4])
 
     report = f"""
 <!DOCTYPE html>
