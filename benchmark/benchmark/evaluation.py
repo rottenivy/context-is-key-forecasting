@@ -28,28 +28,20 @@ def plot_forecast_univariate(task, samples, path):
         Directory in which to save the figure
     """
     samples = samples[:, :, 0]
-    past_timesteps = task.past_time.index
-    past_values = task.past_time.to_numpy()[:, 0]
-    future_timesteps = task.future_time.index
-    future_values = task.future_time.to_numpy()[:, 0]
 
-    # The fill_between method is only ok with pd.DatetimeIndex
-    if isinstance(past_timesteps, pd.PeriodIndex):
-        past_timesteps = past_timesteps.to_timestamp()
+    future_timesteps = task.future_time.index
     if isinstance(future_timesteps, pd.PeriodIndex):
         future_timesteps = future_timesteps.to_timestamp()
 
-    timesteps = np.concatenate([past_timesteps, future_timesteps])
-    values = np.concatenate([past_values, future_values])
-
-    plt.figure()
+    fig = task.plot()
+    ax = fig.gca()
 
     for zorder, quant, color, label in [
         [1, 0.05, (0.75, 0.75, 1), "5%-95%"],
         [2, 0.10, (0.25, 0.25, 1), "10%-90%"],
         [3, 0.25, (0, 0, 0.75), "25%-75%"],
     ]:
-        plt.fill_between(
+        ax.fill_between(
             future_timesteps,
             np.quantile(samples, quant, axis=0).astype(float),
             np.quantile(samples, 1 - quant, axis=0).astype(float),
@@ -59,7 +51,7 @@ def plot_forecast_univariate(task, samples, path):
             zorder=zorder,
         )
 
-    plt.plot(
+    ax.plot(
         future_timesteps,
         np.quantile(samples, 0.5, axis=0),
         color=(0.5, 0.5, 0.5),
@@ -68,15 +60,14 @@ def plot_forecast_univariate(task, samples, path):
         zorder=4,
     )
 
-    plt.plot(
-        timesteps, values, color=(0, 0, 0), linewidth=2, zorder=5, label="ground truth"
+    ax.set_ylim(
+        np.min([np.min(task.past_time), np.min(task.future_time), np.min(samples)]),
+        np.max([np.max(task.past_time), np.max(task.future_time), np.max(samples)]),
     )
 
-    plt.xticks(rotation=90)
-
-    handles, labels = plt.gca().get_legend_handles_labels()
-    order = [4, 0, 1, 2, 3]
-    plt.legend([handles[idx] for idx in order], [labels[idx] for idx in order])
+    handles, labels = ax.get_legend_handles_labels()
+    order = [2, 0, 1, 3, 4, 5, 6]
+    ax.legend([handles[idx] for idx in order], [labels[idx] for idx in order])
 
     plt.title(task.name)
 
