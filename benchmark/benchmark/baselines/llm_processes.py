@@ -69,9 +69,9 @@ class LLMPForecaster(Baseline):
         """
         logging.info("Preparing data for LLMP...")
         llmp_data = {}
-        # Take the first column of the dataframe for now, until a multivariate version is implemented
-        past_time = task_instance.past_time[task_instance.past_time.columns[0]]
-        future_time = task_instance.future_time[task_instance.future_time.columns[0]]
+        # Take the last column of the dataframe (the forecast variable), since we are only modelling the forecast variable for now
+        past_time = task_instance.past_time[task_instance.past_time.columns[-1]]
+        future_time = task_instance.future_time[task_instance.future_time.columns[-1]]
 
         # XXX: Convert to unix timestamp since LLMP expects numbers for x and y
         llmp_data["x_train"] = past_time.index.astype(int).values // 10**9

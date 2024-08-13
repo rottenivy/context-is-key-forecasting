@@ -58,24 +58,21 @@ class ExponentialSmoothingForecaster(Baseline):
 
         Note: If seasonal_periods is <= 0, then the seasonal component is skipped.
         """
-        simulations_samples = []
-        for column in past_time.columns:
-            # If there is no period, then disable the seasonal component of the model (seasonal_periods will be ignored)
-            model = statsmodels.tsa.holtwinters.ExponentialSmoothing(
-                endog=past_time[column],
-                trend=self.trend,
-                seasonal=self.seasonal if seasonal_periods >= 1 else None,
-                seasonal_periods=seasonal_periods,
-            )
+        # If there is no period, then disable the seasonal component of the model (seasonal_periods will be ignored)
+        model = statsmodels.tsa.holtwinters.ExponentialSmoothing(
+            endog=past_time[past_time.columns[-1]],
+            trend=self.trend,
+            seasonal=self.seasonal if seasonal_periods >= 1 else None,
+            seasonal_periods=seasonal_periods,
+        )
 
-            result = model.fit()
+        result = model.fit()
 
-            simulations = result.simulate(
-                nsimulations=future_time.shape[0], repetitions=n_samples
-            )
-            simulations_samples.append(simulations.to_numpy().transpose())
+        simulations = result.simulate(
+            nsimulations=future_time.shape[0], repetitions=n_samples
+        )
 
-        return np.stack(simulations_samples, axis=-1)
+        return simulations.to_numpy().transpose()[..., None]
 
     @property
     def cache_name(self) -> str:
@@ -139,26 +136,23 @@ class ETSModelForecaster(Baseline):
 
         Note: If seasonal_periods is <= 0, then the seasonal component is skipped.
         """
-        simulations_samples = []
-        for column in past_time.columns:
-            # If there is no period, then disable the seasonal component of the model (seasonal_periods will be ignored)
-            model = statsmodels.tsa.exponential_smoothing.ets.ETSModel(
-                endog=past_time[column],
-                trend=self.trend,
-                seasonal=self.seasonal if seasonal_periods >= 1 else None,
-                error=self.error,
-                seasonal_periods=seasonal_periods,
-            )
+        # If there is no period, then disable the seasonal component of the model (seasonal_periods will be ignored)
+        model = statsmodels.tsa.exponential_smoothing.ets.ETSModel(
+            endog=past_time[past_time.columns[-1]],
+            trend=self.trend,
+            seasonal=self.seasonal if seasonal_periods >= 1 else None,
+            error=self.error,
+            seasonal_periods=seasonal_periods,
+        )
 
-            # Avoid L-BFGS-B output spam
-            result = model.fit(disp=False)
+        # Avoid L-BFGS-B output spam
+        result = model.fit(disp=False)
 
-            simulations = result.simulate(
-                nsimulations=future_time.shape[0], repetitions=n_samples
-            )
-            simulations_samples.append(simulations.to_numpy().transpose())
+        simulations = result.simulate(
+            nsimulations=future_time.shape[0], repetitions=n_samples
+        )
 
-        return np.stack(simulations_samples, axis=-1)
+        return simulations.to_numpy().transpose()[..., None]
 
     @property
     def cache_name(self) -> str:
@@ -166,26 +160,3 @@ class ETSModelForecaster(Baseline):
         return f"{self.__class__.__name__}_" + "_".join(
             [f"{k}={getattr(self, k)}" for k in args_to_include]
         )
-
-
-def additive_exponential_smoothing(task_instance, n_samples=50):
-    """
-    A baseline is just some callable that receives a task instance and returns a prediction.
-    """
-    simulations_samples = []
-    for column in task_instance.past_time.columns:
-        model = statsmodels.tsa.holtwinters.ExponentialSmoothing(
-            endog=task_instance.past_time[column],
-            trend="add",
-            seasonal="add",
-            seasonal_periods=get_seasonal_periods(task_instance),
-        )
-
-        result = model.fit()
-
-        simulations = result.simulate(
-            nsimulations=task_instance.future_time.shape[0], repetitions=n_samples
-        )
-        simulations_samples.append(simulations.to_numpy().transpose())
-
-    return np.stack(simulations_samples, axis=-1)
