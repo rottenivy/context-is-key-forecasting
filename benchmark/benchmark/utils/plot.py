@@ -56,6 +56,7 @@ def plot_task(task):
     )
 
     # Shade the entire future region in light green to indicate the forecast region
+    y_min, y_max = plt.ylim()
     plt.fill_between(
         future_timesteps,
         -99999,  # Use the current minimum y-limit
@@ -66,7 +67,7 @@ def plot_task(task):
         zorder=0,
     )
     # Set the plot limits to ensure no white space around the shading
-    plt.ylim(values.min(), values.max())
+    plt.ylim(y_min, y_max)
     plt.xlim(timesteps[0], timesteps[-1])
 
     # Minor style tweaks
