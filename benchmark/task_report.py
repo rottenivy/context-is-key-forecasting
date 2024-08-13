@@ -174,7 +174,7 @@ def task_info_heatmap(task_info):
     task_info_int = task_info.astype(int)
 
     # Create the heatmap
-    plt.figure(figsize=(10, len(task_info) // 2))
+    plt.figure()
     ax = sns.heatmap(
         task_info_int,
         cmap=sns.color_palette(["white", "red"]),
@@ -199,6 +199,7 @@ def task_info_heatmap(task_info):
     plt.ylabel("Tasks")
 
     plt.tight_layout()
+    plt.gcf().set_size_inches(10, task_info.shape[0])
 
     return plt.gcf()
 
