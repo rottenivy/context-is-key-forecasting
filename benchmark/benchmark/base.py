@@ -14,6 +14,9 @@ from .metrics.roi_metric import region_of_interest_constraint_metric
 from .utils.plot import plot_task
 
 
+ALLOWED_CONTEXT_SOURCES = ["c_h", "c_i", "c_f", "c_cov", "c_causal"]
+
+
 class BaseTask(ABC):
     """
     Base class for a task
@@ -97,6 +100,10 @@ class BaseTask(ABC):
             errors.append(
                 f"future_time is not a pd.DataFrame, but a {self.future_time.__class__.__name__}"
             )
+        # ... check that the context sources are valid
+        for source in self._context_sources:
+            if source not in ALLOWED_CONTEXT_SOURCES:
+                errors.append(f"Invalid context source: {source}")
         return errors
 
     @abstractmethod
