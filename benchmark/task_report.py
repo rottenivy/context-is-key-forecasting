@@ -265,7 +265,7 @@ if __name__ == "__main__":
     task_skill_heatmap = plot_task_heatmap(task_skill_info, plot_topic="Skill")
     task_by_skill_list = list_tasks_per_column(task_skill_info)
 
-    # create_task_summary_page(tasks)
+    create_task_summary_page(tasks)
 
     report = f"""
 <!DOCTYPE html>
