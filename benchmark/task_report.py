@@ -99,7 +99,7 @@ def list_tasks_per_context_type(task_info):
             # Add the tasks as a bullet list
             html += "<ul class='list-group'>\n"
             for task in tasks:
-                html += f"<li class='list-group-item'><a href='./{task.name}.html'>{task}</a></li>\n"
+                html += f"<li class='list-group-item'><a href='./{task}.html'>{task}</a></li>\n"
             html += "</ul>\n"
 
     return html
@@ -159,6 +159,8 @@ if __name__ == "__main__":
     task_by_context_bar = _figure_to_html(plot_tasks_per_context_type(task_info))
     task_info_heatmap = _figure_to_html(task_info_heatmap(task_info))
     task_by_context_list = list_tasks_per_context_type(task_info)
+
+    create_task_summary_page(ALL_TASKS)
 
     report = f"""
 <!DOCTYPE html>
@@ -220,5 +222,5 @@ if __name__ == "__main__":
 </html>
 """
 
-    with open("task_report.html", "w") as f:
+    with open("index.html", "w") as f:
         f.write(report)
