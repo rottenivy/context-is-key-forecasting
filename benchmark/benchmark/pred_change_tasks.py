@@ -52,12 +52,11 @@ class DecreaseInTrafficInPrediction(UnivariateCRPSTask):
         drop_duration = self.random.choice(
             [1, 2, 3, 4, 5, 6, 7]
         )  # Arbitrarily picked from 1-7 hours
-        drop_start_date = self.random.choice(
-            future_series.index[
-                :-8
-            ]  # Starting point is anywhere from start of series to max(drop_duration) + 1 points before the series. +1 is arbitrary, to have the drop not completely at the end of the pred.
-        )  # Arbitrary start point for now
-        drop_start_point = future_series.index.get_loc(drop_start_date)
+        # Arbitrary way to select a start date: sort the values of future_series (excluding the last drop_duration+1 points), pick it from the largest 5 values
+        drop_start_point = self.random.choice(
+            np.argsort(future_series.values[: -(drop_duration + 1)])[-5:][::-1]
+        )
+        drop_start_date = future_series.index[drop_start_point]
         drop_magnitude = self.random.choice(
             [0.1, 0.2, 0.3, 0.4, 0.5]
         )  # Arbitrarily set to 0.1 to 0.5 times the usual value in the time series
@@ -70,7 +69,7 @@ class DecreaseInTrafficInPrediction(UnivariateCRPSTask):
         history_series.index = history_series.index.to_timestamp()
 
         background = f"This is hourly traffic data."
-        scenario = f"Consider that there was an accident on the road and there was {drop_magnitude*100}% of the usual traffic from {datetime_to_str(drop_start_date)} for {drop_duration} hours."  # TODO: May also specify drop end date instead of the drop duration.
+        scenario = f"Suppose that there is an accident on the road and there is {drop_magnitude*100}% of the usual traffic from {datetime_to_str(drop_start_date)} for {drop_duration} {'hours' if drop_duration > 1 else 'hour'}."  # TODO: May also specify drop end date instead of the drop duration.
 
         # Instantiate the class variables
         self.past_time = history_series.to_frame()

@@ -56,13 +56,13 @@ class PredictableSpikesInPredTask(UnivariateCRPSTask):
         history_series = window.iloc[: -metadata.prediction_length]
         future_series = window.iloc[-metadata.prediction_length :]
 
-        spike_idx = self.random.randint(0, metadata.prediction_length - 1)
+        # Arbitrary way to select a spike date: sort the values of future_series (excluding the last point), pick it from the largest 5 values
+        spike_idx = self.random.choice(np.argsort(future_series.values[:-1])[-5:][::-1])
+        spike_datetime = future_series.index[spike_idx]
 
         history_series.index = history_series.index.to_timestamp()
         future_series.index = future_series.index.to_timestamp()
         ground_truth = future_series.copy()
-
-        spike_datetime = future_series.index[spike_idx]
 
         relative_impact = self.random.randint(1, 500)
         is_negative = self.random.choice([True, False])
