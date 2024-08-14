@@ -22,6 +22,9 @@ class DummyTrafficTask(UnivariateCRPSTask):
     Dummy traffic task for testing purposes.
     """
 
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i"]
+    _skills = ["reasoning: deduction"]
+
     def __init__(
         self,
         fixed_config: dict = None,
@@ -30,13 +33,6 @@ class DummyTrafficTask(UnivariateCRPSTask):
         self.init_data()
         self.traffic_split_path = TRAFFIC_SPLIT_PATH
         self.traffic_metadata_path = TRAFFIC_METADATA_PATH
-        self._context_sources = ["c_i"]
-        self._skills = [
-            "forecasting",
-            "natural language processing",
-            "reasoning: deduction",
-        ]
-
         super().__init__(seed=seed, fixed_config=fixed_config)
 
     def init_data(self):
