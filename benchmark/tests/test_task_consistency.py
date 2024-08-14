@@ -51,6 +51,7 @@ def test_context_sources(task):
     assert len(task._context_sources) > 0
     assert all(ctx in ALLOWED_CONTEXT_SOURCES for ctx in task._context_sources)
 
+
 @pytest.mark.parametrize("task", ALL_TASKS)
 def test_skills(task):
     """
