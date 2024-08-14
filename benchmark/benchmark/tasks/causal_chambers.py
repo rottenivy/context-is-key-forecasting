@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 
+from abc import abstractmethod
 from causalchamber.datasets import Dataset
 from collections import namedtuple
 
@@ -17,6 +18,7 @@ class WindTunnelTask(UnivariateCRPSTask):
     def __init__(
         self,
         target_name: str,
+        covariate_name: str = "load_in",
         seed: int = None,
         fixed_config: dict = None,
         dataset_name: str = "wt_changepoints_v1",
@@ -25,7 +27,7 @@ class WindTunnelTask(UnivariateCRPSTask):
 
         self.dataset = Dataset(dataset_name, root=datadir, download=True)
         self.seed = seed
-        self.covariate_name = "load_in"
+        self.covariate_name = covariate_name
         self.target_name = target_name
 
         super().__init__(seed=seed, fixed_config=fixed_config)
@@ -54,6 +56,9 @@ class WindTunnelTask(UnivariateCRPSTask):
         experiment = self.dataset.get_experiment(name=f"load_in_seed_{window.seed}")
         observations = experiment.as_pandas_dataframe()
 
+        if self.target_name == "pressure_gap":
+            observations["pressure_gap"] = observations['pressure_downwind'] - observations['pressure_ambient']
+
         selected_variables = observations[
             [self.covariate_name, self.target_name]
         ].copy()
@@ -74,6 +79,10 @@ class WindTunnelTask(UnivariateCRPSTask):
             future_time = future_time.resample(downsample).min()
 
         return window, past_time, future_time, text_covariates
+
+    @abstractmethod
+    def _interval_descriptions(self, interval_start, interval_end):
+        pass
 
     def random_instance(self, downsample: str = "1s"):
         """
@@ -107,7 +116,6 @@ class WindTunnelTask(UnivariateCRPSTask):
             verbalized covariate
         """
 
-        covariate = observations[self.covariate_name]
         # intervention column = 0 when load is constant and = 1 when it changes wrt previous timestep
         change_points = list(observations[observations.intervention == 1].index)
 
@@ -122,14 +130,9 @@ class WindTunnelTask(UnivariateCRPSTask):
             .dt.round(freq=round_freq)
             .dt.time
         )
+        covariate = observations[self.covariate_name]
 
-        ans = f"The load is set to: {covariate.iloc[0]:.1f}"
-        for c in change_points:
-            ans += f" until {timestamps[c]}, {covariate[c]:.1f} from {timestamps[c]}"
-
-        ans += f" until {timestamps.iloc[-1]}."
-
-        return ans
+        return self._interval_descriptions(covariate, change_points, timestamps)
 
 
 class SpeedFromLoadTask(WindTunnelTask):
@@ -157,12 +160,72 @@ class SpeedFromLoadTask(WindTunnelTask):
             Window(1, 0, 779, 1400),
         ]
 
-        super().__init__("rpm_in", seed, fixed_config, "wt_changepoints_v1", datadir)
+        super().__init__("rpm_in", "load_in", seed, fixed_config, "wt_changepoints_v1", datadir)
 
         self.background = "The wind tunnel is a chamber with one controllable fan that pushes air through it. We can control the load of the fan (corresponding to the duty cycle of the pulse-width-modulation signal) and measure its speed (in revolutions per minute). The fan is designed so its steady-state speed scales broadly linearly with the load. Unless completely powered off, the fan never operates below a certain speed, corresponding to a minimum effective load between 0.1 and 0.2."
         self.constraints = "The load is between 0 and 1. At full load (=1), the fan turns at a maximum speed of 3000 rpm."
 
+    def _interval_descriptions(self, covariate, change_points, timestamps):
+
+        ans = f"The load is set to: {covariate.iloc[0]:.1f}"
+        for c in change_points:
+            ans += f" until {timestamps[c]}, {covariate[c]:.1f} from {timestamps[c]}"
+
+        ans += f" until {timestamps.iloc[-1]}."
+
+        return ans
+
+
+class ExplicitPressureFromSpeedTask(WindTunnelTask):
+
+    def __init__(
+        self,
+        seed: int = None,
+        fixed_config: dict = None,
+        datadir: str = DATA_STORAGE_PATH,
+    ):
+
+        self.possible_windows = [
+            Window(1, 0, 325, 500),
+            Window(1, 200, 550, 650),
+            Window(0, 100, 699, 829),
+            Window(2, 0, 578, 884),
+            Window(3, 700, 1364, 1587),
+            Window(4, 600, 952, 1390),
+            Window(5, 200, 671, 994),
+        ]
+
+        super().__init__("pressure_gap", "rpm_in", seed, fixed_config, "wt_changepoints_v1", datadir)
+
+        self.background = "The wind tunnel is a chamber with one controllable fan that pushes air through it. We can control the speed of the fan (rpm_in) and measure the gap between the internal pressure and the ambient pressure (in Pascals). The pressure gap can be estimated from the speed using the affinity laws, which state that the pressure over maximal pressure ratio is proportional to the square of the speed over maximal speed ratio."
+        self.constraints = "The maximal fan speed is 3000 rpm and the maximal pressure is 37.5 Pa."
+
+    def _interval_descriptions(self, covariate, change_points, timestamps):
+
+        ans = f"The speed starts at {covariate.iloc[0]:.1f}."
+        for i, c in enumerate(change_points[:-1]):
+            ans += f" At {timestamps[c]}, it rapidly and smoothly changes to {covariate[change_points[i+1]-1]:.1f}."
+
+        ans += f" At {timestamps[change_points[-1]]}, it rapidly and smoothly changes to {covariate.iloc[-1]:.1f}."
+
+        return ans
+
+class ImplicitPressureFromSpeedTask(ExplicitPressureFromSpeedTask):
+
+    def __init__(
+        self,
+        seed: int = None,
+        fixed_config: dict = None,
+        datadir: str = DATA_STORAGE_PATH,
+    ):
+
+        super().__init__(seed, fixed_config, datadir)
+
+        self.background = "The wind tunnel is a chamber with one controllable fan that pushes air through it. We can control the speed of the fan (in revolutions per minute) and measure the gap between the internal pressure and the ambient pressure (in Pascals). The pressure gap can be estimated from the speed using the affinity laws."
+
 
 __TASKS__ = [
     SpeedFromLoadTask,
+    ExplicitPressureFromSpeedTask,
+    ImplicitPressureFromSpeedTask,
 ]
