@@ -57,7 +57,9 @@ class WindTunnelTask(UnivariateCRPSTask):
         observations = experiment.as_pandas_dataframe()
 
         if self.target_name == "pressure_gap":
-            observations["pressure_gap"] = observations['pressure_downwind'] - observations['pressure_ambient']
+            observations["pressure_gap"] = (
+                observations["pressure_downwind"] - observations["pressure_ambient"]
+            )
 
         selected_variables = observations[
             [self.covariate_name, self.target_name]
@@ -160,7 +162,9 @@ class SpeedFromLoadTask(WindTunnelTask):
             Window(1, 0, 779, 1400),
         ]
 
-        super().__init__("rpm_in", "load_in", seed, fixed_config, "wt_changepoints_v1", datadir)
+        super().__init__(
+            "rpm_in", "load_in", seed, fixed_config, "wt_changepoints_v1", datadir
+        )
 
         self.background = "The wind tunnel is a chamber with one controllable fan that pushes air through it. We can control the load of the fan (corresponding to the duty cycle of the pulse-width-modulation signal) and measure its speed (in revolutions per minute). The fan is designed so its steady-state speed scales broadly linearly with the load. Unless completely powered off, the fan never operates below a certain speed, corresponding to a minimum effective load between 0.1 and 0.2."
         self.constraints = "The load is between 0 and 1. At full load (=1), the fan turns at a maximum speed of 3000 rpm."
@@ -195,10 +199,14 @@ class ExplicitPressureFromSpeedTask(WindTunnelTask):
             Window(5, 200, 671, 994),
         ]
 
-        super().__init__("pressure_gap", "rpm_in", seed, fixed_config, "wt_changepoints_v1", datadir)
+        super().__init__(
+            "pressure_gap", "rpm_in", seed, fixed_config, "wt_changepoints_v1", datadir
+        )
 
         self.background = "The wind tunnel is a chamber with one controllable fan that pushes air through it. We can control the speed of the fan (rpm_in) and measure the gap between the internal pressure and the ambient pressure (in Pascals). The pressure gap can be estimated from the speed using the affinity laws, which state that the pressure over maximal pressure ratio is proportional to the square of the speed over maximal speed ratio."
-        self.constraints = "The maximal fan speed is 3000 rpm and the maximal pressure is 37.5 Pa."
+        self.constraints = (
+            "The maximal fan speed is 3000 rpm and the maximal pressure is 37.5 Pa."
+        )
 
     def _interval_descriptions(self, covariate, change_points, timestamps):
 
@@ -209,6 +217,7 @@ class ExplicitPressureFromSpeedTask(WindTunnelTask):
         ans += f" At {timestamps[change_points[-1]]}, it rapidly and smoothly changes to {covariate.iloc[-1]:.1f}."
 
         return ans
+
 
 class ImplicitPressureFromSpeedTask(ExplicitPressureFromSpeedTask):
 
