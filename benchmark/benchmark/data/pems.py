@@ -35,6 +35,7 @@ csv_file_path = huggingface_hub.hf_hub_download(
     filename="traffic_merged_sensor_data.csv",
     repo_type="dataset",
     cache_dir=HF_CACHE_DIR,
+    token=True,
 )
 
 json_file_path = huggingface_hub.hf_hub_download(
@@ -42,6 +43,7 @@ json_file_path = huggingface_hub.hf_hub_download(
     filename="traffic_metadata.json",
     repo_type="dataset",
     cache_dir=HF_CACHE_DIR,
+    token=True,
 )
 
 # Print the file paths
