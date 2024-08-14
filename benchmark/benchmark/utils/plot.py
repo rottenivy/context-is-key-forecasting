@@ -57,6 +57,7 @@ def plot_task(task):
 
     # Shade the entire future region in light green to indicate the forecast region
     y_min, y_max = plt.ylim()
+    # Shade forecast window
     plt.fill_between(
         future_timesteps,
         -99999,  # Use the current minimum y-limit
@@ -66,6 +67,28 @@ def plot_task(task):
         label="Forecast",
         zorder=0,
     )
+    # Shade RoI
+    if type(task.region_of_interest) != type(None):
+        # Convert the list of timesteps to a Pandas Series and find contiguous groups
+        roi_series = pd.Series(task.region_of_interest)
+        contiguous_regions = []
+        start_idx = roi_series.iloc[0]
+        for i in range(1, len(roi_series)):
+            if roi_series.iloc[i] != roi_series.iloc[i - 1] + 1:
+                contiguous_regions.append(slice(start_idx, roi_series.iloc[i - 1]))
+                start_idx = roi_series.iloc[i]
+        contiguous_regions.append(slice(start_idx, roi_series.iloc[-1]))
+        for region_index, region in enumerate(contiguous_regions):
+            plt.fill_between(
+                future_timesteps[region],
+                -99999,  # Use the current minimum y-limit
+                99999,  # Use the current maximum y-limit
+                facecolor=(0, 0.8, 0),
+                interpolate=True,
+                label="Region of Interest" if region_index == 0 else None,
+                zorder=0,
+            )
+
     # Set the plot limits to ensure no white space around the shading
     plt.ylim(y_min, y_max)
     plt.xlim(timesteps[0], timesteps[-1])
