@@ -78,5 +78,10 @@ class DecreaseInTrafficInPredictionTask(UnivariateCRPSTask):
         self.background = background
         self.scenario = scenario
 
+        # ROI metric parameters
+        self.region_of_interest = slice(
+            drop_start_point, drop_start_point + drop_duration
+        )
+
 
 __TASKS__ = [DecreaseInTrafficInPredictionTask]

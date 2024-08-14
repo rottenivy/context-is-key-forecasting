@@ -80,5 +80,8 @@ class PredictableSpikesInPredTask(UnivariateCRPSTask):
         self.background = None
         self.scenario = scenario
 
+        # ROI metric parameters
+        self.region_of_interest = [spike_idx]
+
 
 __TASKS__ = [PredictableSpikesInPredTask]

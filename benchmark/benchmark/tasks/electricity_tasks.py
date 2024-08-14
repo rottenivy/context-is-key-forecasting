@@ -85,5 +85,10 @@ class ElectricityIncreaseInPredictionTask(UnivariateCRPSTask):
         self.background = None
         self.scenario = scenario
 
+        # ROI metric parameters
+        self.region_of_interest = slice(
+            spike_start_point, spike_start_point + spike_duration
+        )
+
 
 __TASKS__ = [ElectricityIncreaseInPredictionTask]
