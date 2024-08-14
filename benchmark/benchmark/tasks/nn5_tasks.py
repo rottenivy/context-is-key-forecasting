@@ -133,10 +133,7 @@ class ATMUnderPeriodicMaintenanceTask(UnivariateCRPSTask):
         drop_duration = self.random.choice(
             list(range(4, 7))
         )  # Arbitrarily picked from 4-6 hours
-        drop_spacing = 24
-        # * self.random.choice(
-        #     list(range(2, 5))
-        # )  # Arbitrarily picked from 2-4 days (hence multiplied by 24)
+        drop_spacing = 24  # could be self.random.choice(list(range(2, 5))) too, but is kept to 24 so there is definitely a region within the prediction window (which is of length 56)
         drop_start_date = self.random.choice(
             history_series.index[
                 : 24 * 1
