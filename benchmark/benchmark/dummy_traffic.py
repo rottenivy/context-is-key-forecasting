@@ -18,13 +18,6 @@ from benchmark.data.pems import (
 
 
 class DummyTrafficTask(UnivariateCRPSTask):
-    """
-    Dummy traffic task for testing purposes.
-    """
-
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i"]
-    _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def __init__(
         self,
