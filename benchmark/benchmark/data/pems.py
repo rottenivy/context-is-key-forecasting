@@ -25,7 +25,6 @@ TRAFFIC_METADATA_PATH = os.path.join(TRAFFIC_STORAGE_PATH, "traffic_metadata.jso
 TRAFFIC_SPLIT_PATH = os.path.join(TRAFFIC_STORAGE_PATH, "traffic_split_sensor_data")
 
 traffic_url = "https://huggingface.co/datasets/yatsbm/TrafficFresh/resolve/main/traffic_merged_sensor_data.csv"
-hf_token = ""
 
 # avoid issues where toolkit does not report memory correctly
 datasets.builder.has_sufficient_disk_space = lambda needed_bytes, directory=".": True
