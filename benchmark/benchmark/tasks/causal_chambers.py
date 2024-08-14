@@ -106,7 +106,7 @@ class WindTunnelTask(UnivariateCRPSTask):
         """
 
         window_idx = self.random.choice(self._get_number_instances())
-        self.window, self.past_time, self.future_time, self.covariates = (
+        self.window, self.past_time, self.future_time, self.scenario = (
             self._get_instance_by_idx(window_idx, downsample)
         )
 
