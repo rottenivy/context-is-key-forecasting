@@ -86,6 +86,15 @@ class WindTunnelTask(UnivariateCRPSTask):
     def _interval_descriptions(self, interval_start, interval_end):
         pass
 
+    @property
+    def seasonal_period(self) -> int:
+        """
+        This returns the period which should be used by statistical models for this task.
+        If negative, this means that the data either has no period, or the history is shorter than the period.
+        """
+        # Not enough history for a single period
+        return -1
+
     def random_instance(self, downsample: str = "1s"):
         """
         Sets random downsampled instance/window as task instance.
