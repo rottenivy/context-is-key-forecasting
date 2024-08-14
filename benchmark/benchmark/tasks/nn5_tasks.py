@@ -79,6 +79,11 @@ class CashDepletedinATMScenarioTask(UnivariateCRPSTask):
         self.background = background
         self.scenario = scenario
 
+        # ROI metric parameters
+        self.region_of_interest = slice(
+            drop_start_point, drop_start_point + drop_duration
+        )
+
 
 class ATMUnderPeriodicMaintenanceTask(UnivariateCRPSTask):
     """
@@ -128,9 +133,10 @@ class ATMUnderPeriodicMaintenanceTask(UnivariateCRPSTask):
         drop_duration = self.random.choice(
             list(range(4, 7))
         )  # Arbitrarily picked from 4-6 hours
-        drop_spacing = 24 * self.random.choice(
-            list(range(2, 5))
-        )  # Arbitrarily picked from 2-4 days (hence multiplied by 24)
+        drop_spacing = 24
+        # * self.random.choice(
+        #     list(range(2, 5))
+        # )  # Arbitrarily picked from 2-4 days (hence multiplied by 24)
         drop_start_date = self.random.choice(
             history_series.index[
                 : 24 * 1
@@ -154,6 +160,23 @@ class ATMUnderPeriodicMaintenanceTask(UnivariateCRPSTask):
         self.constraints = None
         self.background = background
         self.scenario = None
+
+        # ROI parameters to add focus to the times where there would have been maintenance in the prediction region
+        maintenance_hours_in_pred = []
+        pred_start_point = start_point - len(history_series.index)
+        while pred_start_point + drop_duration < len(future_series.index):
+            # Starting point can be part of the history; we should only consider starting point from prediction
+            # But we don't want to modify pred_start_point, so creating a new variable pred_start_point_modified
+            # pred_start_point + drop_duration will definitely be part of the prediction horizon
+            if pred_start_point < 0:
+                pred_start_point_modified = 0
+            else:
+                pred_start_point_modified = pred_start_point
+            maintenance_hours_in_pred.extend(
+                list(range(pred_start_point_modified, pred_start_point + drop_duration))
+            )
+            pred_start_point += drop_spacing
+        self.region_of_interest = maintenance_hours_in_pred
 
 
 class ATMUnderPeriodicMaintenanceWithRandomValuesTask(UnivariateCRPSTask):
@@ -321,6 +344,11 @@ class IncreasedWithdrawalScenario(UnivariateCRPSTask):
         self.constraints = None
         self.background = background
         self.scenario = scenario
+
+        # ROI metric parameters
+        self.region_of_interest = slice(
+            limit_off_start_point, limit_off_start_point + limit_off_duration
+        )
 
 
 __TASKS__ = [

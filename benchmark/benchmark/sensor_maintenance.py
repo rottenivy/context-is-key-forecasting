@@ -81,7 +81,14 @@ class SensorPeriodicMaintenanceTask(UnivariateCRPSTask):
         self.future_time = future_series.to_frame()
         self.background = background
 
-        # TODO: Add ROI parameters to add focus to the times where there would have been maintenance in the prediction region
+        # ROI parameters to add focus to the times where there would have been maintenance in the prediction region
+        maintenance_hours_in_pred = [
+            future_series.index.get_loc(x)
+            for x in future_series.between_time(
+                maintenance_start_hour, maintenance_end_hour
+            ).index
+        ]
+        self.region_of_interest = maintenance_hours_in_pred
 
 
 class SensorTrendAccumulationTask(UnivariateCRPSTask):
@@ -167,6 +174,8 @@ class SensorTrendAccumulationTask(UnivariateCRPSTask):
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()
         self.background = background
+
+        # No RoI need to be defined as the full prediction window is important
 
 
 class SensorSpikeTask(UnivariateCRPSTask):
@@ -303,7 +312,7 @@ class SensorMaintenanceInPredictionTask(UnivariateCRPSTask):
             # Convert history index to timestamp for consistency
             history_series.index = history_series.index.to_timestamp()
 
-            scenario = f"Consider that the sensor will be offline for maintenance between {datetime_to_str(maintenance_start_date)} and {datetime_to_str(maintenance_end_date)}, which resulted in zero readings."
+            scenario = f"Consider that the sensor will be offline for maintenance between {datetime_to_str(maintenance_start_date)} and {datetime_to_str(maintenance_end_date)}, which results in zero readings."
         else:
             raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
 

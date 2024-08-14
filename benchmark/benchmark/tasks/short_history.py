@@ -53,6 +53,8 @@ class BaseHalfDaySolarForecastTask(UnivariateCRPSTask):
         self.background = background
         self.scenario = None
 
+        # No RoI need to be defined as the full prediction window is important
+
     @abstractmethod
     def get_background(
         self, full_history_series: pd.Series, forecast_date: pd.Timestamp
@@ -172,6 +174,8 @@ class BaseDayOfWeekTrafficForecastTask(UnivariateCRPSTask):
         self.constraints = None
         self.background = background
         self.scenario = None
+
+        # No RoI need to be defined as the full prediction window is important
 
     @abstractmethod
     def get_background(
