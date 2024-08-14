@@ -12,6 +12,8 @@ Window = namedtuple("Window", ["seed", "history_start", "future_start", "time_en
 
 class WindTunnelTask(UnivariateCRPSTask):
 
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov"]
+
     def __init__(
         self,
         target_name: str,
@@ -131,6 +133,9 @@ class WindTunnelTask(UnivariateCRPSTask):
 
 
 class SpeedFromLoadTask(WindTunnelTask):
+
+    _context_sources = WindTunnelTask._context_sources + ["c_causal", "c_i"]
+    _skills = WindTunnelTask._skills + ["reasoning: causal", "instruction following"]
 
     def __init__(
         self,

@@ -23,8 +23,8 @@ class PredictableSpikesInPredTask(UnivariateCRPSTask):
         Seed for the random number generator
     """
 
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(seed=seed, fixed_config=fixed_config)
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_f"]
+    _skills = UnivariateCRPSTask._skills + ["instruction following"]
 
     def random_instance(self):
         datasets = ["electricity_hourly"]

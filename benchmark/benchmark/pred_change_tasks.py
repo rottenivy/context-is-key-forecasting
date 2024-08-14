@@ -7,15 +7,15 @@ from .base import UnivariateCRPSTask
 from .utils import get_random_window_univar, datetime_to_str
 
 
-class DecreaseInTrafficInPrediction(UnivariateCRPSTask):
+class DecreaseInTrafficInPredictionTask(UnivariateCRPSTask):
     """
     A task where the traffic was lower than usual in prediction part,
     due to an accident.
     This should be deducted from the context and reflected in the forecast.
     """
 
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(seed=seed, fixed_config=fixed_config)
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + ["instruction following"]
 
     def random_instance(self):
         datasets = ["traffic"]
@@ -79,4 +79,4 @@ class DecreaseInTrafficInPrediction(UnivariateCRPSTask):
         self.scenario = scenario
 
 
-__TASKS__ = [DecreaseInTrafficInPrediction]
+__TASKS__ = [DecreaseInTrafficInPredictionTask]

@@ -11,6 +11,20 @@ import statsmodels.tsa.tsatools
 from abc import ABC, abstractmethod
 
 from .metrics.roi_metric import region_of_interest_constraint_metric
+from .utils.plot import plot_task
+
+
+ALLOWED_CONTEXT_SOURCES = ["c_h", "c_i", "c_f", "c_cov", "c_causal"]
+ALLOWED_SKILLS = [
+    "forecasting",
+    "natural language processing",
+    "instruction following",
+    "retrieval: context",
+    "reasoning: analogy",
+    "reasoning: deduction",
+    "reasoning: math",
+    "reasoning: causal",
+]
 
 
 class BaseTask(ABC):
@@ -25,6 +39,9 @@ class BaseTask(ABC):
         Fixed configuration for the task
 
     """
+
+    _context_sources = []
+    _skills = ["forecasting", "natural language processing"]
 
     def __init__(self, seed: int = None, fixed_config: Optional[dict] = None):
         self.random = np.random.RandomState(seed)
@@ -94,6 +111,14 @@ class BaseTask(ABC):
             errors.append(
                 f"future_time is not a pd.DataFrame, but a {self.future_time.__class__.__name__}"
             )
+        # ... check that the context sources are valid
+        for source in self._context_sources:
+            if source not in ALLOWED_CONTEXT_SOURCES:
+                errors.append(f"Invalid task context source: {source}")
+        # ... check that the skills are valid
+        for skill in self._skills:
+            if skill not in ALLOWED_SKILLS:
+                errors.append(f"Invalid task skill: {skill}")
         return errors
 
     @abstractmethod
@@ -121,6 +146,18 @@ class BaseTask(ABC):
 
         """
         pass
+
+    def plot(self):
+        """
+        Plot the task
+
+        Returns:
+        --------
+        fig: matplotlib.figure.Figure
+            The figure containing the plot
+
+        """
+        return plot_task(self)
 
 
 class UnivariateCRPSTask(BaseTask):

@@ -1,8 +1,7 @@
 __version__ = "0.0.1"
 
-from .constrained_forecasts import __TASKS__ as CONSTRAINED_FORECASTS_TASKS
-from .electricity_tasks import __TASKS__ as ELECTRICITY_TASKS
-from .nn5_tasks import __TASKS__ as NN5_TASKS
+from .tasks.electricity_tasks import __TASKS__ as ELECTRICITY_TASKS
+from .tasks.nn5_tasks import __TASKS__ as NN5_TASKS
 from .pred_change_tasks import __TASKS__ as PRED_CHANGE_TASKS
 from .predictable_constraints_real_data import __TASKS__ as PREDICTABLE_CONSTRAINT_TASKS
 from .predictable_grocer_shocks import __TASKS__ as PREDICTABLE_GROCER_SHOCKS_TASKS
@@ -14,8 +13,7 @@ from .tasks.short_history import __TASKS__ as SHORT_HISTORY_TASKS
 
 # All tasks that are officially included in the benchmark
 ALL_TASKS = (
-    CONSTRAINED_FORECASTS_TASKS
-    + ELECTRICITY_TASKS
+    ELECTRICITY_TASKS
     + NN5_TASKS
     + PRED_CHANGE_TASKS
     + PREDICTABLE_CONSTRAINT_TASKS
