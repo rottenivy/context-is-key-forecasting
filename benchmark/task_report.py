@@ -197,6 +197,12 @@ def plot_task_heatmap(task_info, plot_topic="Context Type"):
     else:
         colorscale = [[0, "white"], [1, "red"]]
 
+    # Calculate the height of the plot
+    # Set a base height and add extra height per row
+    base_height = 400
+    row_height = 20  # Adjust this value as needed
+    plot_height = base_height + row_height * len(task_info_int.index)
+
     # Create a heatmap using Plotly
     fig = go.Figure(
         data=go.Heatmap(
@@ -215,6 +221,7 @@ def plot_task_heatmap(task_info, plot_topic="Context Type"):
         xaxis=dict(tickangle=-90),
         template="plotly_white",
         margin=dict(l=200, r=20, t=50, b=50),  # Adjust margins if needed
+        height=plot_height,  # Set the calculated height
     )
 
     fig.update_xaxes(showgrid=False)
