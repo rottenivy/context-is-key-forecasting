@@ -18,6 +18,9 @@ from benchmark.data.pems import (
 
 
 class DummyTrafficTask(UnivariateCRPSTask):
+    """
+    Dummy traffic task for testing purposes.
+    """
 
     def __init__(
         self,
