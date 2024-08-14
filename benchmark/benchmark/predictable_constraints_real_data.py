@@ -25,7 +25,8 @@ class OraclePredUnivariateConstraintsTask(UnivariateCRPSTask):
         Fixed configuration for the task
     """
 
-    _context_sources = ["c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_f"]
+    _skills = UnivariateCRPSTask._skills + ["instruction following"]
 
     def __init__(
         self,

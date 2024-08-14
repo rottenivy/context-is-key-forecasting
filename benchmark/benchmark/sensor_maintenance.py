@@ -16,7 +16,8 @@ class SensorPeriodicMaintenanceTask(UnivariateCRPSTask):
 
     """
 
-    _context_sources = ["c_cov", "c_h"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_h"]
+    _skills = UnivariateCRPSTask._skills + ["instruction following"]
 
     def random_instance(self):
         datasets = ["electricity_hourly"]
@@ -91,7 +92,8 @@ class SensorTrendAccumulationTask(UnivariateCRPSTask):
 
     """
 
-    _context_sources = ["c_cov", "c_h"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_h"]
+    _skills = UnivariateCRPSTask._skills + ["instruction following", "reasoning: math"]
 
     def random_instance(self):
         datasets = ["traffic"]
@@ -175,7 +177,8 @@ class SensorSpikeTask(UnivariateCRPSTask):
     # TODO: Support more spikes: in which case single-timesteps spikes would be trivial; but it is non-trivial to handle multi-length spikes
     """
 
-    _context_sources = ["c_cov", "c_h"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_h"]
+    _skills = UnivariateCRPSTask._skills + ["instruction following"]
 
     def random_instance(self):
         datasets = ["traffic"]
@@ -252,7 +255,8 @@ class SensorMaintenanceInPredictionTask(UnivariateCRPSTask):
     The maintenance periods should be reflected in the forecast.
     """
 
-    _context_sources = ["c_cov", "c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + ["instruction following"]
 
     def random_instance(self):
         # TODO: This task can use all datasets where the notion of a "sensor" is meaningful

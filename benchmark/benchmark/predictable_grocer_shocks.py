@@ -38,7 +38,8 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         Filtered for a subset of products for which we generated influences.
     """
 
-    _context_sources = ["c_cov", "c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + ["instruction following"]
 
     def __init__(
         self,
