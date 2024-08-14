@@ -69,15 +69,18 @@ def plot_task(task):
     )
     # Shade RoI
     if type(task.region_of_interest) != type(None):
-        # Convert the list of timesteps to a Pandas Series and find contiguous groups
-        roi_series = pd.Series(task.region_of_interest)
-        contiguous_regions = []
-        start_idx = roi_series.iloc[0]
-        for i in range(1, len(roi_series)):
-            if roi_series.iloc[i] != roi_series.iloc[i - 1] + 1:
-                contiguous_regions.append(slice(start_idx, roi_series.iloc[i - 1]))
-                start_idx = roi_series.iloc[i]
-        contiguous_regions.append(slice(start_idx, roi_series.iloc[-1]))
+        if type(task.region_of_interest) == list:
+            # Convert the list of timesteps to a Pandas Series and find contiguous groups
+            roi_series = pd.Series(task.region_of_interest)
+            contiguous_regions = []
+            start_idx = roi_series.iloc[0]
+            for i in range(1, len(roi_series)):
+                if roi_series.iloc[i] != roi_series.iloc[i - 1] + 1:
+                    contiguous_regions.append(slice(start_idx, roi_series.iloc[i - 1]))
+                    start_idx = roi_series.iloc[i]
+            contiguous_regions.append(slice(start_idx, roi_series.iloc[-1]))
+        else:
+            contiguous_regions = [task.region_of_interest]
         for region_index, region in enumerate(contiguous_regions):
             plt.fill_between(
                 future_timesteps[region],
