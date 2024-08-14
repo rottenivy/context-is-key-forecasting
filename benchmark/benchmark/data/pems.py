@@ -27,7 +27,7 @@ TRAFFIC_SPLIT_PATH = os.path.join(TRAFFIC_STORAGE_PATH, "traffic_split_sensor_da
 traffic_url = "https://huggingface.co/datasets/yatsbm/TrafficFresh/resolve/main/traffic_merged_sensor_data.csv"
 hf_token = ""
 
-
+# avoid issues where toolkit does not report memory correctly
 datasets.builder.has_sufficient_disk_space = lambda needed_bytes, directory=".": True
 
 csv_file_path = huggingface_hub.hf_hub_download(
