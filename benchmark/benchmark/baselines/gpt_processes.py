@@ -222,7 +222,6 @@ Example:
                 except Exception as e:
                     logger.info("Sample rejected due to invalid format.")
                     logger.debug(f"Rejection details: {e}")
-                    logger.debug(f"Forecast: {forecast}")
                     logger.debug(f"Choice: {choice.message.content}")
 
             n_retries -= 1
