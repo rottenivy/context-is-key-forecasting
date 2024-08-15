@@ -1,0 +1,4 @@
+[
+    {"label": "Naive", "method": "naive"},
+    {"label": "Lag-Llama", "method": "lag_llama"}
+]
