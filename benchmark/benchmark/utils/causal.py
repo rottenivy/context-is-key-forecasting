@@ -17,6 +17,39 @@ def check_dagness(inst_graph):
     assert dag_constraint == 0, error_message
 
 
+def parent_descriptions(W, L, node, desc):
+    """
+    Given the DAGs, returns a textual description of the parents
+    of a single node.
+    """
+    for l in range(1, L + 1):
+        parents = W[l, :, node]
+        # Get index
+        parents = np.where(parents != 0)[0]
+        if len(parents) == 0:
+            return f"No parents for variable {node} at lag {l}"
+
+        elif desc == "minimal":
+            parent_vars = []
+            for parent in parents:
+                parent_vars.append(f"X_{parent}")
+            return f"Parents for variable X_{node} at lag {l}: {parent_vars}"
+
+        elif desc == "edge_weights":
+            parent_vars = []
+            coeff_parent_vars = []
+            for parent in parents:
+                coefficient = W[l, parent, node]
+                coeff_parent_vars.append(f"{coefficient} * X_{parent}")
+                parent_vars.append(f"X_{parent}")
+
+            expression = " + ".join(coeff_parent_vars)
+            return f"Parents for variable X_{node} at lag {l}: {parent_vars} affect the forecast variable as {expression}"
+
+        else:
+            NotImplementedError("`desc` should be minimal or edge_weights")
+
+
 def plot_temporal_graph(complete_graph):
     """
     Function to visualize the instantaneous and lagged graphs, to aid in debugging

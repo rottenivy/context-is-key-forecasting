@@ -5,7 +5,7 @@ from scipy.sparse import csr_matrix
 import networkx as nx
 from termcolor import colored
 from abc import abstractmethod
-from .utils.causal import check_dagness
+from .utils.causal import check_dagness, parent_descriptions
 
 """
     Usage:
@@ -157,31 +157,6 @@ class CausalUnivariateCRPSTask(UnivariateCRPSTask):
 
         weighted_adjacency_matrix = full_graph * weights
         return weighted_adjacency_matrix
-
-    def node_i_parent_descriptions(self, W, L, node, desc):
-        for l in range(1, L + 1):
-            parents = W[l, :, node]
-            # Get index
-            parents = np.where(parents != 0)[0]
-            if len(parents) == 0:
-                return f"No parents for variable {node} at lag {l}"
-
-            elif desc == "minimal":
-                parent_vars = []
-                for parent in parents:
-                    parent_vars.append(f"X_{parent}")
-                return f"Parents for variable X_{node} at lag {l}: {parent_vars}"
-
-            elif desc == "edge_weights":
-                parent_vars = []
-                coeff_parent_vars = []
-                for parent in parents:
-                    coefficient = W[l, parent, node]
-                    coeff_parent_vars.append(f"{coefficient} * X_{parent}")
-                    parent_vars.append(f"X_{parent}")
-
-                expression = " + ".join(coeff_parent_vars)
-                return f"Parents for variable X_{node} at lag {l}: {parent_vars} affect the forecast variable as {expression}"
 
 
 class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
@@ -489,7 +464,7 @@ class MinimalCausalContextBivarCategoricalLinSVAR(BivariateCategoricalLinSVARBas
         d = W.shape[-1]
         graph_desc = []
         for i in range(d):
-            desc_i = self.node_i_parent_descriptions(W, lag, i, desc="minimal")
+            desc_i = parent_descriptions(W, lag, i, desc="minimal")
             graph_desc.append(desc_i)
             # graph_desc.append("-----------")
 
@@ -505,7 +480,7 @@ class FullCausalContextBivarCategoricalLinSVAR(BivariateCategoricalLinSVARBaseTa
         d = W.shape[-1]
         graph_desc = []
         for i in range(d):
-            desc_i = self.node_i_parent_descriptions(W, lag, i, desc="edge_weights")
+            desc_i = parent_descriptions(W, lag, i, desc="edge_weights")
             graph_desc.append(desc_i)
             # graph_desc.append("-----------")
 
