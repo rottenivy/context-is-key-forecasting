@@ -1,16 +1,186 @@
-from .base import CausalUnivariateCRPSTask
+from .base import UnivariateCRPSTask
 import pandas as pd
 import numpy as np
 from scipy.sparse import csr_matrix
 import networkx as nx
 from termcolor import colored
 from abc import abstractmethod
+from .utils.causal import check_dagness
 
 """
     Usage:
-    task = BivariateCategoricalLinSVAR(seed=1)
+    task = MinimalCausalContextBivarCategoricalLinSVAR(seed=1)
+    or 
+    task = FullCausalContextBivarCategoricalLinSVAR(seed=1)
+
     plot_forecast_with_covariates(task, "causal.png")
 """
+
+
+class CausalUnivariateCRPSTask(UnivariateCRPSTask):
+    """
+    Base class for all synthetic causal tasks that require forecasting a single series and that use CRPS for evaluation
+
+    """
+
+    # To be used only for the instantaneous graph
+    def generate_dag(self, num_nodes, degree):
+        """
+        Generate Erdos-Renyi random graph with a given degree
+
+        Required only for making the instantaneous graphs since the lagged graphs
+        do not have to be acyclic.
+        """
+
+        total_edges = num_nodes * (num_nodes - 1) // 2
+        total_expected_edges = degree * num_nodes
+
+        if total_expected_edges >= total_edges:
+            print(
+                colored(
+                    f"Warning: For d={num_nodes} nodes and degree={degree}, full graphs will be generated",
+                    "red",
+                )
+            )
+
+        p_threshold = float(total_expected_edges) / total_edges
+        p_edge = (self.random.rand(num_nodes, num_nodes) < p_threshold).astype(float)
+        L = np.tril(p_edge, k=-1)
+
+        P = self.random.permutation(np.eye(num_nodes, num_nodes))
+        G = P.T @ L @ P
+        return G
+
+    def random_graph(self, num_nodes, intra_degree, inter_degree, lag, instantaneous_edges, split):
+        """
+        A function to generate a random (instantaneous, lagged) DAG graph for the causal task
+
+        Parameters
+        ----------
+            num_nodes: int
+
+            intra_degree: float
+                Expected edges for instantaneous graph
+
+            inter_degree: float
+                Expected edges for lagged graph
+
+            lag: int
+                Lag timesteps for the causal
+
+            instantaneous_edges: bool
+                If True, the graph will have instantaneous connections and intra_degree will be used
+                Else intra_degree is not used for any step of the random DAG generation.
+
+            split: Tuple(List, List)
+                Forecast variable list and covariate list
+
+        Returns
+        -------
+        A complete DAG such that the forecast variable has at least one covariate as a parent.
+
+            graph: np.array
+                Binary adjacency matrix of shape (lag+1, d, d)
+        """
+
+        assert lag > 0, "Lag must be greater than 0"
+        assert num_nodes > 1, "DAG must have at least 2 nodes"
+        assert not instantaneous_edges, "Only lagged graphs are supported for now"
+
+        forecast_vars, covariates = split
+
+        if instantaneous_edges:
+            inst_G = self.generate_dag(num_nodes, intra_degree)
+        else:
+            inst_G = np.zeros((num_nodes, num_nodes))
+
+        check_dagness(inst_G)
+
+        lagged_G = np.zeros((lag, num_nodes, num_nodes))
+
+        """
+            expected_lag_edges = inter_degree * num_nodes
+            total_lag_edges = num_nodes * num_nodes * lag
+
+            edge_probs = expected_lag_edges / total_lag_edges
+        """
+        edge_probs = inter_degree / (num_nodes * lag)
+
+        total_edges_per_lag_graph = num_nodes**2
+        expected_edges_per_lag_graph = inter_degree * num_nodes
+        edge_probs = float(expected_edges_per_lag_graph) / total_edges_per_lag_graph
+
+        for l in range(lag):
+            lagged_G[l, :, :] = (
+                self.random.uniform(size=(num_nodes, num_nodes)) < edge_probs
+            )
+
+        # Make sure there is at least one historical parent
+        zero_historical_parent_nodes = np.where(np.sum(lagged_G, axis=(0, 1)) == 0)[0]
+        if len(zero_historical_parent_nodes) > 0:
+            lag_idxs = self.random.choice(lag, len(zero_historical_parent_nodes))
+            random_parent_idxs = self.random.choice(
+                num_nodes, len(zero_historical_parent_nodes)
+            )
+            lagged_G[lag_idxs, random_parent_idxs, zero_historical_parent_nodes] = 1
+
+        # Ensure each forecast variable has a historical parent in the covariate set for every lag step
+        for l in range(lag):
+            # Get all connections from covariate_{t-l} to forecast_{t}
+            lag_submatrix = lagged_G[l][
+                np.ix_(covariates, forecast_vars)
+            ]  # (len(covariates), len(forecast_vars))
+
+            # Check if there is at least one connection from covariate_{t-l} to forecast_{t}
+            has_covariate_parent = lag_submatrix.sum(axis=0) > 0.0
+
+            # For any forecast variable without a covariate parent, add a random covariate parent
+            for i, node in enumerate(forecast_vars):
+                if not has_covariate_parent[i]:
+                    random_parent = self.random.choice(covariates)
+                    lagged_G[l, random_parent, node] = 1
+
+        complete_graph = np.concatenate((inst_G[None], lagged_G), axis=0)
+        return complete_graph
+    
+    def init_weights(self, full_graph):
+        """
+        Initialize the weighted adjacency matrix for the linear model
+        """
+        # Sample weights from [-2., 0.5] U [0.5, 2.]
+        weights = self.random.uniform(0.5, 2, size=full_graph.shape)
+        weights[
+            self.random.rand(*weights.shape) < 0.5
+        ] *= -1  # Half of the weights are negative
+
+        weighted_adjacency_matrix = full_graph * weights
+        return weighted_adjacency_matrix
+
+    def node_i_parent_descriptions(self, W, L, node, desc):
+        for l in range(1, L + 1):
+            parents = W[l, :, node]
+            # Get index
+            parents = np.where(parents != 0)[0]
+            if len(parents) == 0:
+                return f"No parents for variable {node} at lag {l}"
+
+            elif desc == "minimal":
+                parent_vars = []
+                for parent in parents:
+                    parent_vars.append(f"X_{parent}")
+                return f"Parents for variable X_{node} at lag {l}: {parent_vars}"
+
+            elif desc == "edge_weights":
+                parent_vars = []
+                coeff_parent_vars = []
+                for parent in parents:
+                    coefficient = W[l, parent, node]
+                    coeff_parent_vars.append(f"{coefficient} * X_{parent}")
+                    parent_vars.append(f"X_{parent}")
+
+                expression = " + ".join(coeff_parent_vars)
+                return f"Parents for variable X_{node} at lag {l}: {parent_vars} affect the forecast variable as {expression}"
+
 
 
 class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
@@ -38,19 +208,6 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
             "num_forecast_vars": 1,
         }
         super().__init__(seed=seed, fixed_config=fixed_config)
-
-    def init_weights(self, full_graph):
-        """
-        Initialize the weighted adjacency matrix for the linear model
-        """
-        # Sample weights from [-2., 0.5] U [0.5, 2.]
-        weights = self.random.uniform(0.5, 2, size=full_graph.shape)
-        weights[
-            self.random.rand(*weights.shape) < 0.5
-        ] *= -1  # Half of the weights are negative
-
-        weighted_adjacency_matrix = full_graph * weights
-        return weighted_adjacency_matrix
 
     def generate_regimes(self, T, values, value_type, double_regimes, verbalize=True):
         array = []
