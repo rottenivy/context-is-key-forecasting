@@ -50,6 +50,20 @@ def parent_descriptions(W, L, node, desc):
             NotImplementedError("`desc` should be minimal or edge_weights")
 
 
+def get_historical_parents(full_graph):
+    num_nodes = full_graph.shape[-1]
+    # For each variable (column), tells which nodes are parents aggregated across the lag timesteps
+    historical_parent_matrix = np.sum(full_graph[1:], axis=0) > 0
+
+    historical_parents = []
+    for i in range(num_nodes):
+        parents = np.where(historical_parent_matrix[:, i])[0]
+        historical_parents.append(parents.tolist())
+
+    assert len(historical_parents) == num_nodes
+    return historical_parents
+
+
 def plot_temporal_graph(complete_graph):
     """
     Function to visualize the instantaneous and lagged graphs, to aid in debugging

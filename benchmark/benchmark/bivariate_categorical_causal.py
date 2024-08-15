@@ -5,7 +5,7 @@ from scipy.sparse import csr_matrix
 import networkx as nx
 from termcolor import colored
 from abc import abstractmethod
-from .utils.causal import check_dagness, parent_descriptions
+from .utils.causal import check_dagness, parent_descriptions, get_historical_parents
 
 """
     Usage:
@@ -240,9 +240,6 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
             time_elapsed += regime_length
             remaining_length -= regime_length
 
-        # if double_regimes:
-        #     import pdb; pdb.set_trace()
-
         if verbalize:
             for i in range(len(regime_values)):
                 text = f"{regime_values[i]} for {regime_lengths[i]} timesteps"
@@ -320,19 +317,6 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
 
         X_post_burn_in = X[-n_samples:, :]
         return X_post_burn_in, historical_covariates[0], (hist_cov_desc, pred_cov_desc)
-
-    def get_historical_parents(self, full_graph):
-        num_nodes = full_graph.shape[-1]
-        # For each variable (column), tells which nodes are parents aggregated across the lag timesteps
-        historical_parent_matrix = np.sum(full_graph[1:], axis=0) > 0
-
-        historical_parents = []
-        for i in range(num_nodes):
-            parents = np.where(historical_parent_matrix[:, i])[0]
-            historical_parents.append(parents.tolist())
-
-        assert len(historical_parents) == num_nodes
-        return historical_parents
 
     def random_instance(self):
         """
@@ -427,7 +411,7 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
         self.future_time = full_time_series_df[history_length:]
 
         self.graph = W
-        self.historical_parents = self.get_historical_parents(full_graph)
+        self.historical_parents = get_historical_parents(full_graph)
 
         # Set scenario, constraints and background
         background = f"The variable to forecast as well as the covariate, all are generated from a linear Structural Vector Autoregressive (SVAR) model with additive {noise_type} noise and a noise scale of {noise_scale},\n"
