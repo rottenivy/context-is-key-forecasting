@@ -76,6 +76,30 @@ def generate_timestamps(num_days, start_date="2025-06-01"):
     return timestamps
 
 
+def verbalize_variable_values(regime_values, regime_lengths):
+    pred_time_covariate_desc = []
+    for i in range(len(regime_values)):
+        text = f"{regime_values[i]} for {regime_lengths[i]} timesteps"
+        pred_time_covariate_desc.append(text)
+    return pred_time_covariate_desc
+
+
+def truncate_regime(regime_values, regime_lengths, max_length=100):
+    """
+    Truncate a list regime_values and regime_lengths given maximum cumulative regime length
+    """
+    regime_lengths = np.array(regime_lengths)
+    cum_rev_regime_lengths = np.cumsum(regime_lengths[::-1])
+    border_idx = np.argwhere(cum_rev_regime_lengths > max_length)[0, 0]
+    num_elements_to_keep = border_idx + 1
+
+    trunc_regime_values = regime_values[-num_elements_to_keep:].copy()
+    trunc_regime_lengths = regime_lengths[-num_elements_to_keep:].copy()
+    trunc_regime_lengths[0] = max_length - trunc_regime_lengths[1:].sum()
+    assert trunc_regime_lengths.sum() == max_length
+    return trunc_regime_values, trunc_regime_lengths
+
+
 def plot_temporal_graph(complete_graph):
     """
     Function to visualize the instantaneous and lagged graphs, to aid in debugging

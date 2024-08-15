@@ -10,6 +10,8 @@ from .utils.causal import (
     parent_descriptions,
     get_historical_parents,
     generate_timestamps,
+    truncate_regime,
+    verbalize_variable_values,
 )
 
 """
@@ -155,7 +157,7 @@ class CausalUnivariateCRPSTask(UnivariateCRPSTask):
         Initialize the weighted adjacency matrix for the linear model
         """
         # Sample weights from [-2., 0.5] U [0.5, 2.]
-        weights = self.random.uniform(0.5, 2, size=full_graph.shape)
+        weights = self.random.uniform(0.5, 1.5, size=full_graph.shape)
         weights[
             self.random.rand(*weights.shape) < 0.5
         ] *= -1  # Half of the weights are negative
@@ -190,7 +192,9 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
         }
         super().__init__(seed=seed, fixed_config=fixed_config)
 
-    def generate_regimes(self, T, values, value_type, double_regimes, verbalize=True):
+    def generate_regimes(
+        self, T, values, value_type, double_regimes, regime_limits=(10, 20)
+    ):
         array = []
         regime_lengths = []
         regime_values = []
@@ -202,7 +206,9 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
         ha = 0
         while remaining_length > 0:
             if value_type == "fluctuate":
-                regime_length = self.random.randint(low=10, high=20)
+                regime_length = self.random.randint(
+                    low=regime_limits[0], high=regime_limits[1]
+                )
                 regime_length = min(
                     regime_length, remaining_length
                 )  # Ensure it doesn't exceed remaining length
@@ -239,18 +245,14 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
                     regime_lengths.append(regime_length)
                     array.extend([regime_value] * regime_length)
             else:
-                regime_lengths.append(regime_length)
                 array.extend([regime_value] * regime_length)
+                regime_values.append(regime_value)
+                regime_lengths.append(regime_length)
 
             time_elapsed += regime_length
             remaining_length -= regime_length
 
-        if verbalize:
-            for i in range(len(regime_values)):
-                text = f"{regime_values[i]} for {regime_lengths[i]} timesteps"
-                pred_time_covariate_desc.append(text)
-
-        return np.array(array), pred_time_covariate_desc
+        return np.array(array), (regime_values, regime_lengths)
 
     def generate_time_series(
         self, W, history_length, n_samples, noise_type="gauss", noise_scale=0.1
@@ -260,20 +262,36 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
         total_length = self.causal_config["burn_in"] + 2 * n_samples
         pred_length = n_samples - history_length
 
-        historical_covariates, hist_cov_desc = self.generate_regimes(
+        hist_value_type = "fluctuate" if self.fluctuate_history else "const"
+        future_val_type = "fluctuate"
+
+        historical_covariates, hist_regime_details = self.generate_regimes(
             T=total_length - n_samples + history_length,
             values=[2, 6, 8],
-            value_type="const",
+            value_type=hist_value_type,
             double_regimes=False,
-        )
-        future_covariates, pred_cov_desc = self.generate_regimes(
-            T=pred_length,
-            values=[10, 12, 30],
-            value_type="fluctuate",
-            double_regimes=True,
+            regime_limits=(40, 60),
         )
 
-        # future_covariates[-pred_length // 2 :] *= 2
+        future_covariates, pred_regime_details = self.generate_regimes(
+            T=pred_length,
+            values=[10, 12, 30],
+            value_type=future_val_type,
+            double_regimes=True,
+            regime_limits=(10, 20),
+        )
+
+        hist_regime_values, hist_regime_lengths = hist_regime_details
+        trunc_hist_values, trunc_hist_lengths = truncate_regime(
+            hist_regime_values, hist_regime_lengths, max_length=history_length
+        )
+        hist_cov_desc = verbalize_variable_values(trunc_hist_values, trunc_hist_lengths)
+
+        pred_regime_values, pred_regime_lengths = pred_regime_details
+        pred_cov_desc = verbalize_variable_values(
+            pred_regime_values, pred_regime_lengths
+        )
+
         covariate_values = np.concatenate(
             [historical_covariates, future_covariates]
         )  # (total_length, )
@@ -333,7 +351,6 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
         n_samples = self.causal_config["time_window"]
         noise_type = self.causal_config["noise_type"]
         noise_scale = self.causal_config["noise_scale"]
-        num_forecast_vars = 1
 
         attempt = 0
         simulate_flag = True
@@ -341,7 +358,6 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
         X_post_burn_in = None
         full_graph = None
         W = None
-        historical_parents = None
 
         vars_ = set(np.arange(d).tolist())
 
@@ -437,11 +453,17 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
         print(self.causal_context)
 
     def get_scenario(self, const_hist_value, history_length, pred_length, cov_desc):
-        _, pred_cov_desc_list = cov_desc
+        hist_cov_desc_list, pred_cov_desc_list = cov_desc
         pred_cov_desc = ", ".join(pred_cov_desc_list)
 
         line1 = f"The task is to forecast the value of the variable X_{self.causal_config['num_nodes'] - 1} at time t, given the values of the covariate X_0 and the variable X_{self.causal_config['num_nodes'] - 1} itself at times t-1, ... t-{self.causal_config['lag']}."
-        line2 = f"For the first {history_length} time steps, the covariate X_0 is constant at {const_hist_value}."
+
+        if self.fluctuate_history:
+            hist_val = ", ".join(hist_cov_desc_list)
+            line2 = f"For the first {history_length} time steps, the covariate X_0 takes a value of {hist_val}."
+        else:
+            line2 = f"For the first {history_length} time steps, the covariate X_0 is constant at {const_hist_value}."
+
         line3 = f"For the next {pred_length} time steps, the covariate X_0 takes a value of {pred_cov_desc}."
 
         scenario = f"{line1}\n{line2}\n{line3}"
@@ -454,13 +476,16 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
 
 # Causal Context Level 1
 class MinimalCausalContextBivarCategoricalLinSVAR(BivariateCategoricalLinSVARBaseTask):
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        self.fluctuate_history = True
+        super().__init__(fixed_config, seed)
+
     def get_causal_context(self, W, lag):
         d = W.shape[-1]
         graph_desc = []
         for i in range(d):
             desc_i = parent_descriptions(W, lag, i, desc="minimal")
             graph_desc.append(desc_i)
-            # graph_desc.append("-----------")
 
         textual_causal_desc = "\n".join(graph_desc)
         causal_context = f"The causal parents affect the child variables at different lags. There are no instantaneous edges in the graph.\n"
@@ -470,13 +495,17 @@ class MinimalCausalContextBivarCategoricalLinSVAR(BivariateCategoricalLinSVARBas
 
 # Causal Context Level 2
 class FullCausalContextBivarCategoricalLinSVAR(BivariateCategoricalLinSVARBaseTask):
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        self.fluctuate_history = False
+        super().__init__(fixed_config, seed)
+
     def get_causal_context(self, W, lag):
         d = W.shape[-1]
         graph_desc = []
         for i in range(d):
             desc_i = parent_descriptions(W, lag, i, desc="edge_weights")
             graph_desc.append(desc_i)
-            # graph_desc.append("-----------")
 
         textual_causal_desc = "\n".join(graph_desc)
         causal_context = f"The causal parents affect the child variables at different lags. There are no instantaneous edges in the graph.\n"
