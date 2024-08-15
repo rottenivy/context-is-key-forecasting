@@ -28,7 +28,7 @@ class STLMediumDescriptionContext:
 
     def get_background_context():
         return """This task applies a multiplier to a component of the STL decomposition
-        of the series. The seasonal-trend decomposition with LOESS (STL) is a method for 
+        of the series. The seasonal-trend decomposition with LOESS (STL) is a method for
         decomposing a time series into trend, seasonal, and residual components."""
 
 
@@ -36,10 +36,10 @@ class STLLongDescriptionContext:
 
     def get_background_context():
         return """This task applies a multiplier to a component of the STL decomposition
-        of the series. The seasonal-trend decomposition with LOESS (STL) is a method for 
-        decomposing a time series into trend, seasonal, and residual components. The 
-        trend component represents the long-term progression of the series, the seasonal 
-        component represents the seasonal variation, and the residual component 
+        of the series. The seasonal-trend decomposition with LOESS (STL) is a method for
+        decomposing a time series into trend, seasonal, and residual components. The
+        trend component represents the long-term progression of the series, the seasonal
+        component represents the seasonal variation, and the residual component
         represents the noise in the series. """
 
 
@@ -63,6 +63,9 @@ class STLModifierTask(UnivariateCRPSTask):
     seed: int
         Seed for the random number generator
     """
+
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_f"]
+    _skills = UnivariateCRPSTask._skills + ["instruction following", "reasoning: math"]
 
     def __init__(
         self,
@@ -279,9 +282,6 @@ class STLPredTrendMultiplierWithNoDescriptionTask(STLPredTrendMultiplierTask):
     Context: synthetic
     """
 
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(fixed_config=fixed_config, seed=seed)
-
     def get_background_context(self):
         return STLNoDescriptionContext.get_background_context()
 
@@ -293,9 +293,6 @@ class STLPredTrendMultiplierWithShortDescriptionTask(STLPredTrendMultiplierTask)
     Time series: agnostic
     Context: synthetic
     """
-
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(fixed_config=fixed_config, seed=seed)
 
     def get_background_context(self):
         return STLShortDescriptionContext.get_background_context()
@@ -309,9 +306,6 @@ class STLPredTrendMultiplierWithMediumDescriptionTask(STLPredTrendMultiplierTask
     Context: synthetic
     """
 
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(fixed_config=fixed_config, seed=seed)
-
     def get_background_context(self):
         return STLMediumDescriptionContext.get_background_context()
 
@@ -323,9 +317,6 @@ class STLPredTrendMultiplierWithLongDescriptionTask(STLPredTrendMultiplierTask):
     Time series: agnostic
     Context: synthetic
     """
-
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(fixed_config=fixed_config, seed=seed)
 
     def get_background_context(self):
         return STLLongDescriptionContext.get_background_context()
@@ -339,9 +330,6 @@ class STLPredSeasonalMultiplierWithNoDescriptionTask(STLPredSeasonalMultiplierTa
     Context: synthetic
     """
 
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(fixed_config=fixed_config, seed=seed)
-
     def get_background_context(self):
         return STLNoDescriptionContext.get_background_context()
 
@@ -353,9 +341,6 @@ class STLPredSeasonalMultiplierWithShortDescriptionTask(STLPredSeasonalMultiplie
     Time series: agnostic
     Context: synthetic
     """
-
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(fixed_config=fixed_config, seed=seed)
 
     def get_background_context(self):
         return STLShortDescriptionContext.get_background_context()
@@ -369,9 +354,6 @@ class STLPredSeasonalMultiplierWithMediumDescriptionTask(STLPredSeasonalMultipli
     Context: synthetic
     """
 
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(fixed_config=fixed_config, seed=seed)
-
     def get_background_context(self):
         return STLMediumDescriptionContext.get_background_context()
 
@@ -383,9 +365,6 @@ class STLPredSeasonalMultiplierWithLongDescriptionTask(STLPredSeasonalMultiplier
     Time series: agnostic
     Context: synthetic
     """
-
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(fixed_config=fixed_config, seed=seed)
 
     def get_background_context(self):
         return STLLongDescriptionContext.get_background_context()
@@ -399,9 +378,6 @@ class STLPredResidualMultiplierWithNoDescriptionTask(STLPredResidualMultiplierTa
     Context: synthetic
     """
 
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(fixed_config=fixed_config, seed=seed)
-
     def get_background_context(self):
         return STLNoDescriptionContext.get_background_context()
 
@@ -413,9 +389,6 @@ class STLPredResidualMultiplierWithShortDescriptionTask(STLPredResidualMultiplie
     Time series: agnostic
     Context: synthetic
     """
-
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(fixed_config=fixed_config, seed=seed)
 
     def get_background_context(self):
         return STLShortDescriptionContext.get_background_context()
@@ -429,9 +402,6 @@ class STLPredResidualMultiplierWithMediumDescriptionTask(STLPredResidualMultipli
     Context: synthetic
     """
 
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(fixed_config=fixed_config, seed=seed)
-
     def get_background_context(self):
         return STLMediumDescriptionContext.get_background_context()
 
@@ -444,9 +414,6 @@ class STLPredResidualMultiplierWithLongDescriptionTask(STLPredResidualMultiplier
     Context: synthetic
     """
 
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(fixed_config=fixed_config, seed=seed)
-
     def get_background_context(self):
         return STLLongDescriptionContext.get_background_context()
 
@@ -457,9 +424,6 @@ class STLPredTrendRemovedTask(STLPredTrendMultiplierTask):
     Time series: agnostic
     Context: synthetic
     """
-
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(fixed_config=fixed_config, seed=seed)
 
     def sample_multiplier(self, multiplier_min=-1, multiplier_max=1):
         return 0
@@ -479,9 +443,6 @@ class STLPredSeasonalRemovedTask(STLPredSeasonalMultiplierTask):
     Context: synthetic
     """
 
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(fixed_config=fixed_config, seed=seed)
-
     def sample_multiplier(self, multiplier_min=-1, multiplier_max=1):
         return 0
 
@@ -499,9 +460,6 @@ class STLPredResidualRemovedTask(STLPredResidualMultiplierTask):
     Time series: agnostic
     Context: synthetic
     """
-
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(fixed_config=fixed_config, seed=seed)
 
     def sample_multiplier(self, multiplier_min=-1, multiplier_max=1):
         return 0
@@ -522,9 +480,6 @@ class STLPredTrendRemovedWithNoDescriptionTask(STLPredTrendRemovedTask):
     Context: synthetic
     """
 
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(fixed_config=fixed_config, seed=seed)
-
     def get_background_context(self):
         return STLNoDescriptionContext.get_background_context()
 
@@ -536,9 +491,6 @@ class STLPredTrendRemovedWithShortDescriptionTask(STLPredTrendRemovedTask):
     Time series: agnostic
     Context: synthetic
     """
-
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(fixed_config=fixed_config, seed=seed)
 
     def get_background_context(self):
         return STLShortDescriptionContext.get_background_context()
@@ -552,9 +504,6 @@ class STLPredTrendRemovedWithMediumDescriptionTask(STLPredTrendRemovedTask):
     Context: synthetic
     """
 
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(fixed_config=fixed_config, seed=seed)
-
     def get_background_context(self):
         return STLMediumDescriptionContext.get_background_context()
 
@@ -566,9 +515,6 @@ class STLPredTrendRemovedWithLongDescriptionTask(STLPredTrendRemovedTask):
     Time series: agnostic
     Context: synthetic
     """
-
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(fixed_config=fixed_config, seed=seed)
 
     def get_background_context(self):
         return STLLongDescriptionContext.get_background_context()
@@ -582,9 +528,6 @@ class STLPredSeasonalRemovedWithNoDescriptionTask(STLPredSeasonalRemovedTask):
     Context: synthetic
     """
 
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(fixed_config=fixed_config, seed=seed)
-
     def get_background_context(self):
         return STLNoDescriptionContext.get_background_context()
 
@@ -596,9 +539,6 @@ class STLPredSeasonalRemovedWithShortDescriptionTask(STLPredSeasonalRemovedTask)
     Time series: agnostic
     Context: synthetic
     """
-
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(fixed_config=fixed_config, seed=seed)
 
     def get_background_context(self):
         return STLShortDescriptionContext.get_background_context()
@@ -612,9 +552,6 @@ class STLPredSeasonalRemovedWithMediumDescriptionTask(STLPredSeasonalRemovedTask
     Context: synthetic
     """
 
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(fixed_config=fixed_config, seed=seed)
-
     def get_background_context(self):
         return STLMediumDescriptionContext.get_background_context()
 
@@ -626,9 +563,6 @@ class STLPredSeasonalRemovedWithLongDescriptionTask(STLPredSeasonalRemovedTask):
     Time series: agnostic
     Context: synthetic
     """
-
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(fixed_config=fixed_config, seed=seed)
 
     def get_background_context(self):
         return STLLongDescriptionContext.get_background_context()
@@ -642,9 +576,6 @@ class STLPredResidualRemovedWithNoDescriptionTask(STLPredResidualRemovedTask):
     Context: synthetic
     """
 
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(fixed_config=fixed_config, seed=seed)
-
     def get_background_context(self):
         return STLNoDescriptionContext.get_background_context()
 
@@ -656,9 +587,6 @@ class STLPredResidualRemovedWithShortDescriptionTask(STLPredResidualRemovedTask)
     Time series: agnostic
     Context: synthetic
     """
-
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(fixed_config=fixed_config, seed=seed)
 
     def get_background_context(self):
         return STLShortDescriptionContext.get_background_context()
@@ -672,9 +600,6 @@ class STLPredResidualRemovedWithMediumDescriptionTask(STLPredResidualRemovedTask
     Context: synthetic
     """
 
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(fixed_config=fixed_config, seed=seed)
-
     def get_background_context(self):
         return STLMediumDescriptionContext.get_background_context()
 
@@ -686,9 +611,6 @@ class STLPredResidualRemovedWithLongDescriptionTask(STLPredResidualRemovedTask):
     Time series: agnostic
     Context: synthetic
     """
-
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(fixed_config=fixed_config, seed=seed)
 
     def get_background_context(self):
         return STLLongDescriptionContext.get_background_context()
@@ -703,10 +625,10 @@ __TASKS__ = [
     STLPredSeasonalMultiplierWithShortDescriptionTask,
     STLPredSeasonalMultiplierWithMediumDescriptionTask,
     STLPredSeasonalMultiplierWithLongDescriptionTask,
-    STLPredResidualMultiplierWithNoDescriptionTask,
-    STLPredResidualMultiplierWithShortDescriptionTask,
-    STLPredResidualMultiplierWithMediumDescriptionTask,
-    STLPredResidualMultiplierWithLongDescriptionTask,
+    # STLPredResidualMultiplierWithNoDescriptionTask,
+    # STLPredResidualMultiplierWithShortDescriptionTask,
+    # STLPredResidualMultiplierWithMediumDescriptionTask,
+    # STLPredResidualMultiplierWithLongDescriptionTask,
     STLPredTrendRemovedWithNoDescriptionTask,
     STLPredTrendRemovedWithShortDescriptionTask,
     STLPredTrendRemovedWithMediumDescriptionTask,
@@ -715,8 +637,8 @@ __TASKS__ = [
     STLPredSeasonalRemovedWithShortDescriptionTask,
     STLPredSeasonalRemovedWithMediumDescriptionTask,
     STLPredSeasonalRemovedWithLongDescriptionTask,
-    STLPredResidualRemovedWithNoDescriptionTask,
-    STLPredResidualRemovedWithShortDescriptionTask,
-    STLPredResidualRemovedWithMediumDescriptionTask,
-    STLPredResidualRemovedWithLongDescriptionTask,
+    # STLPredResidualRemovedWithNoDescriptionTask,
+    # STLPredResidualRemovedWithShortDescriptionTask,
+    # STLPredResidualRemovedWithMediumDescriptionTask,
+    # STLPredResidualRemovedWithLongDescriptionTask,
 ]

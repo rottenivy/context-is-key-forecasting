@@ -16,8 +16,8 @@ class SensorPeriodicMaintenanceTask(UnivariateCRPSTask):
 
     """
 
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(seed=seed, fixed_config=fixed_config)
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_h"]
+    _skills = UnivariateCRPSTask._skills + ["instruction following"]
 
     def random_instance(self):
         datasets = ["electricity_hourly"]
@@ -81,6 +81,15 @@ class SensorPeriodicMaintenanceTask(UnivariateCRPSTask):
         self.future_time = future_series.to_frame()
         self.background = background
 
+        # ROI parameters to add focus to the times where there would have been maintenance in the prediction region
+        maintenance_hours_in_pred = [
+            future_series.index.get_loc(x)
+            for x in future_series.between_time(
+                maintenance_start_hour, maintenance_end_hour
+            ).index
+        ]
+        self.region_of_interest = maintenance_hours_in_pred
+
 
 class SensorTrendAccumulationTask(UnivariateCRPSTask):
     """
@@ -90,8 +99,8 @@ class SensorTrendAccumulationTask(UnivariateCRPSTask):
 
     """
 
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(seed=seed, fixed_config=fixed_config)
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_h"]
+    _skills = UnivariateCRPSTask._skills + ["instruction following", "reasoning: math"]
 
     def random_instance(self):
         datasets = ["traffic"]
@@ -138,7 +147,9 @@ class SensorTrendAccumulationTask(UnivariateCRPSTask):
             #      of 1.25 to 2 times the absolute mean value of the series. This ensures a
             #      significant trend without making the series explode.
             mean = np.abs(history_series.mean())
-            factor = 1.25 + self.random.rand() * 0.75  # Random factor between 1 and 1.5
+            factor = (
+                1.25 + self.random.rand() * 0.75
+            )  # Random factor between 1.25 and 2
             # XXX: Assumes a constant frequency
             trend = np.linspace(0, factor * mean, n_points_slope + 1)[
                 1:
@@ -154,7 +165,7 @@ class SensorTrendAccumulationTask(UnivariateCRPSTask):
 
             background = (
                 f"The sensor had a calibration problem starting from {datetime_to_str(start_point)} "
-                + f"which resulted in an additive linear trend increasing by {trend[1] - trend[0]:.6f} at every measurement."
+                + f"which resulted in an additive trend in the series that increases by {trend[1] - trend[0]:.4f} at every observed timestep. "
                 + "Assume that the sensor will not have this calibration problem in the future."
             )
 
@@ -166,6 +177,8 @@ class SensorTrendAccumulationTask(UnivariateCRPSTask):
         self.future_time = future_series.to_frame()
         self.background = background
 
+        # No RoI need to be defined as the full prediction window is important
+
 
 class SensorSpikeTask(UnivariateCRPSTask):
     """
@@ -175,8 +188,8 @@ class SensorSpikeTask(UnivariateCRPSTask):
     # TODO: Support more spikes: in which case single-timesteps spikes would be trivial; but it is non-trivial to handle multi-length spikes
     """
 
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(seed=seed, fixed_config=fixed_config)
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_h"]
+    _skills = UnivariateCRPSTask._skills + ["instruction following"]
 
     def random_instance(self):
         datasets = ["traffic"]
@@ -241,6 +254,11 @@ class SensorSpikeTask(UnivariateCRPSTask):
         self.future_time = future_series.to_frame()
         self.background = background
 
+        # ROI metric parameters
+        self.region_of_interest = slice(
+            spike_start_point, spike_start_point + spike_duration
+        )
+
 
 class SensorMaintenanceInPredictionTask(UnivariateCRPSTask):
     """
@@ -248,8 +266,8 @@ class SensorMaintenanceInPredictionTask(UnivariateCRPSTask):
     The maintenance periods should be reflected in the forecast.
     """
 
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(seed=seed, fixed_config=fixed_config)
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + ["instruction following"]
 
     def random_instance(self):
         # TODO: This task can use all datasets where the notion of a "sensor" is meaningful
@@ -296,7 +314,7 @@ class SensorMaintenanceInPredictionTask(UnivariateCRPSTask):
             # Convert history index to timestamp for consistency
             history_series.index = history_series.index.to_timestamp()
 
-            scenario = f"Consider that the sensor will be offline for maintenance between {datetime_to_str(maintenance_start_date)} and {datetime_to_str(maintenance_end_date)}, which resulted in zero readings."
+            scenario = f"Consider that the sensor will be offline for maintenance between {datetime_to_str(maintenance_start_date)} and {datetime_to_str(maintenance_end_date)}, which results in zero readings."
         else:
             raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
 
@@ -304,6 +322,9 @@ class SensorMaintenanceInPredictionTask(UnivariateCRPSTask):
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()
         self.scenario = scenario
+
+        # ROI metric parameters
+        self.region_of_interest = slice(start_hour, start_hour + duration)
 
 
 __TASKS__ = [

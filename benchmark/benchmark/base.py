@@ -5,11 +5,26 @@ Base classes for the benchmark
 
 import numpy as np
 import pandas as pd
+from typing import Optional
 import statsmodels.tsa.tsatools
 
 from abc import ABC, abstractmethod
 
-from .metrics.crps import crps_quantile
+from .metrics.roi_metric import region_of_interest_constraint_metric
+from .utils.plot import plot_task
+
+
+ALLOWED_CONTEXT_SOURCES = ["c_h", "c_i", "c_f", "c_cov", "c_causal"]
+ALLOWED_SKILLS = [
+    "forecasting",
+    "natural language processing",
+    "instruction following",
+    "retrieval: context",
+    "reasoning: analogy",
+    "reasoning: deduction",
+    "reasoning: math",
+    "reasoning: causal",
+]
 
 
 class BaseTask(ABC):
@@ -25,7 +40,10 @@ class BaseTask(ABC):
 
     """
 
-    def __init__(self, seed: int = None, fixed_config: dict = None):
+    _context_sources = []
+    _skills = ["forecasting", "natural language processing"]
+
+    def __init__(self, seed: int = None, fixed_config: Optional[dict] = None):
         self.random = np.random.RandomState(seed)
 
         # Instantiate task parameters
@@ -93,6 +111,14 @@ class BaseTask(ABC):
             errors.append(
                 f"future_time is not a pd.DataFrame, but a {self.future_time.__class__.__name__}"
             )
+        # ... check that the context sources are valid
+        for source in self._context_sources:
+            if source not in ALLOWED_CONTEXT_SOURCES:
+                errors.append(f"Invalid task context source: {source}")
+        # ... check that the skills are valid
+        for skill in self._skills:
+            if skill not in ALLOWED_SKILLS:
+                errors.append(f"Invalid task skill: {skill}")
         return errors
 
     @abstractmethod
@@ -121,12 +147,56 @@ class BaseTask(ABC):
         """
         pass
 
+    def plot(self):
+        """
+        Plot the task
+
+        Returns:
+        --------
+        fig: matplotlib.figure.Figure
+            The figure containing the plot
+
+        """
+        return plot_task(self)
+
 
 class UnivariateCRPSTask(BaseTask):
     """
     A base class for tasks that require forecasting a single series and that use CRPS for evaluation
     We use the last column of `future_time` as the ground truth for evaluation
     """
+
+    def __init__(self, seed: int = None, fixed_config: Optional[dict] = None):
+        # Instantiate task parameters
+        if fixed_config is not None:
+            self.region_of_interest = fixed_config["region_of_interest"]
+            self.roi_weight = fixed_config["roi_weight"]
+            self.metric_constraints = fixed_config["metric_constraints"]
+            self.metric_constraints_tolerance = fixed_config[
+                "metric_constraints_tolerance"
+            ]
+        else:
+            # These will be filled during by random_instance(), called in BaseTask.__init__
+            self.region_of_interest = None
+            self.roi_weight = 0.5
+            self.metric_constraints = None
+            self.metric_constraints_tolerance = 0.05
+
+        super().__init__(seed=seed, fixed_config=fixed_config)
+
+    def verify_config(self) -> list[str]:
+        """
+        Check whether the task satisfy the correct format for its parameters.
+
+        Returns:
+        --------
+        errors: list[str]
+            A list of textual descriptions of all errors in the format
+        """
+        errors = super().verify_config()
+        if self.roi_weight < 0 or self.roi_weight > 1:
+            errors.append(f"roi weight ({self.roi_weight}) is not between 0 and 1")
+        return errors
 
     def evaluate(self, samples):
         if len(samples.shape) == 3:
@@ -135,4 +205,11 @@ class UnivariateCRPSTask(BaseTask):
         # This is the dual of pd.Series.to_frame(), compatible with any series name
         only_column = self.future_time.columns[-1]
         target = self.future_time[only_column]
-        return crps_quantile(target=target, samples=samples)[0].mean()
+        return region_of_interest_constraint_metric(
+            target=target,
+            forecast=samples,
+            region_of_interest=self.region_of_interest,
+            roi_weight=self.roi_weight,
+            constraints=self.metric_constraints,
+            tolerance_percentage=self.metric_constraints_tolerance,
+        )

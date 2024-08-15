@@ -38,6 +38,9 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         Filtered for a subset of products for which we generated influences.
     """
 
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + ["instruction following"]
+
     def __init__(
         self,
         fixed_config: dict = None,
@@ -124,6 +127,8 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         self.constraints = None
         self.background = None
         self.scenario = self.get_scenario_context(shock_delay_in_days, influence_info)
+
+        self.region_of_interest = slice(shock_delay_in_days, self.prediction_length)
 
     def get_shock_description(self, shock_delay_in_days, influence_info):
         return influence_info["influence"].replace(

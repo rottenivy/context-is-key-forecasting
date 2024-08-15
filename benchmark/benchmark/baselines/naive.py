@@ -15,7 +15,7 @@ def random_baseline(task_instance, n_samples=50):
     return np.random.rand(
         n_samples,
         task_instance.future_time.shape[0],
-        task_instance.future_time.shape[1],
+        1,  # For now, just univariate output of 1 variable
     )
 
 
@@ -30,5 +30,6 @@ def oracle_baseline(task_instance, n_samples=50):
     )  # [time dimension, number of variables]
     return (
         target[None, :, :]
-        + np.random.rand(n_samples, target.shape[0], target.shape[1]) * 1e-6
+        + np.random.rand(n_samples, target.shape[0], 1)
+        * 1e-6  # For now, just univariate output of 1 variable
     )

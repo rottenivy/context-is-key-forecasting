@@ -18,9 +18,9 @@ def plot_forecast_univariate(task, filename):
         Where to save the figure
     """
     past_timesteps = task.past_time.index
-    past_values = task.past_time.to_numpy()[:, 0]
+    past_values = task.past_time.to_numpy()[:, -1]
     future_timesteps = task.future_time.index
-    future_values = task.future_time.to_numpy()[:, 0]
+    future_values = task.future_time.to_numpy()[:, -1]
 
     # The fill_between method is only ok with pd.DatetimeIndex
     if isinstance(past_timesteps, pd.PeriodIndex):
@@ -28,7 +28,7 @@ def plot_forecast_univariate(task, filename):
     if isinstance(future_timesteps, pd.PeriodIndex):
         future_timesteps = future_timesteps.to_timestamp()
 
-    plt.figure()
+    plt.figure(figsize=(15, 15))
 
     plt.plot(
         past_timesteps,

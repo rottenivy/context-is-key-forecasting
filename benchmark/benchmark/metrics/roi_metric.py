@@ -29,7 +29,7 @@ def region_of_interest_constraint_metric(
         The target values. (n_timesteps,)
     forecast: np.ndarray
         The forecast values. (n_samples, n_timesteps)
-    region_of_interest: int, list of ints, slice, or boolean mask
+    region_of_interest: None, int, list of ints, slice, or boolean mask
         The region of interest to apply the roi_metric to.
     roi_weight: float
         The weight to apply to the region of interest.
@@ -205,7 +205,10 @@ def format_roi_mask(region_of_interest, forecast_shape):
         np.ndarray: The formatted region of interest mask.
 
     """
-    if isinstance(region_of_interest, int):
+    if region_of_interest is None:
+        mask = np.zeros(forecast_shape[1], dtype=bool)
+        return mask
+    elif isinstance(region_of_interest, int):
         mask = np.zeros(forecast_shape[1], dtype=bool)
         mask[region_of_interest] = True
         return mask
@@ -355,14 +358,14 @@ if __name__ == "__main__":
     txt = """
             Each plot represents a single sample forecast.
             Target in solid green, forecast in dashed yellow
-            The ground truth forecast is a line from 1 to 5. 
-            The dashed line represents the forecast. 
-            The red line represents the minimum constraint. 
-            The blue line represents the maximum constraint. 
-            The dotted lines represent the tolerance around the constraints 5(%). 
-            The metric value is displayed in the title of each plot. 
-            The metric value is calculated using the roi_metric * np.exp(penalty). 
-            The roi_metric is calculated using CRPS (reduces to MAE for 1 sample). 
+            The ground truth forecast is a line from 1 to 5.
+            The dashed line represents the forecast.
+            The red line represents the minimum constraint.
+            The blue line represents the maximum constraint.
+            The dotted lines represent the tolerance around the constraints 5(%).
+            The metric value is displayed in the title of each plot.
+            The metric value is calculated using the roi_metric * np.exp(penalty).
+            The roi_metric is calculated using CRPS (reduces to MAE for 1 sample).
             The weight on the region of interest (timesteps 1,2,3) is 0.91.
             The penalty is calculated using the constraints.
             Hence, the metric values is roi_CRPS * exp(penalty).

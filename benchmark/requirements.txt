@@ -8,3 +8,4 @@ openai
 pandas
 statsmodels
 termcolor<=2.4.0
+causalchamber==0.1.1

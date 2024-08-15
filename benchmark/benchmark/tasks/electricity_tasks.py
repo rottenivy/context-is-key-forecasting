@@ -2,8 +2,8 @@ from tactis.gluon.dataset import get_dataset
 from gluonts.dataset.util import to_pandas
 import numpy as np
 
-from .base import UnivariateCRPSTask
-from .utils import get_random_window_univar, datetime_to_str
+from ..base import UnivariateCRPSTask
+from ..utils import get_random_window_univar, datetime_to_str
 
 
 class ElectricityIncreaseInPredictionTask(UnivariateCRPSTask):
@@ -12,13 +12,13 @@ class ElectricityIncreaseInPredictionTask(UnivariateCRPSTask):
     due to a heat wave and people using a lot of air conditioning.
     The spikes should be deducted from the context and reflected in the forecast.
     TODO: A multivariate extension of this task, where weather is another time series
+
     """
 
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        super().__init__(seed=seed, fixed_config=fixed_config)
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + ["instruction following"]
 
     def random_instance(self):
-        # TODO: This task can use all datasets where the notion of a "sensor" is meaningful
         datasets = ["electricity_hourly"]
 
         # Select a random dataset
@@ -84,6 +84,11 @@ class ElectricityIncreaseInPredictionTask(UnivariateCRPSTask):
         self.constraints = None
         self.background = None
         self.scenario = scenario
+
+        # ROI metric parameters
+        self.region_of_interest = slice(
+            spike_start_point, spike_start_point + spike_duration
+        )
 
 
 __TASKS__ = [ElectricityIncreaseInPredictionTask]

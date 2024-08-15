@@ -21,9 +21,6 @@ class BaseHalfDaySolarForecastTask(UnivariateCRPSTask):
     learns the daily shape of the signal.
     """
 
-    def __init__(self, seed: int = None):
-        super().__init__(seed=seed)
-
     def random_instance(self):
         dataset = get_dataset("solar_10_minutes", regenerate=False)
 
@@ -56,6 +53,8 @@ class BaseHalfDaySolarForecastTask(UnivariateCRPSTask):
         self.background = background
         self.scenario = None
 
+        # No RoI need to be defined as the full prediction window is important
+
     @abstractmethod
     def get_background(
         self, full_history_series: pd.Series, forecast_date: pd.Timestamp
@@ -80,6 +79,9 @@ class MinimalInfoHalfDaySolarForecastTask(BaseHalfDaySolarForecastTask):
     Version of the task where only the minimal background information is given.
     """
 
+    _context_sources = ["c_i"]
+    _skills = BaseHalfDaySolarForecastTask._skills + ["reasoning: deduction"]
+
     def get_background(
         self, full_history_series: pd.Series, forecast_date: pd.Timestamp
     ) -> str:
@@ -93,6 +95,9 @@ class LocaleInfoHalfDaySolarForecastTask(BaseHalfDaySolarForecastTask):
     Version of the task where the state in which the data was collected is mentioned.
     """
 
+    _context_sources = ["c_i"]
+    _skills = BaseHalfDaySolarForecastTask._skills + ["reasoning: deduction"]
+
     def get_background(
         self, full_history_series: pd.Series, forecast_date: pd.Timestamp
     ) -> str:
@@ -103,6 +108,9 @@ class ZenithInfoHalfDaySolarForecastTask(BaseHalfDaySolarForecastTask):
     """
     Version of the task where the average time at which the daily maximum is reached is mentioned.
     """
+
+    _context_sources = ["c_i", "c_h"]
+    _skills = BaseHalfDaySolarForecastTask._skills + ["reasoning: deduction"]
 
     def get_background(
         self, full_history_series: pd.Series, forecast_date: pd.Timestamp
@@ -136,9 +144,6 @@ class BaseDayOfWeekTrafficForecastTask(UnivariateCRPSTask):
     The task comes with a textual description which can helps the model guesses the difference.
     """
 
-    def __init__(self, seed: int = None):
-        super().__init__(seed=seed)
-
     def random_instance(self):
         dataset = get_dataset("traffic", regenerate=False)
 
@@ -170,6 +175,8 @@ class BaseDayOfWeekTrafficForecastTask(UnivariateCRPSTask):
         self.background = background
         self.scenario = None
 
+        # No RoI need to be defined as the full prediction window is important
+
     @abstractmethod
     def get_background(
         self, full_history_series: pd.Series, forecast_date: pd.Timestamp
@@ -189,6 +196,9 @@ class MinimalInfoDayOfWeekTrafficForecastTask(BaseDayOfWeekTrafficForecastTask):
     Secondary difficulty: being able to detect that given history is only for weekdays.
     """
 
+    _context_sources = ["c_i"]
+    _skills = BaseDayOfWeekTrafficForecastTask._skills + ["reasoning: deduction"]
+
     def get_background(
         self, full_history_series: pd.Series, forecast_date: pd.Timestamp
     ) -> str:
@@ -202,6 +212,9 @@ class ExplicitDayOfWeekTrafficForecastTask(BaseDayOfWeekTrafficForecastTask):
     Main difficulty: using a world model to guess that the traffic is lower during the weekend.
     Secondary difficulty: using a world model to guess at the amplitude of the reduction.
     """
+
+    _context_sources = ["c_i", "c_cov"]
+    _skills = BaseDayOfWeekTrafficForecastTask._skills + ["reasoning: deduction"]
 
     def get_background(
         self, full_history_series: pd.Series, forecast_date: pd.Timestamp
@@ -218,6 +231,9 @@ class WeekendShiftDayOfWeekTrafficForecastTask(BaseDayOfWeekTrafficForecastTask)
 
     Main difficulty: using a world model to guess that the traffic is lower during the weekend.
     """
+
+    _context_sources = ["c_i", "c_h"]
+    _skills = BaseDayOfWeekTrafficForecastTask._skills + ["reasoning: deduction"]
 
     def get_background(
         self, full_history_series: pd.Series, forecast_date: pd.Timestamp
