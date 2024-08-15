@@ -86,7 +86,7 @@ def experiment_statsmodels(n_samples, output_folder, max_parallel=None):
     )
 
 
-def experiment_gpt(llm, use_context, n_samples, output_folder, max_parallel=4):
+def experiment_gpt(llm, use_context, n_samples, output_folder, max_parallel=1):
     """
     GPT baselines
 
