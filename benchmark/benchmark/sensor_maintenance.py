@@ -165,7 +165,7 @@ class SensorTrendAccumulationTask(UnivariateCRPSTask):
 
             background = (
                 f"The sensor had a calibration problem starting from {datetime_to_str(start_point)} "
-                + f"which resulted in an additive trend in the series that increases by {trend[1] - trend[0]:.4f} at every observed timestep."
+                + f"which resulted in an additive trend in the series that increases by {trend[1] - trend[0]:.4f} at every observed timestep. "
                 + "Assume that the sensor will not have this calibration problem in the future."
             )
 
