@@ -147,7 +147,9 @@ class SensorTrendAccumulationTask(UnivariateCRPSTask):
             #      of 1.25 to 2 times the absolute mean value of the series. This ensures a
             #      significant trend without making the series explode.
             mean = np.abs(history_series.mean())
-            factor = 1.25 + self.random.rand() * 0.75  # Random factor between 1 and 1.5
+            factor = (
+                1.25 + self.random.rand() * 0.75
+            )  # Random factor between 1.25 and 2
             # XXX: Assumes a constant frequency
             trend = np.linspace(0, factor * mean, n_points_slope + 1)[
                 1:
@@ -163,7 +165,7 @@ class SensorTrendAccumulationTask(UnivariateCRPSTask):
 
             background = (
                 f"The sensor had a calibration problem starting from {datetime_to_str(start_point)} "
-                + f"which resulted in an additive linear trend increasing by {trend[1] - trend[0]:.6f} at every measurement."
+                + f"which resulted in an additive trend in the series that increases by {trend[1] - trend[0]:.4f} at every observed timestep."
                 + "Assume that the sensor will not have this calibration problem in the future."
             )
 
