@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import textwrap
+import numpy as np
 
 from benchmark.sensor_maintenance import SensorMaintenanceInPredictionTask
 
@@ -66,10 +67,19 @@ def plot_forecast_with_covariates(task, filename):
     filename: Pathlike
         Where to save the figure
     """
-    past_timesteps = task.past_time.index
     past_values = task.past_time.to_numpy()[:, -1]
-    future_timesteps = task.future_time.index
     future_values = task.future_time.to_numpy()[:, -1]
+
+    past_timesteps = np.arange(len(past_values))
+    future_timesteps = np.arange(
+        len(past_values), len(past_values) + len(future_values)
+    )
+
+    if isinstance(past_timesteps, pd.PeriodIndex):
+        past_timesteps = past_timesteps.to_timestamp()
+    if isinstance(future_timesteps, pd.PeriodIndex):
+        future_timesteps = future_timesteps.to_timestamp()
+
     past_covariates = task.past_time.to_numpy()[:, :-1]
     future_covariates = task.future_time.to_numpy()[:, :-1]
     num_covariates = past_covariates.shape[1]
@@ -77,6 +87,7 @@ def plot_forecast_with_covariates(task, filename):
     fig, axes = plt.subplots(
         num_covariates + 1, 1, figsize=(10, 8 * num_covariates), sharex=True
     )
+    plt.xticks(fontsize=7)
 
     for k in range(num_covariates + 1):
 
