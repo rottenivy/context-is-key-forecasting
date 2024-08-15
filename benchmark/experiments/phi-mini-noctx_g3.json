@@ -1,0 +1,3 @@
+[
+    {"label": "Phi-3-mini (no-ctx)", "method": "llmp", "llm": "phi-3-mini-128k-instruct", "use_context": false}
+]
