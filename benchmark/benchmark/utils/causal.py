@@ -23,20 +23,26 @@ def parent_descriptions(W, L, node, desc):
     Given the DAGs, returns a textual description of the parents
     of a single node.
     """
+    res = ""
+    coeff_parent_vars = []
+
     for l in range(1, L + 1):
         parents = W[l, :, node]
         # Get index
         parents = np.where(parents != 0)[0]
         if len(parents) == 0:
-            return f"No parents for variable {node} at lag {l}"
+            if desc in ["minimal", "edge_weights_implicit_equation"]:
+                res += f"No parents for X_{node} at lag {l}.\n"
 
         elif desc == "minimal":
             parent_vars = []
             for parent in parents:
                 parent_vars.append(f"X_{parent}")
-            return f"Parents for variable X_{node} at lag {l}: {parent_vars}"
 
-        elif desc == "edge_weights":
+            parent_str = ", ".join(parent_vars)
+            res += f"Parents for variable X_{node} at lag {l}: {parent_str}.\n"
+
+        elif desc == "edge_weights_implicit_equation":
             parent_vars = []
             coeff_parent_vars = []
             for parent in parents:
@@ -45,10 +51,27 @@ def parent_descriptions(W, L, node, desc):
                 parent_vars.append(f"X_{parent}")
 
             expression = " + ".join(coeff_parent_vars)
-            return f"Parents for variable X_{node} at lag {l}: {parent_vars} affect the forecast variable as {expression}"
+            res += f"Parents for X_{node} at lag {l}: {parent_vars} affect the forecast variable as {expression}.\n"
+
+        elif desc == "edge_weights_explicit_equation":
+            for parent in parents:
+                coefficient = W[l, parent, node]
+                timestep_indexed_parent = f"X_{parent}" + "^{t-" + str(l) + "}"
+                coeff_parent_vars.append(f"{coefficient} * {timestep_indexed_parent}")
 
         else:
-            NotImplementedError("`desc` should be minimal or edge_weights")
+            NotImplementedError(
+                "`desc` should be `minimal`, `edge_weights_implicit_equation`, or `edge_weights_plicit_equation`"
+            )
+
+    if desc == "edge_weights_explicit_equation":
+        if len(coeff_parent_vars) == 0:
+            res = f"X_{node}^" + "{t} = \epsilon."
+        else:
+            expression = " + ".join(coeff_parent_vars)
+            res = f"X_{node}^" + "{t} = " + expression + " + \epsilon."
+
+    return res
 
 
 def get_historical_parents(full_graph):
