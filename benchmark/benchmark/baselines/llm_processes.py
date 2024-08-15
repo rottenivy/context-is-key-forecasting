@@ -54,9 +54,14 @@ class LLMPForecaster(Baseline):
 
         # Load the model and tokenizer
         logging.info("Loading model and tokenizer...")
-        self.model, self.tokenizer = get_model_and_tokenizer(
-            llm_path=None, llm_type=self.llmp_args["--llm_type"]
-        )
+        try:
+            self.model, self.tokenizer = get_model_and_tokenizer(
+                llm_path=None, llm_type=self.llmp_args["--llm_type"]
+            )
+        except KeyError:
+            raise ValueError(
+                f"Model type {self.llmp_args['--llm_type']} not supported. Options are: {llm_map.keys()}"
+            )
 
     def _prepare_data(self, task_instance):
         """
@@ -183,7 +188,7 @@ Constraints:
 
     @property
     def cache_name(self):
-        args_to_include = ["llm_type", "use_context", "fail_on_invalid", "n_retries"]
+        args_to_include = ["llm_type", "use_context"]
         return f"{self.__class__.__name__}_" + "_".join(
             [f"{k}={getattr(self, k)}" for k in args_to_include]
         )
