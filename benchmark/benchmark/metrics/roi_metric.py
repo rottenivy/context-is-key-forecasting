@@ -206,7 +206,7 @@ def format_roi_mask(region_of_interest, forecast_shape):
 
     """
     if region_of_interest is None:
-        mask = np.zeros(forecast_shape[1], dtype=bool)
+        mask = np.ones(forecast_shape[1], dtype=bool)
         return mask
     elif isinstance(region_of_interest, int):
         mask = np.zeros(forecast_shape[1], dtype=bool)
