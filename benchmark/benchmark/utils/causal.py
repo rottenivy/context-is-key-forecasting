@@ -4,19 +4,22 @@ from termcolor import colored
 import numpy as np
 import scipy
 
+
 def check_dagness(inst_graph):
     """
-        Check for acylcity of the instantaneous graph
+    Check for acylcity of the instantaneous graph
     """
     num_nodes = inst_graph.shape[0]
-    error_message = colored("Error in DAG generation: Instantaneous graph is not acyclic!", "red")
+    error_message = colored(
+        "Error in DAG generation: Instantaneous graph is not acyclic!", "red"
+    )
     dag_constraint = np.trace(scipy.linalg.expm(inst_graph * inst_graph)) - num_nodes
     assert dag_constraint == 0, error_message
-    
+
 
 def plot_temporal_graph(complete_graph):
     """
-        Function to visualize the instantaneous and lagged graphs, to aid in debugging
+    Function to visualize the instantaneous and lagged graphs, to aid in debugging
     """
     L = complete_graph.shape[0] - 1
     d = complete_graph.shape[1]

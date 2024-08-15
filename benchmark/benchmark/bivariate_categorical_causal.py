@@ -51,7 +51,9 @@ class CausalUnivariateCRPSTask(UnivariateCRPSTask):
         G = P.T @ L @ P
         return G
 
-    def random_graph(self, num_nodes, intra_degree, inter_degree, lag, instantaneous_edges, split):
+    def random_graph(
+        self, num_nodes, intra_degree, inter_degree, lag, instantaneous_edges, split
+    ):
         """
         A function to generate a random (instantaneous, lagged) DAG graph for the causal task
 
@@ -142,7 +144,7 @@ class CausalUnivariateCRPSTask(UnivariateCRPSTask):
 
         complete_graph = np.concatenate((inst_G[None], lagged_G), axis=0)
         return complete_graph
-    
+
     def init_weights(self, full_graph):
         """
         Initialize the weighted adjacency matrix for the linear model
@@ -180,7 +182,6 @@ class CausalUnivariateCRPSTask(UnivariateCRPSTask):
 
                 expression = " + ".join(coeff_parent_vars)
                 return f"Parents for variable X_{node} at lag {l}: {parent_vars} affect the forecast variable as {expression}"
-
 
 
 class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
