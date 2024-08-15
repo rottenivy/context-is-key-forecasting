@@ -8,6 +8,7 @@ import pickle
 
 from pathlib import Path
 from multiprocessing import Lock
+
 # TODO: Need to adapt the cache to multiprocessing. This means reading before writing to make sure that the cache is up to date.
 
 from ..baselines.base import Baseline
@@ -92,7 +93,7 @@ class ResultCache:
         )
         self.cache_path = self.cache_dir / "cache.pkl"
         self.lock = Lock()
-    
+
     def _read_cache(self):
         with self.lock:
             if not self.cache_path.exists():

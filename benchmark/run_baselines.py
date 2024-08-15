@@ -2,6 +2,7 @@
 Run all baselines on all tasks and save the results to a Pandas dataframe.
 
 """
+
 import argparse
 import json
 import inspect
@@ -114,17 +115,18 @@ def experiment_gpt(llm, use_context, n_samples, output_folder, max_parallel=4):
 def experiment_llmp(llm, use_context, n_samples, output_folder, max_parallel=1):
     """
     LLM Process baselines
-    
+
     """
-    llmp_forecaster = LLMPForecaster(
-                llm_type=llm, use_context=use_context
-            )
-    return evaluate_all_tasks(
+    llmp_forecaster = LLMPForecaster(llm_type=llm, use_context=use_context)
+    return (
+        evaluate_all_tasks(
             llmp_forecaster,
             n_samples=n_samples,
             output_folder=f"{output_folder}/{llmp_forecaster.cache_name}",
             max_parallel=max_parallel,
-        ), {}
+        ),
+        {},
+    )
 
 
 def main():
@@ -219,7 +221,6 @@ def main():
     results = pd.DataFrame(results_).sort_values("Task").set_index("Task")
     del results_
     print(results)
-
 
 
 if __name__ == "__main__":
