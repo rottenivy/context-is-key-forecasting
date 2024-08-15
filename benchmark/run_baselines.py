@@ -213,7 +213,8 @@ def main():
     results_.update(
         {
             method: [
-                np.mean([res["score"] for res in results[task]]) for task in results
+                np.mean([res["score"] for res in results[task] if not "error" in res])
+                for task in results
             ]
             for method, results in results.items()
         }
