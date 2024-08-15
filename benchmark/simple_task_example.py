@@ -85,7 +85,7 @@ def plot_forecast_with_covariates(task, filename):
     num_covariates = past_covariates.shape[1]
 
     fig, axes = plt.subplots(
-        num_covariates + 1, 1, figsize=(10, 8 * num_covariates), sharex=True
+        num_covariates + 1, 1, figsize=(18, 12 * num_covariates), sharex=True
     )
     plt.xticks(fontsize=7)
 
@@ -128,12 +128,18 @@ def plot_forecast_with_covariates(task, filename):
 
     fig.legend(lines, lables, loc="upper right")
 
-    scenario = "\n".join(textwrap.wrap(task.scenario, width=40))
-    background = "\n".join(textwrap.wrap(task.background, width=40))
-    causal_context = "\n".join(textwrap.wrap(task.causal_context, width=40))
+    scenario = "\n".join(textwrap.wrap(task.scenario, width=125))
+    background = "\n".join(textwrap.wrap(task.background, width=125))
+    causal_context = "\n".join(textwrap.wrap(task.causal_context, width=125))
+
+    # Count number of characters in scenario, background and causal context
+    background_chars = len(background)
+    scenario_chars = len(scenario)
+    causal_context_chars = len(causal_context)
 
     plt.suptitle(
-        f"Background: {background}\nCausal context: {causal_context}\nScenario: {scenario}"
+        f"Background ({background_chars}): {background}\nCausal context ({causal_context_chars}): {causal_context}\nScenario ({scenario_chars}): {scenario}",
+        fontsize=16,
     )  # Change this to task.background or task.constraint depending on task
     plt.tight_layout()
     plt.savefig(filename)
