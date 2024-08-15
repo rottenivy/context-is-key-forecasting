@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from termcolor import colored
 import numpy as np
 import scipy
+from datetime import datetime, timedelta
 
 
 def check_dagness(inst_graph):
@@ -62,6 +63,17 @@ def get_historical_parents(full_graph):
 
     assert len(historical_parents) == num_nodes
     return historical_parents
+
+
+def generate_timestamps(num_days, start_date="2025-06-01"):
+    timestamps = []
+    current_date = datetime.strptime(start_date, "%Y-%m-%d")
+
+    for _ in range(num_days):
+        timestamps.append(current_date.strftime("%Y-%m-%d %H:%M:%S"))
+        current_date += timedelta(days=1)
+
+    return timestamps
 
 
 def plot_temporal_graph(complete_graph):

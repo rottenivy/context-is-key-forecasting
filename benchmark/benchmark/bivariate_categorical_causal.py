@@ -5,7 +5,12 @@ from scipy.sparse import csr_matrix
 import networkx as nx
 from termcolor import colored
 from abc import abstractmethod
-from .utils.causal import check_dagness, parent_descriptions, get_historical_parents
+from .utils.causal import (
+    check_dagness,
+    parent_descriptions,
+    get_historical_parents,
+    generate_timestamps,
+)
 
 """
     Usage:
@@ -409,6 +414,11 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
         full_time_series_df = pd.DataFrame(X_post_burn_in)
         self.past_time = full_time_series_df[:history_length]
         self.future_time = full_time_series_df[history_length:]
+
+        # Generate and set arbitrary timestamps
+        ts = generate_timestamps(num_days=len(X_post_burn_in), start_date="2025-06-01")
+        self.past_time.index = ts[:history_length]
+        self.future_time.index = ts[history_length:]
 
         self.graph = W
         self.historical_parents = get_historical_parents(full_graph)
