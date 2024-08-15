@@ -5,14 +5,11 @@ Base classes for the benchmark
 
 import numpy as np
 import pandas as pd
-from termcolor import colored
-import scipy
 import statsmodels.tsa.tsatools
 
 from abc import ABC, abstractmethod
 
 from .metrics.crps import crps_quantile
-
 
 
 class BaseTask(ABC):
@@ -139,4 +136,3 @@ class UnivariateCRPSTask(BaseTask):
         only_column = self.future_time.columns[-1]
         target = self.future_time[only_column]
         return crps_quantile(target=target, samples=samples)[0].mean()
-
