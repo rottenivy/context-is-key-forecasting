@@ -7,6 +7,8 @@ import pandas as pd
 import pickle
 
 from pathlib import Path
+from multiprocessing import Lock
+# TODO: Need to adapt the cache to multiprocessing. This means reading before writing to make sure that the cache is up to date.
 
 from ..baselines.base import Baseline
 from ..config import DEFAULT_N_SAMPLES, RESULT_CACHE_PATH
@@ -89,18 +91,28 @@ class ResultCache:
             else method_name
         )
         self.cache_path = self.cache_dir / "cache.pkl"
+        self.lock = Lock()
+    
+    def _read_cache(self):
+        with self.lock:
+            if not self.cache_path.exists():
+                self.logger.info("Cache file does not exist. Creating new cache.")
+                self.cache = {}
+                self.cache_dir.mkdir(parents=True, exist_ok=True)
+            else:
+                self.logger.info(f"Loading cache from {self.cache_path}.")
+                with self.cache_path.open("rb") as f:
+                    if os.path.getsize(self.cache_path) == 0:
+                        self.cache = {}
+                    else:
+                        self.cache = pickle.load(f)
 
-        if not self.cache_path.exists():
-            self.logger.info("Cache file does not exist. Creating new cache.")
-            self.cache = {}
-            self.cache_dir.mkdir(parents=True, exist_ok=True)
-        else:
-            self.logger.info(f"Loading cache from {self.cache_path}.")
-            with self.cache_path.open("rb") as f:
-                if os.path.getsize(self.cache_path) == 0:
-                    self.cache = {}
-                else:
-                    self.cache = pickle.load(f)
+    def _write_cache(self, cache_key, samples):
+        with self.lock:
+            self.logger.info("Updating cache.")
+            self.cache[cache_key] = samples
+            with self.cache_path.open("wb") as f:
+                pickle.dump(self.cache, f)
 
     def get_cache_key(self, task_instance, n_samples):
         """
@@ -149,6 +161,7 @@ class ResultCache:
         self.logger.info("Attempting to load from cache.")
         cache_key = self.get_cache_key(task_instance, n_samples)
 
+        self._read_cache()  # update cache
         if cache_key in self.cache:
             self.logger.info("Cache hit.")
             return self.cache[cache_key]
@@ -157,10 +170,7 @@ class ResultCache:
         samples = self.method_callable(task_instance, n_samples)
 
         # Update cache on disk
-        self.logger.info("Updating cache.")
-        self.cache[cache_key] = samples
-        with self.cache_path.open("wb") as f:
-            pickle.dump(self.cache, f)
+        self._write_cache(cache_key, samples)
 
         return samples
 
