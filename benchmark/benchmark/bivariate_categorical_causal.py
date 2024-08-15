@@ -16,11 +16,13 @@ from .utils.causal import (
 
 """
     Usage:
-    task = MinimalCausalContextBivarCategoricalLinSVAR(seed=1)
+    task = MinimalCausalContextBivarLinSVAR(seed=1)
     or 
-    task = FullCausalContextBivarCategoricalLinSVAR(seed=1)
+    task = FullCausalContextImplicitEquationBivarLinSVAR(seed=1)
+    or 
+    task = FullCausalContextExplicitEquationBivarLinSVAR(seed=1)
 
-    plot_forecast_with_covariates(task, "causal.png")
+    plot_forecast_with_covariates(task, f"{task.plot_name}.png")
 """
 
 
@@ -178,6 +180,23 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
     """
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
+        """
+        Currently the causal config is hardcoded. There are some heuristics for what are "good values" and what are not.
+
+        Rule of thumb:
+
+        lag:
+            larger the lag, higher the increase in magnitude of the variable as we unroll in time. For large lag values we risk exploding the values of the time series.
+        time_window:
+            Larger the value, higher the chance of time series blowing up to NaNs (for which checks are in place).
+        num_nodes:
+            This is a bivariate task so it should always be 2. But in future if we increase this, we risk blowing up faster.
+        noise_scale:
+            Controls the noise levels of the model. Making it smaller makes the dynamics less stochastic, but allows us to accommodate larger lag and time_window.
+        max_data_gen_trials:
+            In case the data blows up due to any of these conditions, there are checks in place to catch the error and retry data generation with a different set of edge weights,
+            and it would retry for a maximum of max_data_gen_trials.
+        """
 
         self.causal_config = {
             "num_nodes": 2,
@@ -188,8 +207,11 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
             "noise_scale": 0.1,
             "time_window": 200,
             "max_data_gen_trials": 100,
-            "num_forecast_vars": 1,
+            "num_forecast_vars": 1,  # CODE DOES NOT SUPPORT MULTIPLE FORECAST VARIABLES
         }
+        assert (
+            self.causal_config["num_forecast_vars"] == 1
+        ), "Only 1 forecast variable supported"
         super().__init__(seed=seed, fixed_config=fixed_config)
 
     def generate_regimes(
@@ -198,7 +220,6 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
         array = []
         regime_lengths = []
         regime_values = []
-        pred_time_covariate_desc = []
         remaining_length = T
         assert value_type in ["fluctuate", "const"]
 
@@ -440,17 +461,20 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
         self.historical_parents = get_historical_parents(full_graph)
 
         # Set scenario, constraints and background
-        background = f"The variable to forecast as well as the covariate, all are generated from a linear Structural Vector Autoregressive (SVAR) model with additive {noise_type} noise and a noise scale of {noise_scale},\n"
-        background += f"with lag = {L}.\nVariable to forecast: X_{forecast_variable}."
+        ""
+        background = f"Given are variables X_0 and X_1, where X_0 is a covariate and X_1 is the variable to forecast."
+        background += f" Variables are generated from a linear Structural Vector Autoregressive (SVAR) model with additive {noise_type} noise and a noise scale of {noise_scale}, with lag = {L}."
         self.background = background
+        print(colored(f"\nBackground: {background}\n", "green"))
 
         self.scenario = self.get_scenario(
             const_hist_value, history_length, pred_length, cov_desc
         )
         self.constraints = None
+        print(colored(f"Scenario: {self.scenario}\n", "green"))
 
         self.causal_context = self.get_causal_context(W, L)
-        print(self.causal_context)
+        print(colored(f"Causal context: {self.causal_context}\n", "green"))
 
     def get_scenario(self, const_hist_value, history_length, pred_length, cov_desc):
         hist_cov_desc_list, pred_cov_desc_list = cov_desc
@@ -474,46 +498,133 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
         pass
 
 
-# Causal Context Level 1
-class MinimalCausalContextBivarCategoricalLinSVAR(BivariateCategoricalLinSVARBaseTask):
+"""
+    Causal Context Level 1
+    ----------------------
+
+    Parents of the forecast variable are given. Edge weights of the linear SVAR model are not given and have to be inferred,
+    by solving the linear SVAR model which can be done by observing the parent history and child history. The inferred edge weights
+    should then used to forecast the future values of the forecast variable, given the future values of the covariate.
+
+    Causal context example:
+    Parents for X_1 at lag 1: X_0, X_1
+    Parents for X_1 at lag 2: X_0, X_1
+"""
+
+
+class MinimalCausalContextBivarLinSVAR(BivariateCategoricalLinSVARBaseTask):
     def __init__(self, fixed_config: dict = None, seed: int = None):
         self.fluctuate_history = True
+        self.plot_name = "MinimalContextBivarCatLinSVAR"
         super().__init__(fixed_config, seed)
 
     def get_causal_context(self, W, lag):
         d = W.shape[-1]
         graph_desc = []
         for i in range(d):
-            desc_i = parent_descriptions(W, lag, i, desc="minimal")
+            if i == d - 1:
+                desc_i = parent_descriptions(W, lag, i, desc="minimal")
+            else:
+                desc_i = f"No parents for X_{i} at any lag."
             graph_desc.append(desc_i)
 
         textual_causal_desc = "\n".join(graph_desc)
-        causal_context = f"The causal parents affect the child variables at different lags. There are no instantaneous edges in the graph.\n"
-        causal_context += f"The causal parents for each variable is given below:\n{textual_causal_desc}\n"
+        causal_context = (
+            f"The causal parents affect the child variables at different lags.\n"
+        )
+        causal_context += f"The complete set of causal parents for each variable is given below, and there are no confounders.\n{textual_causal_desc}\n"
         return causal_context
 
 
-# Causal Context Level 2
-class FullCausalContextBivarCategoricalLinSVAR(BivariateCategoricalLinSVARBaseTask):
+"""
+    Causal Context Level 2
+    ----------------------
+    
+    Parents of the forecast variable are given along with the exact edge weights.
+
+    Causal context example:
+    Parents for X_1 at lag 1: X_0 affect the forecast variable as 0.5 * X_0 + 0.5 * X_1. 
+    Parents for X_1 at lag 2: X_0 affect the forecast variable as 0.73 * X_0 + 0.52 * X_1. 
+
+    In the expression, the timesteps of X_0 and X_1 have to be inferred from the text description (which mentions `at lag <l>`).
+    Thus, the model must implictly reason that X_0^{t} = 0.5 * X_0^{t-1} + 0.5 * X_1^{t-1} + 0.73 * X_0^{t-2} + 0.52 * X_1^{t-2} + \epsilon
+    \epsilon has to be inferred from details on noise_scale, distribution and the linear SVAR model mentioned in task.background.
+"""
+
+
+class FullCausalContextImplicitEquationBivarLinSVAR(
+    BivariateCategoricalLinSVARBaseTask
+):
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
         self.fluctuate_history = False
+        self.plot_name = "FullContextImplicitBivarCatLinSVAR"
         super().__init__(fixed_config, seed)
 
     def get_causal_context(self, W, lag):
         d = W.shape[-1]
         graph_desc = []
         for i in range(d):
-            desc_i = parent_descriptions(W, lag, i, desc="edge_weights")
+            if i == d - 1:
+                desc_i = parent_descriptions(
+                    W, lag, i, desc="edge_weights_implicit_equation"
+                )
+            else:
+                desc_i = f"No parents for X_{i} at any lag."
             graph_desc.append(desc_i)
 
         textual_causal_desc = "\n".join(graph_desc)
-        causal_context = f"The causal parents affect the child variables at different lags. There are no instantaneous edges in the graph.\n"
-        causal_context += f"The causal parents for each variable is given below:\n{textual_causal_desc}.\n"
+        causal_context = (
+            f"The causal parents affect the child variables at different lags.\n"
+        )
+        causal_context += f"The causal parents for each variable is given below:\n{textual_causal_desc}"
+        return causal_context
+
+
+"""
+    Causal Context Level 3
+    ----------------------
+    
+    Parents of the forecast variable are given along with the exact edge weights.
+
+    Causal context example:
+    The causal expression for X_1 is completely described by the following equation:
+        X_1^{t} = 0.5 * X_0^{t-1} + 0.5 * X_1^{t-1} + 0.73 * X_0^{t-2} + 0.52 * X_1^{t-2} + \epsilon
+
+    In the expression, the mathematical relations are given explicitly and the task boils down to mathematical reasoning.
+    The exact value/distribution of \epsilon still has to be inferred from textual descriptions of noise_scale and distribution mentioned in task.background.
+"""
+
+
+class FullCausalContextExplicitEquationBivarLinSVAR(
+    BivariateCategoricalLinSVARBaseTask
+):
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
+        self.fluctuate_history = False
+        self.plot_name = "FullContextExplicitBivarCatLinSVAR"
+        super().__init__(fixed_config, seed)
+
+    def get_causal_context(self, W, lag):
+        d = W.shape[-1]
+        graph_desc = []
+        for i in range(d):
+            desc_i = parent_descriptions(
+                W, lag, i, desc="edge_weights_explicit_equation"
+            )
+
+            graph_desc.append(desc_i)
+
+        textual_causal_desc = "\n".join(graph_desc)
+        causal_context = (
+            f"The causal parents affect the child variables at different lags.\n"
+        )
+        causal_context += f"The mathematical equations describing the cause-effect relationship for each variable is given below:\n{textual_causal_desc}."
         return causal_context
 
 
 __TASKS__ = [
-    MinimalCausalContextBivarCategoricalLinSVAR,
-    FullCausalContextBivarCategoricalLinSVAR,
+    MinimalCausalContextBivarLinSVAR,  # Level 1: Parents are given
+    FullCausalContextImplicitEquationBivarLinSVAR,  # Level 2: Parents and edge weights are given, details on timesteps in the SVAR expression and epsilon have to be inferred from text
+    FullCausalContextExplicitEquationBivarLinSVAR,  # Level 3: Parents and edge weights are given along with explicit timestep indexing in the SVAR equation and epsilon have to be inferred from text
 ]
