@@ -11,7 +11,6 @@ from lag_llama.gluon.estimator import LagLlamaEstimator
 from .utils import torch_default_device
 from ..config import MODEL_STORAGE_PATH
 
-
 LAG_LLAMA_WEIGHTS_PATH = f"{MODEL_STORAGE_PATH}/lag-llama.ckpt"
 if not os.path.exists(LAG_LLAMA_WEIGHTS_PATH):
     logging.info("Downloading Lag-Llama weights...")
@@ -30,6 +29,7 @@ def get_lag_llama_predictions(
     use_rope_scaling=False,
     num_samples=100,
     num_parallel_samples=100,
+    seed=42,
 ):
     """
     Generates forecasts using the Lag-Llama model.
@@ -52,6 +52,9 @@ def get_lag_llama_predictions(
 
     """
     logging.info("Generating forecasts using Lag-Llama...")
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
     ckpt = torch.load(
         LAG_LLAMA_WEIGHTS_PATH,
         map_location=device,
@@ -162,7 +165,9 @@ def lag_llama(task_instance, n_samples, batch_size=1, device=None):
         num_samples=n_samples,
         batch_size=batch_size,
     )
+    dtype = task_instance.past_time.dtypes.iloc[0]
+    return format_llama_predictions(forecasts, dtype)
 
-    return np.stack([f.samples for f in forecasts], axis=-1).astype(
-        task_instance.past_time.dtypes.iloc[-1]
-    )
+
+def format_llama_predictions(forecasts, dtype):
+    return np.stack([f.samples for f in forecasts], axis=-1).astype(dtype)
