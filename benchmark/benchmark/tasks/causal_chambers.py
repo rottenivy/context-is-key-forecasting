@@ -223,7 +223,7 @@ class ExplicitPressureFromSpeedTask(WindTunnelTask):
             "pressure_gap", "rpm_in", seed, fixed_config, "wt_changepoints_v1", datadir
         )
 
-        self.background = "The wind tunnel is a chamber with one controllable fan that pushes air through it. We can control the speed of the fan (rpm_in) and measure the gap between the internal pressure and the ambient pressure (in Pascals). The pressure gap can be estimated from the speed using the affinity laws, which state that the pressure over maximal pressure ratio is proportional to the square of the speed over maximal speed ratio."
+        self.background = "The wind tunnel is a chamber with one controllable fan that pushes air through it. We can control the speed of the fan (rpm_in) and measure the gap between the internal pressure and the ambient pressure (in Pascals). The pressure gap can be estimated from the speed using the affinity laws, which state that the pressure over maximal pressure ratio is proportional to the square of the speed over maximal speed ratio. The task is to forecast the pressure."
         self.constraints = (
             "The maximal fan speed is 3000 rpm and the maximal pressure is 37.5 Pa."
         )
@@ -258,7 +258,7 @@ class ImplicitPressureFromSpeedTask(ExplicitPressureFromSpeedTask):
 
         super().__init__(seed, fixed_config, datadir)
 
-        self.background = "The wind tunnel is a chamber with one controllable fan that pushes air through it. We can control the speed of the fan (in revolutions per minute) and measure the gap between the internal pressure and the ambient pressure (in Pascals). The pressure gap can be estimated from the speed using the affinity laws."
+        self.background = "The wind tunnel is a chamber with one controllable fan that pushes air through it. We can control the speed of the fan (in revolutions per minute) and measure the gap between the internal pressure and the ambient pressure (in Pascals). The pressure gap can be estimated from the speed using the affinity laws. The task is to forecast the pressure."
 
 
 __TASKS__ = [
