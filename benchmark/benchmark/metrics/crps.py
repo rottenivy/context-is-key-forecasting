@@ -55,3 +55,47 @@ def crps_quantile(
     #     result_sum /= np.sum(np.abs(target))
 
     return series_QuantileLoss, abs_target_sum
+
+
+def crps(
+    target: np.array,
+    samples: np.array,
+) -> np.array:
+    """
+    Compute the CRPS using the probability weighted moment form.
+    See Eq ePWM from "Estimation of the Continuous Ranked Probability Score with
+    Limited Information and Applications to Ensemble Weather Forecasts"
+    https://link.springer.com/article/10.1007/s11004-017-9709-7
+
+    This is a O(n log n) per variable exact implementation, without estimation bias.
+
+    Parameters:
+    -----------
+    target: np.ndarray
+        The target values. (variable dimensions)
+    samples: np.ndarray
+        The forecast values. (n_samples, variable dimensions)
+
+    Returns:
+    --------
+    crps: np.ndarray
+        The CRPS for each of the (variable dimensions)
+    """
+    assert target.shape == samples.shape[1:]
+
+    num_samples = samples.shape[0]
+    num_dims = samples.ndim
+    sorted_samples = np.sort(samples, axis=0)
+
+    abs_diff = (
+        np.abs(np.expand_dims(target, axis=0) - sorted_samples).sum(axis=0)
+        / num_samples
+    )
+
+    beta0 = sorted_samples.sum(axis=0) / num_samples
+
+    # An array from 0 to num_samples - 1, but expanded to allow broadcasting over the variable dimensions
+    i_array = np.expand_dims(np.arange(num_samples), axis=tuple(range(1, num_dims)))
+    beta1 = (i_array * sorted_samples).sum(axis=0) / (num_samples * (num_samples - 1))
+
+    return abs_diff + beta0 - 2 * beta1
