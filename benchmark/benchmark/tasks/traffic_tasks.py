@@ -260,14 +260,14 @@ class TrafficForecastTaskwithHolidaysInPredictionWindowAndPastYearAnalogy(
         mean_history_traffic_last_year = past_year_history_series.mean()
         mean_holiday_traffic_last_year = past_year_future_series[:24].mean()
         mean_traffic_percentage_difference = (
-            mean_holiday_traffic_last_year / mean_history_traffic_last_year
+            mean_holiday_traffic_last_year * 100 / mean_history_traffic_last_year
         )
         max_history_traffic_last_year = past_year_history_series.max()
         max_holiday_traffic_last_year = past_year_future_series[:24].max()
         max_traffic_percentage_difference = (
-            max_holiday_traffic_last_year / max_history_traffic_last_year
+            max_holiday_traffic_last_year * 100 / max_history_traffic_last_year
         )
-        analogy_background = f" In 2015, the mean traffic on the holiday was {mean_traffic_percentage_difference:.4f} times the mean traffic in the preceeding 7 days before the holiday, and traffic in the busiest hour on the holiday was {max_traffic_percentage_difference:.4f} times the traffic in the preceeding 7 days before the holiday."
+        analogy_background = f" In 2015, the mean traffic on the holiday was {round(mean_traffic_percentage_difference):.0f} % the mean traffic in the preceeding 7 days before the holiday, and traffic on the busiest hour on the holiday was {round(max_traffic_percentage_difference):.0f} % the traffic on the busiest hour in the preceeding 7 days before the holiday."
         return analogy_background
 
 
