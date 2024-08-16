@@ -7,6 +7,13 @@ from gluonts.dataset.util import to_pandas
 
 from .utils import get_random_window_univar
 
+from .window_selection import (
+    intersection_over_union_is_low,
+    quartile_intersection_over_union_is_low,
+    median_absolute_deviation_intersection_is_low,
+    is_baseline_prediction_poor,
+)
+
 
 class OraclePredUnivariateConstraintsTask(UnivariateCRPSTask):
     """
@@ -19,10 +26,19 @@ class OraclePredUnivariateConstraintsTask(UnivariateCRPSTask):
     possible_constraints: list
         List of possible constraints to be used.
         Default is ["min", "max"]
+        Possible values are ["min", "max"]
     max_constraints: int
         Maximum number of constraints to be used. Default is 2.
+    baselines: list
+        List of baseline models to be used. Default is None.
+    baseline_evaluation_criteria: str
+        Criteria to evaluate the baseline models. Default is "all".
+    window_selection: str
+        Method to select the window. Default is "robust_iou".
     fixed_config: dict
         Fixed configuration for the task
+    seed: int
+        Seed for the random number generator.
     """
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_f"]
@@ -32,6 +48,9 @@ class OraclePredUnivariateConstraintsTask(UnivariateCRPSTask):
         self,
         possible_constraints=["min", "max"],
         max_constraints: int = 2,
+        baselines=None,
+        baseline_evaluation_criteria="all",
+        window_selection="robust_iou",
         fixed_config: dict = None,
         seed: int = None,
     ):
@@ -40,6 +59,10 @@ class OraclePredUnivariateConstraintsTask(UnivariateCRPSTask):
         ), "max_constraints cannot be greater than the total available constraints"
         self.possible_constraints = possible_constraints
         self.max_constraints = max_constraints
+        self.seed = seed
+        self.baselines = baselines
+        self.baseline_evaluation_criteria = baseline_evaluation_criteria
+        self.window_selection = window_selection
 
         super().__init__(seed=seed, fixed_config=fixed_config)
 
@@ -49,6 +72,25 @@ class OraclePredUnivariateConstraintsTask(UnivariateCRPSTask):
         Selects a random dataset, a random time series, and a random window.
         Samples constraints from the ground truth forecast.
         Instantiates the class variables.
+        """
+        history_series, future_series = self.find_interesting_window(
+            how=self.window_selection
+        )
+
+        # Instantiate the class variables
+        self.past_time = history_series.to_frame()
+        self.future_time = future_series.to_frame()
+        self.constraints = self.verbalize_context_from_constraints(
+            self.metric_constraints
+        )
+        self.background = None
+        self.scenario = None
+
+    def find_interesting_window(self, how="iou"):
+        """
+        Selects a window from one of the gluonts datasets.
+        The window is selected according to the performance of a baseline model.
+        If the baseline model performs poorly, the window is considered interesting.
         """
         datasets = ["electricity_hourly"]
 
@@ -67,29 +109,48 @@ class OraclePredUnivariateConstraintsTask(UnivariateCRPSTask):
         ts_index = self.random.choice(len(dataset.train))
         full_series = to_pandas(list(dataset.test)[ts_index])
 
-        # Select a random window
-        window = get_random_window_univar(
-            full_series,
-            prediction_length=metadata.prediction_length,
-            history_factor=self.random.randint(2, 5),
-            random=self.random,
-        )
+        window_is_interesting = False
+        while not window_is_interesting:
+            # Select a random window
+            window = get_random_window_univar(
+                full_series,
+                prediction_length=metadata.prediction_length,
+                history_factor=self.random.randint(2, 5),
+                random=self.random,
+            )
 
-        # Extract the history and future series
-        history_series = window.iloc[: -metadata.prediction_length]
-        future_series = window.iloc[-metadata.prediction_length :]
+            # Extract the history and future series
+            history_series = window.iloc[: -metadata.prediction_length]
+            future_series = window.iloc[-metadata.prediction_length :]
+            self.past_time = history_series.to_frame()
+            self.future_time = future_series.to_frame()
 
-        # ROI metrics parameter
-        self.metric_constraints = self.sampleConstraintsFromGroundTruth(future_series)
+            self.metric_constraints = self.sampleConstraintsFromGroundTruth(
+                future_series
+            )
 
-        # Instantiate the class variables
-        self.past_time = history_series.to_frame()
-        self.future_time = future_series.to_frame()
-        self.constraints = self.verbalize_context_from_constraints(
-            self.metric_constraints
-        )
-        self.background = None
-        self.scenario = None
+            # Check if the constraints are interesting
+            if how == "baseline":
+                period = self.seasonal_period
+                window_is_interesting = is_baseline_prediction_poor(
+                    history_series, future_series, self.metric_constraints, period
+                )
+            elif how == "iou":
+                window_is_interesting = intersection_over_union_is_low(
+                    history_series, future_series
+                )
+
+            elif how == "robust_iou":
+                window_is_interesting = quartile_intersection_over_union_is_low(
+                    history_series, future_series
+                )
+
+            elif how == "robust_mad_iou":
+                window_is_interesting = median_absolute_deviation_intersection_is_low(
+                    history_series, future_series
+                )
+
+        return history_series, future_series
 
     def sampleConstraintsFromGroundTruth(self, future_series):
         """
@@ -104,12 +165,12 @@ class OraclePredUnivariateConstraintsTask(UnivariateCRPSTask):
             Dictionary of constraints to be satisfied by the forecast
         """
         constraints_dict = {}
-        sampled_constraint_types = self.random.choice(
+        sampled_constraints = self.random.choice(
             self.possible_constraints,
             self.random.randint(1, self.max_constraints + 1),
             replace=False,
         )
-        for constraint_type in sampled_constraint_types:
+        for constraint_type in sampled_constraints:
             if constraint_type == "min":
                 constraints_dict["min"] = future_series.min()
             elif constraint_type == "max":
@@ -129,28 +190,15 @@ class OraclePredUnivariateConstraintsTask(UnivariateCRPSTask):
         context: str
             Synthetic context that describes the constraints
         """
-        context = "Assume that in the forecast, "
+        parts = ["Suppose that in the forecast,"]
+
         for constraint, value in constraints.items():
-            # context += f"{constraint}: {value}, "
             if constraint == "min":
-                context += f"the minimum possible value is {value} and anything below that being bounded to {value}, "
+                parts.append(f"the values are bounded below by {value:.2f}")
             elif constraint == "max":
-                context += f"the maximum possible value is {value} and anything above that being bounded to {value}, "
-            elif constraint == "median":
-                context += f"the median is {value}, "
-            elif constraint == "mode":
-                context += f"the mode is {value}, "
-            elif constraint == "mean":
-                context += f"the mean is {value}, "
-            else:
-                raise ValueError(f"Unknown constraint type: {constraint}")
+                parts.append(f"the values are bounded above by {value:.2f}")
 
-        # remove trailing whitespace and comma
-        context = context[:-2]
-
-        # add period
-        context += "."
-
+        context = ", ".join(parts) + "."
         return context
 
 
