@@ -513,14 +513,15 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
 
 
 class MinimalCausalContextBivarLinSVAR(BivariateCategoricalLinSVARBaseTask):
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        _context_sources = ["c_cov", "c_causal"]
-        _skills = BivariateCategoricalLinSVARBaseTask._skills + [
-            "reasoning: math",
-            "reasoning: causal",
-            "reasoning: deduction",
-        ]
 
+    _context_sources = ["c_cov", "c_causal"]
+    _skills = BivariateCategoricalLinSVARBaseTask._skills + [
+        "reasoning: math",
+        "reasoning: causal",
+        "reasoning: deduction",
+    ]
+
+    def __init__(self, fixed_config: dict = None, seed: int = None):
         self.fluctuate_history = True
         self.plot_name = "MinimalContextBivarCatLinSVAR"
         super().__init__(fixed_config, seed)
@@ -562,16 +563,15 @@ class MinimalCausalContextBivarLinSVAR(BivariateCategoricalLinSVARBaseTask):
 class FullCausalContextImplicitEquationBivarLinSVAR(
     BivariateCategoricalLinSVARBaseTask
 ):
+    _context_sources = ["c_cov", "c_causal"]
+    _skills = BivariateCategoricalLinSVARBaseTask._skills + [
+        "reasoning: math",
+        "reasoning: causal",
+        "reasoning: deduction",
+        "instruction following",
+    ]
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
-        _context_sources = ["c_cov", "c_causal"]
-        _skills = BivariateCategoricalLinSVARBaseTask._skills + [
-            "reasoning: math",
-            "reasoning: causal",
-            "reasoning: deduction",
-            "instruction following",
-        ]
-
         self.fluctuate_history = False
         self.plot_name = "FullContextImplicitBivarCatLinSVAR"
         super().__init__(fixed_config, seed)
@@ -614,15 +614,14 @@ class FullCausalContextImplicitEquationBivarLinSVAR(
 class FullCausalContextExplicitEquationBivarLinSVAR(
     BivariateCategoricalLinSVARBaseTask
 ):
-    def __init__(self, fixed_config: dict = None, seed: int = None):
-        _context_sources = ["c_cov", "c_causal"]
-        _skills = BivariateCategoricalLinSVARBaseTask._skills + [
-            "reasoning: math",
-            "reasoning: causal",
-            "reasoning: deduction",
-            "instruction following",
-        ]
+    _context_sources = ["c_cov", "c_causal"]
+    _skills = BivariateCategoricalLinSVARBaseTask._skills + [
+        "reasoning: math",
+        "reasoning: causal",
+        "instruction following",
+    ]
 
+    def __init__(self, fixed_config: dict = None, seed: int = None):
         self.fluctuate_history = False
         self.plot_name = "FullContextExplicitBivarCatLinSVAR"
         super().__init__(fixed_config, seed)
