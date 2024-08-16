@@ -107,9 +107,10 @@ def experiment_gpt(llm, use_context, n_samples, output_folder, max_parallel=1):
         output_folder=f"{output_folder}/{gpt_forecaster.cache_name}",
         max_parallel=max_parallel,
     )
+    total_cost = gpt_forecaster.total_cost
     del gpt_forecaster
 
-    return results, {"total_cost": gpt_forecaster.total_cost}
+    return results, {"total_cost": total_cost}
 
 
 def experiment_llmp(llm, use_context, n_samples, output_folder, max_parallel=1):
