@@ -515,7 +515,11 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
 class MinimalCausalContextBivarLinSVAR(BivariateCategoricalLinSVARBaseTask):
     def __init__(self, fixed_config: dict = None, seed: int = None):
         _context_sources = ["c_cov", "c_causal"]
-        _skills = ["reasoning: math", "reasoning: causal", "reasoning: deduction"]
+        _skills = BivariateCategoricalLinSVARBaseTask._skills + [
+            "reasoning: math",
+            "reasoning: causal",
+            "reasoning: deduction",
+        ]
 
         self.fluctuate_history = True
         self.plot_name = "MinimalContextBivarCatLinSVAR"
@@ -561,7 +565,7 @@ class FullCausalContextImplicitEquationBivarLinSVAR(
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
         _context_sources = ["c_cov", "c_causal"]
-        _skills = [
+        _skills = BivariateCategoricalLinSVARBaseTask._skills + [
             "reasoning: math",
             "reasoning: causal",
             "reasoning: deduction",
@@ -612,7 +616,7 @@ class FullCausalContextExplicitEquationBivarLinSVAR(
 ):
     def __init__(self, fixed_config: dict = None, seed: int = None):
         _context_sources = ["c_cov", "c_causal"]
-        _skills = [
+        _skills = BivariateCategoricalLinSVARBaseTask._skills + [
             "reasoning: math",
             "reasoning: causal",
             "reasoning: deduction",
