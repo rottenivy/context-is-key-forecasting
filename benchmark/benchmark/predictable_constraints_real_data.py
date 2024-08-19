@@ -1,7 +1,7 @@
-import scipy
 import numpy as np
 
 from .base import UnivariateCRPSTask
+from .metrics.constraints import ListConstraint, MaxConstraint, MinConstraint
 from tactis.gluon.dataset import get_dataset
 from gluonts.dataset.util import to_pandas
 
@@ -81,7 +81,7 @@ class OraclePredUnivariateConstraintsTask(UnivariateCRPSTask):
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()
         self.constraints = self.verbalize_context_from_constraints(
-            self.metric_constraints
+            self.constraints_dict
         )
         self.background = None
         self.scenario = None
@@ -125,15 +125,15 @@ class OraclePredUnivariateConstraintsTask(UnivariateCRPSTask):
             self.past_time = history_series.to_frame()
             self.future_time = future_series.to_frame()
 
-            self.metric_constraints = self.sampleConstraintsFromGroundTruth(
-                future_series
+            self.constraints_dict, self.metric_constraint = (
+                self.sampleConstraintsFromGroundTruth(future_series)
             )
 
             # Check if the constraints are interesting
             if how == "baseline":
                 period = self.seasonal_period
                 window_is_interesting = is_baseline_prediction_poor(
-                    history_series, future_series, self.metric_constraints, period
+                    history_series, future_series, self.constraints_dict, period
                 )
             elif how == "iou":
                 window_is_interesting = intersection_over_union_is_low(
@@ -165,6 +165,7 @@ class OraclePredUnivariateConstraintsTask(UnivariateCRPSTask):
             Dictionary of constraints to be satisfied by the forecast
         """
         constraints_dict = {}
+        constraints_objects = []
         sampled_constraints = self.random.choice(
             self.possible_constraints,
             self.random.randint(1, self.max_constraints + 1),
@@ -173,10 +174,16 @@ class OraclePredUnivariateConstraintsTask(UnivariateCRPSTask):
         for constraint_type in sampled_constraints:
             if constraint_type == "min":
                 constraints_dict["min"] = future_series.min()
+                constraints_objects.append(MinConstraint(future_series.min()))
             elif constraint_type == "max":
                 constraints_dict["max"] = future_series.max()
+                constraints_objects.append(MaxConstraint(future_series.max()))
 
-        return constraints_dict
+        if len(constraints_objects) >= 2:
+            metric_constraint = ListConstraint(constraints_objects)
+        else:
+            metric_constraint = constraints_objects[0]
+        return constraints_dict, metric_constraint
 
     def verbalize_context_from_constraints(self, constraints):
         """
@@ -261,16 +268,14 @@ class BoundedPredConstraintsBasedOnPredQuantilesTask(
         future_series = window.iloc[-metadata.prediction_length :]
 
         # ROI metrics parameter
-        self.metric_constraints = self.calculateConstraintsFromGroundTruth(
-            future_series
+        constraints_dict, self.metric_constraint = (
+            self.calculateConstraintsFromGroundTruth(future_series)
         )
 
         # Instantiate the class variables
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()
-        self.constraints = self.verbalize_context_from_constraints(
-            self.metric_constraints
-        )
+        self.constraints = self.verbalize_context_from_constraints(constraints_dict)
         self.background = None
         self.scenario = None
 
@@ -287,6 +292,7 @@ class BoundedPredConstraintsBasedOnPredQuantilesTask(
             Dictionary of constraints to be satisfied by the forecast
         """
         constraints_dict = {}
+        constraints_objects = []
         sampled_constraint_types = self.random.choice(
             self.possible_constraints,
             self.random.randint(1, self.max_constraints + 1),
@@ -308,13 +314,23 @@ class BoundedPredConstraintsBasedOnPredQuantilesTask(
                     min_quantile_index
                 ]
                 constraints_dict["min"] = quantile_values[min_quantile_index]
+                constraints_objects.append(
+                    MinConstraint(quantile_values[min_quantile_index])
+                )
             elif constraint_type == "max":
                 window[window >= quantile_values[max_quantile_index]] = quantile_values[
                     max_quantile_index
                 ]
                 constraints_dict["max"] = quantile_values[max_quantile_index]
+                constraints_objects.append(
+                    MaxConstraint(quantile_values[max_quantile_index])
+                )
 
-        return constraints_dict
+        if len(constraints_objects) >= 2:
+            metric_constraint = ListConstraint(constraints_objects)
+        else:
+            metric_constraint = constraints_objects[0]
+        return constraints_dict, metric_constraint
 
 
 __TASKS__ = [
