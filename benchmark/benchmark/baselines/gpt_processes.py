@@ -165,10 +165,6 @@ Example:
             The forecast samples. Note: only univariate is supported at the moment (number of variables = 1)
 
         """
-        assert (
-            task_instance.past_time.shape[-1] == 1
-        ), "Only univariate time series are supported at the moment."
-
         prompt = self.make_prompt(task_instance)
         messages = [
             {
