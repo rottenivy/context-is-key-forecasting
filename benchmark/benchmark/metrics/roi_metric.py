@@ -22,7 +22,7 @@ def threshold_weighted_crps(
     roi_weight: float = 0.5,
     constraint: Optional[Constraint] = None,
     violation_factor: float = 5.0,
-    log_barrier: bool = False,
+    log_transform: bool = True,
 ) -> dict[str, float]:
     """
     Compute the scaled twCRPS, which adds a penalty term when constraints are violated.
@@ -53,7 +53,7 @@ def threshold_weighted_crps(
         A constraint whose violation must be checked.
     violation_factor: float, default 5.0
         A multiplicative factor to the violation of the constraint, before sending to the exponential.
-    log_barrier: bool, default False
+    log_transform: bool, default False
         If set to true, the metric is transformed using log(1 + m).
 
     Returns:
@@ -61,7 +61,7 @@ def threshold_weighted_crps(
     result: dict[str, float]
         A dictionary containing the following entries:
         "metric": the final metric.
-        "raw_metric": the metric before the log barrier transformation.
+        "raw_metric": the metric before the log transformation.
         "scaling": the scaling factor applied to the CRPS and the violations.
         "crps": the weighted CRPS.
         "roi_crps": the CRPS only for the region of interest.
@@ -97,7 +97,7 @@ def threshold_weighted_crps(
         violation_crps = 0.0
 
     raw_metric = scaling * crps_value + violation_crps
-    if log_barrier:
+    if log_transform:
         metric = np.log(1 + raw_metric)
     else:
         metric = raw_metric
