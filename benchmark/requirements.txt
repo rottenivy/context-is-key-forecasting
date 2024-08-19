@@ -9,3 +9,4 @@ pandas
 statsmodels
 causalchamber==0.1.1
 diskcache
+termcolor<=2.4.0
