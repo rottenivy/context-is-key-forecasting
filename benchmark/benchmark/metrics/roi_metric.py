@@ -1,16 +1,122 @@
+from typing import Optional
 import numpy as np
-from benchmark.metrics.crps import crps
 
-import matplotlib.pyplot as plt
+from .constraints import Constraint
+from .crps import crps
 
 
 def mean_crps(target, samples):
     """
     The mean of the CRPS over all variables
     """
-    return crps(target, samples).mean()
+    if target.size > 0:
+        return crps(target, samples).mean()
+    else:
+        return 0.0
 
 
+def threshold_weighted_crps(
+    target: np.array,
+    forecast: np.array,
+    region_of_interest=None,
+    roi_weight: float = 0.5,
+    constraint: Optional[Constraint] = None,
+    violation_factor: float = 5.0,
+    log_barrier: bool = False,
+) -> dict[str, float]:
+    """
+    Compute the scaled twCRPS, which adds a penalty term when constraints are violated.
+
+    Without scaling and region of interest, the twCRPS is defined as:
+    twCRPS(X, y) = CRPS(v(X), v(y)),
+    where the multivariate CRPS is computed as the sum of the univariate CRPS over all dimensions,
+    and v(z) is an arbitrary transform.
+    In our case, we select the transform to be:
+    v(z) = [z / length(z), exp(violation_factor * constraint violation) - 1].
+
+    For the scaling, we divide the CRPS by the range of values in the target.
+
+    For the region of interest, we compute the mean CRPS individually on both the region of interest
+    and the rest of the forecast, which we then combine using the given weight.
+
+    Parameters:
+    ----------
+    target: np.array
+        The target values. (n_timesteps,)
+    forecast: np.array
+        The forecast values. (n_samples, n_timesteps)
+    region_of_interest: None, int, list of ints, slice, or boolean mask
+        The region of interest to apply the roi_metric to.
+    roi_weight: float
+        The weight to apply to the region of interest.
+    constraint: Constraint, optional
+        A constraint whose violation must be checked.
+    violation_factor: float, default 5.0
+        A multiplicative factor to the violation of the constraint, before sending to the exponential.
+    log_barrier: bool, default False
+        If set to true, the metric is transformed using log(1 + m).
+
+    Returns:
+    --------
+    result: dict[str, float]
+        A dictionary containing the following entries:
+        "metric": the final metric.
+        "raw_metric": the metric before the log barrier transformation.
+        "scaling": the scaling factor applied to the CRPS and the violations.
+        "crps": the weighted CRPS.
+        "roi_crps": the CRPS only for the region of interest.
+        "non_roi_crps": the CRPS only for the forecast not in the region of interest.
+        "violation_mean": the average constraint violation over the samples.
+        "violation_crps": the CRPS of the constraint violation.
+    """
+    target_range = np.max(target) - np.min(target)
+    scaling = 1.0 / target_range
+
+    if region_of_interest:
+        roi_mask = format_roi_mask(region_of_interest, forecast.shape)
+        roi_crps = mean_crps(target=target[roi_mask], samples=forecast[:, roi_mask])
+        non_roi_crps = mean_crps(
+            target=target[~roi_mask], samples=forecast[:, ~roi_mask]
+        )
+        crps_value = roi_weight * roi_crps + (1 - roi_weight) * non_roi_crps
+    else:
+        crps_value = mean_crps(target=target, samples=forecast)
+        # Those will only be used in the reporting
+        roi_crps = crps_value
+        non_roi_crps = crps_value
+
+    if constraint:
+        violation_amount = constraint.violation(samples=forecast, scaling=scaling)
+        violation_exp = np.exp(violation_factor * violation_amount) - 1
+        # The target is set to zero, since we make sure that the ground truth always satisfy the constraints
+        # The crps code assume multivariate input, so add a dummy dimension
+        violation_crps = crps(target=np.zeros(1), samples=violation_exp[:, None])[0]
+    else:
+        violation_amount = np.zeros(forecast.shape[0])
+        violation_exp = np.zeros(forecast.shape[0])
+        violation_crps = 0.0
+
+    raw_metric = scaling * crps_value + violation_crps
+    if log_barrier:
+        metric = np.log(1 + raw_metric)
+    else:
+        metric = raw_metric
+
+    return {
+        "metric": metric,
+        "raw_metric": raw_metric,
+        "scaling": scaling,
+        "crps": scaling * crps_value,
+        "roi_crps": scaling * roi_crps,
+        "non_roi_crps": scaling * non_roi_crps,
+        "violation_mean": violation_amount.mean(),
+        "violation_crps": violation_crps,
+    }
+
+
+###############################################################################
+############################# OLD METRIC BELOW ################################
+###############################################################################
 def region_of_interest_constraint_metric(
     target,
     forecast,
@@ -185,6 +291,11 @@ def calculate_constraint_penalty(
 
     average_penalty = np.mean(penalties)
     return average_penalty * scale_factor
+
+
+###############################################################################
+############################# OLD METRIC ABOVE ################################
+###############################################################################
 
 
 def format_roi_mask(region_of_interest, forecast_shape):

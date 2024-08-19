@@ -81,7 +81,9 @@ def crps(
     crps: np.ndarray
         The CRPS for each of the (variable dimensions)
     """
-    assert target.shape == samples.shape[1:]
+    assert (
+        target.shape == samples.shape[1:]
+    ), f"shapes mismatch between: {target.shape} and {samples.shape}"
 
     num_samples = samples.shape[0]
     num_dims = samples.ndim
