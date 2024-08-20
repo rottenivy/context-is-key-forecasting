@@ -43,6 +43,7 @@ class BaseTask(ABC):
 
     _context_sources = []
     _skills = ["forecasting", "natural language processing"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def __init__(self, seed: int = None, fixed_config: Optional[dict] = None):
         self.random = np.random.RandomState(seed)
@@ -166,6 +167,8 @@ class UnivariateCRPSTask(BaseTask):
     A base class for tasks that require forecasting a single series and that use CRPS for evaluation
     We use the last column of `future_time` as the ground truth for evaluation
     """
+
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def __init__(self, seed: int = None, fixed_config: Optional[dict] = None):
         # Instantiate task parameters

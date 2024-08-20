@@ -14,6 +14,8 @@ from .base import BaseTask
 
 
 class BaseConstrainedTask(BaseTask):
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def __init__(
         self,
         seed: int = None,
@@ -246,4 +248,4 @@ class ConstrainedNoisySine(BaseConstrainedTask):
         return -1
 
 
-__TASKS__ = [ConstrainedRandomWalk, ConstrainedNoisySine]
+__TASKS__ = []  # No tasks currently included in the benchmark

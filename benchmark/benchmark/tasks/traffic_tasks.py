@@ -18,6 +18,8 @@ class TrafficForecastTaskwithHolidaysInPredictionWindow(UnivariateCRPSTask):
     Forecasting task based on the Monash traffic dataset, with frequency hourly, where the history is 7 days (168 hours/timesteps) and prediction is 3 days (72 hours/timesteps), and windows are chosen such that there is a holiday in the middle of the prediction window.
     """
 
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def __init__(self, seed: int = None, fixed_config: Optional[dict] = None):
         # Holidays with observable differences from the preceeding 7 days
         self.holidays = [
@@ -95,6 +97,7 @@ class ImplicitTrafficForecastTaskwithHolidaysInPredictionWindow(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_i"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def get_background(self, future_series, holiday_date, holiday_name):
         background = "This series contains the road occupancy rates on a freeway in the San Francisco Bay area."
@@ -110,6 +113,7 @@ class ExplicitTrafficForecastTaskwithHolidaysInPredictionWindow(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_cov"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def get_background(self, future_series, holiday_date, holiday_name):
         background = "This series contains the road occupancy rates on a freeway in the San Francisco Bay area."
@@ -126,6 +130,7 @@ class ExplicitWithDaysTrafficForecastTaskwithHolidaysInPredictionWindow(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_cov"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def get_background(self, future_series, holiday_date, holiday_name):
         background = "This series contains the road occupancy rates on a freeway in the San Francisco Bay area."
@@ -150,6 +155,7 @@ class ExplicitWithDatesAndDaysTrafficForecastTaskwithHolidaysInPredictionWindow(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_cov"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def get_background(self, future_series, holiday_date, holiday_name):
         background = "This series contains the road occupancy rates on a freeway in the San Francisco Bay area."
@@ -173,6 +179,8 @@ class TrafficForecastTaskwithHolidaysInPredictionWindowAndPastYearAnalogy(
     Forecasting task based on the Monash traffic dataset, with frequency hourly, where the history is 7 days (168 hours/timesteps) and prediction is 3 days (72 hours/timesteps), and windows are chosen such that there is a holiday in the start of the prediction window. Only 2016 holidays (6 holidays) are put in the prediction window, and an analogy to 2015 is also given. The analogy has the mean and max difference between the preceeding 7 days and the holiday in 2015.
     NOTE: The assumption that the difference in traffic pattern between the preceeding 7 days and the holiday would be the same between 2015 and 2016 is made here.
     """
+
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def __init__(self, seed: int = None, fixed_config: Optional[dict] = None):
         # Holidays with observable differences from the preceeding 7 days
@@ -283,6 +291,7 @@ class ExplicitTrafficForecastTaskwithHolidaysInPredictionWindowAndPastYearAnalog
         "reasoning: deduction",
         "reasoning: analogy",
     ]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def get_background(self, future_series, holiday_date, holiday_name):
         background = "This series contains the road occupancy rates on a freeway in the San Francisco Bay area."
@@ -303,6 +312,7 @@ class ExplicitWithDaysTrafficForecastTaskwithHolidaysInPredictionWindowAndPastYe
         "reasoning: deduction",
         "reasoning: analogy",
     ]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def get_background(self, future_series, holiday_date, holiday_name):
         background = "This series contains the road occupancy rates on a freeway in the San Francisco Bay area."
@@ -330,6 +340,7 @@ class ExplicitWithDatesAndDaysTrafficForecastTaskwithHolidaysInPredictionWindowA
         "reasoning: deduction",
         "reasoning: analogy",
     ]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def get_background(self, future_series, holiday_date, holiday_name):
         background = "This series contains the road occupancy rates on a freeway in the San Francisco Bay area."

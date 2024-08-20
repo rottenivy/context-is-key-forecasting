@@ -21,6 +21,7 @@ class CashDepletedinATMScenarioTask(UnivariateCRPSTask):
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def random_instance(self):
         datasets = [
@@ -98,6 +99,7 @@ class ATMBuildingClosedTask(CashDepletedinATMScenarioTask):
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def get_scenario(self, drop_start_date, drop_duration):
         scenario = f"Consider that the building which contains the ATM is closed from {datetime_to_str(drop_start_date)}, for {drop_duration} {'day' if drop_duration == 1 else 'days'}."  # TODO: May also specify drop end date instead of the drop duration.
@@ -113,6 +115,7 @@ class ATMUnderPeriodicMaintenanceTask(UnivariateCRPSTask):
     # XXX: No c_h since the context doesn't say what happened due to maintenance
     _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_cov"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def random_instance(self):
         datasets = [
@@ -203,6 +206,7 @@ class ATMUnderPeriodicMaintenanceWithRandomValuesTask(UnivariateCRPSTask):
     This period should be ignored by the forecasting algorithm in its forecasts.
 
     NOTE: This task is too hard right now since the randomly sampled data looks too similar to the other data. So it's hard even for humans. Hence, not putting it in __TASKS__ for now.
+
     """
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
@@ -286,6 +290,7 @@ class IncreasedWithdrawalScenario(UnivariateCRPSTask):
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_i", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def random_instance(self):
         datasets = [

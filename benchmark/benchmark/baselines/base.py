@@ -16,6 +16,8 @@ class Baseline(ABC):
 
     """
 
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def __init__(self):
         pass
 

@@ -43,6 +43,7 @@ class OraclePredUnivariateConstraintsTask(UnivariateCRPSTask):
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -216,6 +217,8 @@ class BoundedPredConstraintsBasedOnPredQuantilesTask(
     A task where the data is modified to be bounded (upper or lower) in the prediction part, and the context specifies the bounds.
     This task is dataset-independent.
     """
+
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def __init__(
         self,

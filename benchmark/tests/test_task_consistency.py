@@ -8,6 +8,7 @@ import pytest
 
 from benchmark import ALL_TASKS
 from benchmark.base import BaseTask, ALLOWED_CONTEXT_SOURCES, ALLOWED_SKILLS
+from benchmark.utils import get_all_parent_classes
 
 
 @pytest.mark.parametrize("task", ALL_TASKS)
@@ -60,3 +61,19 @@ def test_skills(task):
     """
     assert len(task._skills) > 2
     assert all(skill in ALLOWED_SKILLS for skill in task._skills)
+
+
+@pytest.mark.parametrize("task", ALL_TASKS)
+def test_version(task):
+    """
+    Test that the task defines a version attribute
+
+    """
+    assert (
+        "__version__" in task.__dict__
+    ), f"{task} should define a __version__ attribute"
+    parents = get_all_parent_classes(task)
+    status = {t: "__version__" in t.__dict__ for t in parents}
+    assert all(
+        status.values()
+    ), f"All parents of {task} should define a __version__ attribute but found {status}"

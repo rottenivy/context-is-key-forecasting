@@ -21,6 +21,8 @@ class BaseHalfDaySolarForecastTask(UnivariateCRPSTask):
     learns the daily shape of the signal.
     """
 
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def random_instance(self):
         dataset = get_dataset("solar_10_minutes", regenerate=False)
 
@@ -81,6 +83,7 @@ class MinimalInfoHalfDaySolarForecastTask(BaseHalfDaySolarForecastTask):
 
     _context_sources = ["c_i"]
     _skills = BaseHalfDaySolarForecastTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def get_background(
         self, full_history_series: pd.Series, forecast_date: pd.Timestamp
@@ -97,6 +100,7 @@ class LocaleInfoHalfDaySolarForecastTask(BaseHalfDaySolarForecastTask):
 
     _context_sources = ["c_i"]
     _skills = BaseHalfDaySolarForecastTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def get_background(
         self, full_history_series: pd.Series, forecast_date: pd.Timestamp
@@ -111,6 +115,7 @@ class ZenithInfoHalfDaySolarForecastTask(BaseHalfDaySolarForecastTask):
 
     _context_sources = ["c_i", "c_h"]
     _skills = BaseHalfDaySolarForecastTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def get_background(
         self, full_history_series: pd.Series, forecast_date: pd.Timestamp
