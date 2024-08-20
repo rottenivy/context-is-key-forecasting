@@ -167,6 +167,8 @@ class UnivariateCRPSTask(BaseTask):
     We use the last column of `future_time` as the ground truth for evaluation
     """
 
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def __init__(self, seed: int = None, fixed_config: Optional[dict] = None):
         # Instantiate task parameters
         if fixed_config is not None:
