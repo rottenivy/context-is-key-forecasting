@@ -1,0 +1,3 @@
+[
+    {"label": "GPT-4o", "method": "gpt", "llm": "gpt-4o", "use_context": true}
+]
