@@ -59,6 +59,10 @@ def get_source(obj) -> str:
         return "".join(inspect.getsource(c) for c in parent_classes + [obj.__class__])
 
 
+class CacheMissError(Exception):
+    pass
+
+
 class ResultCache:
     """
     A cache to avoid recomputing costly results. Basically acts as a wrapper
@@ -75,11 +79,13 @@ class ResultCache:
         Must be provided if method_callable is an instance of a class.
     cache_path: str, optional
         Path to the cache directory. Default is taken from RESULT_CACHE.
+    raise_on_miss: bool, optional
+        Whether to raise a CacheMissError if the cache is not found. Default is False.
 
     """
 
     def __init__(
-        self, method_callable, method_name=None, cache_path=RESULT_CACHE_PATH
+        self, method_callable, method_name=None, cache_path=RESULT_CACHE_PATH, raise_on_miss=False
     ) -> None:
         self.logger = logging.getLogger("Result cache")
         self.method_callable = method_callable
@@ -89,6 +95,7 @@ class ResultCache:
             else method_name
         )
         self.cache = Cache(self.cache_dir)
+        self.raise_on_miss = raise_on_miss
 
     def get_cache_key(self, task_instance, n_samples):
         """
@@ -141,6 +148,9 @@ class ResultCache:
             self.logger.info("Cache hit.")
             return self.cache[cache_key]
 
+        if self.raise_on_miss:
+            raise CacheMissError()
+        
         self.logger.info("Cache miss. Running inference.")
         samples = self.method_callable(task_instance, n_samples)
 

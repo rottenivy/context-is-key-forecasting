@@ -11,7 +11,7 @@ from pathlib import Path
 
 from . import ALL_TASKS
 from .config import DEFAULT_N_SAMPLES
-from .utils.cache import ResultCache
+from .utils.cache import ResultCache, CacheMissError
 
 
 logger = logging.getLogger("Evaluation")
@@ -131,6 +131,10 @@ def evaluate_task(
             save_context(task=task, path=seed_folder)
 
         return (task_cls.__name__, result)
+    
+    except CacheMissError:
+        logger.info(f"Skipping over cache miss.")
+        return (task_cls.__name__, {"seed": seed, "error": f"Cache miss - Method {method_callable} - Task {task_cls.__name__} - Seed {seed}"})
 
     except Exception as e:
         logger.error(f"Error evaluating task {task_cls.__name__} - Seed {seed}: {e}")
@@ -150,7 +154,32 @@ def evaluate_all_tasks(
     use_cache=True,
     cache_name=None,
     max_parallel=None,
+    skip_cache_miss=False,
 ):
+    """
+    Evaluate a method on all tasks.
+
+    Parameters:
+    -----------
+    method_callable: callable
+        The method to evaluate. Must take a task instance and return samples.
+    seeds: int
+        Number of seeds to evaluate on each task.
+    n_samples: int
+        Number of samples to generate.
+    output_folder: Pathlike
+        Directory in which to save the results.
+    use_cache: bool
+        Whether to use a cache to store/load results.
+    cache_name: str
+        Name of the cache.
+    max_parallel: int
+        Number of parallel processes to use.
+    skip_cache_miss: bool
+        Whether to skip computing tasks that are not found in the cache (useful for report generation).
+    
+    """
+
     logger.info(
         f"Evaluating method {method_callable} with {seeds} seeds and {n_samples} samples on {len(ALL_TASKS)} tasks."
     )
@@ -163,7 +192,7 @@ def evaluate_all_tasks(
         logger.info("No output folder provided. Results will not be saved.")
 
     if use_cache:
-        method_callable = ResultCache(method_callable, method_name=cache_name)
+        method_callable = ResultCache(method_callable, method_name=cache_name, raise_on_miss=skip_cache_miss)
 
     tasks_to_evaluate = []
     for task_cls in ALL_TASKS:
