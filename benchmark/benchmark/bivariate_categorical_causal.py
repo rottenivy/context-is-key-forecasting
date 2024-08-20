@@ -32,6 +32,8 @@ class CausalUnivariateCRPSTask(UnivariateCRPSTask):
 
     """
 
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     # To be used only for the instantaneous graph
     def generate_dag(self, num_nodes, degree):
         """
@@ -178,6 +180,8 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
     [00101020001010202... | 113435343534433534...]
     [hist.. | pred...]
     """
+
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
         """
@@ -520,6 +524,7 @@ class MinimalCausalContextBivarLinSVAR(BivariateCategoricalLinSVARBaseTask):
         "reasoning: causal",
         "reasoning: deduction",
     ]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
         self.fluctuate_history = True
@@ -570,6 +575,7 @@ class FullCausalContextImplicitEquationBivarLinSVAR(
         "reasoning: deduction",
         "instruction following",
     ]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
         self.fluctuate_history = False
@@ -620,6 +626,7 @@ class FullCausalContextExplicitEquationBivarLinSVAR(
         "reasoning: causal",
         "instruction following",
     ]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
         self.fluctuate_history = False

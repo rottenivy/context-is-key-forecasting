@@ -25,6 +25,7 @@ class PredictableSpikesInPredTask(UnivariateCRPSTask):
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def random_instance(self):
         datasets = ["electricity_hourly"]
