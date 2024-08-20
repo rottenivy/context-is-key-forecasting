@@ -236,7 +236,8 @@ def main():
     missing_results = {
         method: [
             res
-            for res in results[method]
+            for task in results[method]
+            for res in results[method][task]
             if "error" in res and "cache miss" in res["error"].lower()
         ]
         for method in results
