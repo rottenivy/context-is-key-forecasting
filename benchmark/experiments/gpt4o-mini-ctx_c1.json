@@ -1,0 +1,3 @@
+[
+    {"label": "GPT-4o-mini", "method": "gpt", "llm": "gpt-4o-mini", "use_context": true}
+]

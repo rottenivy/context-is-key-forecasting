@@ -1,15 +1,17 @@
 import logging
 import matplotlib.pyplot as plt
+import multiprocessing
 import numpy as np
 import pandas as pd
 import traceback
 
 from collections import defaultdict
+from functools import partial
 from pathlib import Path
 
 from . import ALL_TASKS
 from .config import DEFAULT_N_SAMPLES
-from .utils.cache import ResultCache
+from .utils.cache import ResultCache, CacheMissError
 
 
 logger = logging.getLogger("Evaluation")
@@ -98,6 +100,58 @@ Scenario:
         )
 
 
+def evaluate_task(
+    task_cls,
+    seed,
+    method_callable,
+    n_samples,
+    output_folder=None,
+):
+    try:
+        # Instantiate the task
+        task = task_cls(seed=seed)
+
+        if output_folder:
+            task_folder = output_folder / task.name
+            seed_folder = task_folder / f"{seed}"
+            seed_folder.mkdir(parents=True, exist_ok=True)
+
+        logger.info(f"Method {method_callable} - Task {task.name} - Seed {seed}")
+        samples = method_callable(task_instance=task, n_samples=n_samples)
+        result = {
+            "seed": seed,
+            "score": task.evaluate(samples),
+        }
+
+        if output_folder:
+            # Save forecast plots
+            plot_forecast_univariate(task=task, samples=samples, path=seed_folder)
+
+            # Save context
+            save_context(task=task, path=seed_folder)
+
+        return (task_cls.__name__, result)
+
+    except CacheMissError:
+        logger.info(f"Skipping over cache miss.")
+        return (
+            task_cls.__name__,
+            {
+                "seed": seed,
+                "error": f"Cache miss - Method {method_callable} - Task {task_cls.__name__} - Seed {seed}",
+            },
+        )
+
+    except Exception as e:
+        logger.error(f"Error evaluating task {task_cls.__name__} - Seed {seed}: {e}")
+        if output_folder:
+            with open(seed_folder / "error", "w") as f:
+                f.write(str(e))
+                f.write("\n")
+                f.write(traceback.format_exc())
+        return (task_cls.__name__, {"seed": seed, "error": str(e)})
+
+
 def evaluate_all_tasks(
     method_callable,
     seeds=5,
@@ -105,36 +159,33 @@ def evaluate_all_tasks(
     output_folder=None,
     use_cache=True,
     cache_name=None,
+    max_parallel=None,
+    skip_cache_miss=False,
 ):
     """
-    Evaluates a method on all tasks for a number of seeds and samples
+    Evaluate a method on all tasks.
 
     Parameters:
     -----------
     method_callable: callable
-        A callable that receives a task instance and returns a prediction samples.
-        The callable should expect the following kwargs: task_instance, n_samples
+        The method to evaluate. Must take a task instance and return samples.
     seeds: int
-        Number of seeds to evaluate the method
+        Number of seeds to evaluate on each task.
     n_samples: int
-        Number of samples to generate for each prediction
-    output_folder: None or Pathlike
-        Directory to output results (figures and task context). If not None,
-        results will not be saved.
+        Number of samples to generate.
+    output_folder: Pathlike
+        Directory in which to save the results.
     use_cache: bool
-        If True, use cached results when available. Otherwise, re-run the evaluation.
-    cache_name: str, optional
-        Name of the method to use as cache key. If not provided, will be inferred
-        automatically.
-
-    Returns:
-    --------
-    results: dict
-        A dictionary with the results of the evaluation.
-        Keys are task names and values are lists of dictionaries
-        with metrics and relevant information.
+        Whether to use a cache to store/load results.
+    cache_name: str
+        Name of the cache.
+    max_parallel: int
+        Number of parallel processes to use.
+    skip_cache_miss: bool
+        Whether to skip computing tasks that are not found in the cache (useful for report generation).
 
     """
+
     logger.info(
         f"Evaluating method {method_callable} with {seeds} seeds and {n_samples} samples on {len(ALL_TASKS)} tasks."
     )
@@ -147,50 +198,33 @@ def evaluate_all_tasks(
         logger.info("No output folder provided. Results will not be saved.")
 
     if use_cache:
-        method_callable = ResultCache(method_callable, method_name=cache_name)
+        method_callable = ResultCache(
+            method_callable, method_name=cache_name, raise_on_miss=skip_cache_miss
+        )
 
-    results = defaultdict(list)
+    tasks_to_evaluate = []
     for task_cls in ALL_TASKS:
         for seed in range(1, seeds + 1):
+            tasks_to_evaluate.append((task_cls, seed))
 
-            # Instantiate the task
-            task = task_cls(seed=seed)
+    func = partial(
+        evaluate_task,
+        method_callable=method_callable,
+        n_samples=n_samples,
+        output_folder=output_folder,
+    )
 
-            if output_folder:
-                task_folder = output_folder / task.name
-                seed_folder = task_folder / f"{seed}"
-                seed_folder.mkdir(parents=True, exist_ok=True)
+    if max_parallel == 1:
+        # No parallelism, just evaluate tasks in a loop
+        results_list = [func(task_cls, seed) for task_cls, seed in tasks_to_evaluate]
+    else:
+        # Use multiprocessing to parallelize the evaluation
+        with multiprocessing.Pool(processes=max_parallel) as pool:
+            results_list = pool.starmap(func, tasks_to_evaluate)
 
-            try:
-                logger.info(
-                    f"Method {method_callable} - Task {task.name} - Seed {seed}"
-                )
-                samples = method_callable(task_instance=task, n_samples=n_samples)
-                results[task_cls.__name__].append(
-                    {
-                        "seed": seed,
-                        "score": task.evaluate(samples),
-                    }
-                )
-
-                if output_folder:
-                    # Save forecast plots
-                    plot_forecast_univariate(
-                        task=task, samples=samples, path=seed_folder
-                    )
-
-                    # Save context
-                    save_context(task=task, path=seed_folder)
-
-            except Exception as e:
-                logger.error(
-                    f"Error evaluating task {task_cls.__name__} - Seed {seed}: {e}"
-                )
-                # Save the error to the seed folder
-                if output_folder:
-                    with open(seed_folder / "error", "w") as f:
-                        f.write(str(e))
-                        f.write("\n")
-                        f.write(traceback.format_exc())
+    # Collect results
+    results = defaultdict(list)
+    for task_name, result in results_list:
+        results[task_name].append(result)
 
     return results

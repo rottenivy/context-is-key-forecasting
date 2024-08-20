@@ -6,6 +6,8 @@ import pickle
 import tempfile
 import torch
 
+from datetime import datetime
+
 from llm_processes.hf_api import get_model_and_tokenizer
 from llm_processes.parse_args import llm_map, parse_command_line
 from llm_processes.run_llm_process import run_llm_process
@@ -50,13 +52,17 @@ class LLMPForecaster(Baseline):
             "--experiment_name": self.experiment_name,
             "--num_samples": None,  # This is set in the __call__ method
         }
-        # TODO: Are there other args we should set?
 
         # Load the model and tokenizer
         logging.info("Loading model and tokenizer...")
-        self.model, self.tokenizer = get_model_and_tokenizer(
-            llm_path=None, llm_type=self.llmp_args["--llm_type"]
-        )
+        try:
+            self.model, self.tokenizer = get_model_and_tokenizer(
+                llm_path=None, llm_type=self.llmp_args["--llm_type"]
+            )
+        except KeyError:
+            raise ValueError(
+                f"Model type {self.llmp_args['--llm_type']} not supported. Options are: {llm_map.keys()}"
+            )
 
     def _prepare_data(self, task_instance):
         """
@@ -72,11 +78,13 @@ class LLMPForecaster(Baseline):
         # Take the last column of the dataframe (the forecast variable), since we are only modelling the forecast variable for now
         past_time = task_instance.past_time[task_instance.past_time.columns[-1]]
         future_time = task_instance.future_time[task_instance.future_time.columns[-1]]
-
-        # XXX: Convert to unix timestamp since LLMP expects numbers for x and y
-        llmp_data["x_train"] = past_time.index.astype(int).values // 10**9
-        llmp_data["x_test"] = future_time.index.astype(int).values // 10**9
+        llmp_data["x_train"] = past_time.index.strftime("%Y-%m-%d %H:%M:%S").values
+        llmp_data["x_test"] = future_time.index.strftime("%Y-%m-%d %H:%M:%S").values
         llmp_data["x_true"] = np.hstack((llmp_data["x_train"], llmp_data["x_test"]))
+        llmp_data["x_ordering"] = {
+            t: int(datetime.strptime(t, "%Y-%m-%d %H:%M:%S").timestamp())
+            for t in llmp_data["x_true"]
+        }
         llmp_data["y_train"] = past_time.values
         llmp_data["y_test"] = future_time.values
         llmp_data["y_true"] = np.hstack((llmp_data["y_train"], llmp_data["y_test"]))
@@ -183,7 +191,7 @@ Constraints:
 
     @property
     def cache_name(self):
-        args_to_include = ["llm_type", "use_context", "fail_on_invalid", "n_retries"]
+        args_to_include = ["llm_type", "use_context"]
         return f"{self.__class__.__name__}_" + "_".join(
             [f"{k}={getattr(self, k)}" for k in args_to_include]
         )

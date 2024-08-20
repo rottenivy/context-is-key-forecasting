@@ -12,7 +12,6 @@ Window = namedtuple("Window", ["seed", "history_start", "future_start", "time_en
 
 
 class WindTunnelTask(UnivariateCRPSTask):
-
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov"]
 
     def __init__(
@@ -24,7 +23,6 @@ class WindTunnelTask(UnivariateCRPSTask):
         dataset_name: str = "wt_changepoints_v1",
         datadir: str = DATA_STORAGE_PATH,
     ):
-
         self.dataset = Dataset(dataset_name, root=datadir, download=True)
         self.seed = seed
         self.covariate_name = covariate_name
@@ -106,9 +104,12 @@ class WindTunnelTask(UnivariateCRPSTask):
         """
 
         window_idx = self.random.choice(self._get_number_instances())
-        self.window, self.past_time, self.future_time, self.scenario = (
-            self._get_instance_by_idx(window_idx, downsample)
-        )
+        (
+            self.window,
+            self.past_time,
+            self.future_time,
+            self.scenario,
+        ) = self._get_instance_by_idx(window_idx, downsample)
 
     def verbalize_covariate(self, observations: pd.DataFrame, round_freq: str = "s"):
         """
@@ -147,7 +148,6 @@ class WindTunnelTask(UnivariateCRPSTask):
 
 
 class SpeedFromLoadTask(WindTunnelTask):
-
     _context_sources = WindTunnelTask._context_sources + ["c_causal", "c_i"]
     _skills = WindTunnelTask._skills + [
         "reasoning: causal",
@@ -161,7 +161,6 @@ class SpeedFromLoadTask(WindTunnelTask):
         fixed_config: dict = None,
         datadir: str = DATA_STORAGE_PATH,
     ):
-
         self.possible_windows = [
             Window(4, 0, 952, 1100),
             Window(7, 0, 613, 1000),
@@ -183,7 +182,6 @@ class SpeedFromLoadTask(WindTunnelTask):
         self.constraints = "The load is between 0 and 1. At full load (=1), the fan turns at a maximum speed of 3000 rpm."
 
     def _interval_descriptions(self, covariate, change_points, timestamps):
-
         ans = f"The load is set to: {covariate.iloc[0]:.1f}"
         for c in change_points:
             ans += f" until {timestamps[c]}, {covariate[c]:.1f} from {timestamps[c]}"
@@ -194,7 +192,6 @@ class SpeedFromLoadTask(WindTunnelTask):
 
 
 class ExplicitPressureFromSpeedTask(WindTunnelTask):
-
     _context_sources = WindTunnelTask._context_sources + ["c_causal", "c_i"]
     _skills = WindTunnelTask._skills + [
         "reasoning: causal",
@@ -208,7 +205,6 @@ class ExplicitPressureFromSpeedTask(WindTunnelTask):
         fixed_config: dict = None,
         datadir: str = DATA_STORAGE_PATH,
     ):
-
         self.possible_windows = [
             Window(1, 0, 325, 500),
             Window(1, 200, 550, 650),
@@ -229,7 +225,6 @@ class ExplicitPressureFromSpeedTask(WindTunnelTask):
         )
 
     def _interval_descriptions(self, covariate, change_points, timestamps):
-
         ans = f"The speed starts at {covariate.iloc[0]:.1f}."
         for i, c in enumerate(change_points[:-1]):
             ans += f" At {timestamps[c]}, it rapidly and smoothly changes to {covariate[change_points[i+1]-1]:.1f}."
@@ -240,7 +235,6 @@ class ExplicitPressureFromSpeedTask(WindTunnelTask):
 
 
 class ImplicitPressureFromSpeedTask(ExplicitPressureFromSpeedTask):
-
     _context_sources = WindTunnelTask._context_sources + ["c_causal", "c_i"]
     _skills = WindTunnelTask._skills + [
         "reasoning: causal",
@@ -255,7 +249,6 @@ class ImplicitPressureFromSpeedTask(ExplicitPressureFromSpeedTask):
         fixed_config: dict = None,
         datadir: str = DATA_STORAGE_PATH,
     ):
-
         super().__init__(seed, fixed_config, datadir)
 
         self.background = "The wind tunnel is a chamber with one controllable fan that pushes air through it. We can control the speed of the fan (in revolutions per minute) and measure the gap between the internal pressure and the ambient pressure (in Pascals). The pressure gap can be estimated from the speed using the affinity laws. The task is to forecast the pressure."

@@ -2,11 +2,11 @@ import builtins
 import inspect
 import hashlib
 import logging
-import os
 import pandas as pd
-import pickle
 
+from diskcache import Cache
 from pathlib import Path
+
 
 from ..baselines.base import Baseline
 from ..config import DEFAULT_N_SAMPLES, RESULT_CACHE_PATH
@@ -59,6 +59,10 @@ def get_source(obj) -> str:
         return "".join(inspect.getsource(c) for c in parent_classes + [obj.__class__])
 
 
+class CacheMissError(Exception):
+    pass
+
+
 class ResultCache:
     """
     A cache to avoid recomputing costly results. Basically acts as a wrapper
@@ -75,11 +79,17 @@ class ResultCache:
         Must be provided if method_callable is an instance of a class.
     cache_path: str, optional
         Path to the cache directory. Default is taken from RESULT_CACHE.
+    raise_on_miss: bool, optional
+        Whether to raise a CacheMissError if the cache is not found. Default is False.
 
     """
 
     def __init__(
-        self, method_callable, method_name=None, cache_path=RESULT_CACHE_PATH
+        self,
+        method_callable,
+        method_name=None,
+        cache_path=RESULT_CACHE_PATH,
+        raise_on_miss=False,
     ) -> None:
         self.logger = logging.getLogger("Result cache")
         self.method_callable = method_callable
@@ -88,19 +98,8 @@ class ResultCache:
             if method_name is None
             else method_name
         )
-        self.cache_path = self.cache_dir / "cache.pkl"
-
-        if not self.cache_path.exists():
-            self.logger.info("Cache file does not exist. Creating new cache.")
-            self.cache = {}
-            self.cache_dir.mkdir(parents=True, exist_ok=True)
-        else:
-            self.logger.info(f"Loading cache from {self.cache_path}.")
-            with self.cache_path.open("rb") as f:
-                if os.path.getsize(self.cache_path) == 0:
-                    self.cache = {}
-                else:
-                    self.cache = pickle.load(f)
+        self.cache = Cache(self.cache_dir)
+        self.raise_on_miss = raise_on_miss
 
     def get_cache_key(self, task_instance, n_samples):
         """
@@ -153,14 +152,15 @@ class ResultCache:
             self.logger.info("Cache hit.")
             return self.cache[cache_key]
 
+        if self.raise_on_miss:
+            raise CacheMissError()
+
         self.logger.info("Cache miss. Running inference.")
         samples = self.method_callable(task_instance, n_samples)
 
         # Update cache on disk
         self.logger.info("Updating cache.")
         self.cache[cache_key] = samples
-        with self.cache_path.open("wb") as f:
-            pickle.dump(self.cache, f)
 
         return samples
 
