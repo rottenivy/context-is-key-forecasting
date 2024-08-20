@@ -85,7 +85,11 @@ class ResultCache:
     """
 
     def __init__(
-        self, method_callable, method_name=None, cache_path=RESULT_CACHE_PATH, raise_on_miss=False
+        self,
+        method_callable,
+        method_name=None,
+        cache_path=RESULT_CACHE_PATH,
+        raise_on_miss=False,
     ) -> None:
         self.logger = logging.getLogger("Result cache")
         self.method_callable = method_callable
@@ -150,7 +154,7 @@ class ResultCache:
 
         if self.raise_on_miss:
             raise CacheMissError()
-        
+
         self.logger.info("Cache miss. Running inference.")
         samples = self.method_callable(task_instance, n_samples)
 

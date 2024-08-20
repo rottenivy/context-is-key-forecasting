@@ -131,10 +131,16 @@ def evaluate_task(
             save_context(task=task, path=seed_folder)
 
         return (task_cls.__name__, result)
-    
+
     except CacheMissError:
         logger.info(f"Skipping over cache miss.")
-        return (task_cls.__name__, {"seed": seed, "error": f"Cache miss - Method {method_callable} - Task {task_cls.__name__} - Seed {seed}"})
+        return (
+            task_cls.__name__,
+            {
+                "seed": seed,
+                "error": f"Cache miss - Method {method_callable} - Task {task_cls.__name__} - Seed {seed}",
+            },
+        )
 
     except Exception as e:
         logger.error(f"Error evaluating task {task_cls.__name__} - Seed {seed}: {e}")
@@ -177,7 +183,7 @@ def evaluate_all_tasks(
         Number of parallel processes to use.
     skip_cache_miss: bool
         Whether to skip computing tasks that are not found in the cache (useful for report generation).
-    
+
     """
 
     logger.info(
@@ -192,7 +198,9 @@ def evaluate_all_tasks(
         logger.info("No output folder provided. Results will not be saved.")
 
     if use_cache:
-        method_callable = ResultCache(method_callable, method_name=cache_name, raise_on_miss=skip_cache_miss)
+        method_callable = ResultCache(
+            method_callable, method_name=cache_name, raise_on_miss=skip_cache_miss
+        )
 
     tasks_to_evaluate = []
     for task_cls in ALL_TASKS:
