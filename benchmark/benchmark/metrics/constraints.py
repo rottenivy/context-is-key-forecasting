@@ -14,6 +14,8 @@ class Constraint(ABC):
         """
         Function to calculate a combined metric that considers a region of interest and constraints.
         This method should be invariant to the number of variables in the samples.
+        Also, this method should take advantage of the scaling parameter to ensure that it is scale invariant.
+        Note: If we multiply all numbers in a task by 2, the scaling parameter will be divided by 2.
 
         Parameters:
         ----------

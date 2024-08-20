@@ -12,7 +12,9 @@ def mean_crps(target, samples):
     if target.size > 0:
         return crps(target, samples).mean()
     else:
-        return 0.0
+        raise RuntimeError(
+            f"CRPS received an empty target. Shapes = {target.shape} and {samples.shape}"
+        )
 
 
 def threshold_weighted_crps(
@@ -26,6 +28,9 @@ def threshold_weighted_crps(
 ) -> dict[str, float]:
     """
     Compute the scaled twCRPS, which adds a penalty term when constraints are violated.
+
+    Reference for the twCRPS: https://arxiv.org/abs/2202.12732
+    (Evaluating forecasts for high-impact events using transformed kernel scores)
 
     Without scaling and region of interest, the twCRPS is defined as:
     twCRPS(X, y) = CRPS(v(X), v(y)),
