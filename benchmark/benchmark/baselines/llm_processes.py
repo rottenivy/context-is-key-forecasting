@@ -14,6 +14,8 @@ from .base import Baseline
 
 
 class LLMPForecaster(Baseline):
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def __init__(self, llm_type, use_context=True):
         f"""
         Get predictions from LLM processes
