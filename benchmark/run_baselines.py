@@ -172,12 +172,12 @@ def compile_results(results):
                         errors[method].append(seed_res)
                 else:
                     task_results.append(seed_res["score"])
-            
+
             mean = np.mean(task_results)
             std = np.std(task_results)
             stderr = std / np.sqrt(len(task_results))
             _method_results.append(f"{mean.round(3): .3f} +- {stderr.round(3) :.3f}")
-        
+
         results_[method] = _method_results
 
     results = pd.DataFrame(results_).sort_values("Task").set_index("Task")
@@ -197,7 +197,9 @@ def upload_results(results_path):
     os.makedirs(tmp_dir)
 
     # Clone report repository
-    os.system(f"git clone https://aldro61:{access_token}@github.com/aldro61/sc_task_stats.git {tmp_dir}/repo")
+    os.system(
+        f"git clone https://aldro61:{access_token}@github.com/aldro61/sc_task_stats.git {tmp_dir}/repo"
+    )
 
     # Copy results to temporary directory
     os.system(f"cp {results_path} {tmp_dir}/repo/results.csv")
@@ -301,7 +303,6 @@ def main():
         else:
             results[exp_label] = res
         extra_infos[exp_label] = extra_info
-
 
     # Compile results
     results, missing, errors = compile_results(results)
