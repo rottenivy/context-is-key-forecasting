@@ -281,113 +281,140 @@ if __name__ == "__main__":
     report = f"""
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Benchmark Task Overview</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {{
-            background-color: #f8f9fa;
-        }}
-        .container {{
-            margin-top: 20px;
-        }}
-        .section {{
-            background-color: #ffffff;
-            border: 1px solid #dee2e6;
-            border-radius: 0.25rem;
-            padding: 20px;
-            margin-bottom: 20px;
-        }}
-        .subsection {{
-            background-color: #f1f1f1;
-            border: 1px solid #dee2e6;
-            border-radius: 0.25rem;
-            padding: 15px;
-            margin-bottom: 15px;
-        }}
-        .section h2 {{
-            border-bottom: 2px solid #007bff;
-            padding-bottom: 10px;
-            cursor: pointer;
-            position: relative;
-        }}
-        .section h2::after {{
-            content: "\\25BC";  /* Downward pointing caret */
-            font-size: 1rem;
-            position: absolute;
-            right: 10px;
-            top: 10px;
-            transition: transform 0.3s ease;
-        }}
-        .collapse.show + h2::after {{
-            transform: rotate(-180deg);  /* Rotate caret icon */
-        }}
-        .subsection h3 {{
-            border-bottom: 1px solid #007bff;
-            padding-bottom: 5px;
-            cursor: pointer;
-        }}
-        .list-group-item {{
-            background-color: #f8f9fa;
-        }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="section">
+   <head>
+      <title>Benchmark Task Overview</title>
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+      <style>
+         body {{
+         background-color: #f8f9fa;
+         }}
+         .container {{
+         margin-top: 20px;
+         }}
+         .section {{
+         background-color: #ffffff;
+         border: 1px solid #dee2e6;
+         border-radius: 0.25rem;
+         padding: 20px;
+         margin-bottom: 20px;
+         }}
+         .subsection {{
+         background-color: #f1f1f1;
+         border: 1px solid #dee2e6;
+         border-radius: 0.25rem;
+         padding: 15px;
+         margin-bottom: 15px;
+         }}
+         .section h2 {{
+         border-bottom: 2px solid #007bff;
+         padding-bottom: 10px;
+         cursor: pointer;
+         position: relative;
+         }}
+         .section h2::after {{
+         content: "\\25BC";  /* Downward pointing caret */
+         font-size: 1rem;
+         position: absolute;
+         right: 10px;
+         top: 10px;
+         transition: transform 0.3s ease;
+         }}
+         .collapse.show + h2::after {{
+         transform: rotate(-180deg);  /* Rotate caret icon */
+         }}
+         .subsection h3 {{
+         border-bottom: 1px solid #007bff;
+         padding-bottom: 5px;
+         cursor: pointer;
+         }}
+         .list-group-item {{
+         background-color: #f8f9fa;
+         }}
+      </style>
+   </head>
+   <body>
+      <div class="container">
+         <div class="section">
             <h1 class="text-center text-primary">Benchmark Task Overview</h1>
             <p class="text-center">Generated on {generation_time}</p>
-        </div>
-
-        <div class="section">
+         </div>
+         <div class="section">
             <h2 class="text-primary" data-bs-toggle="collapse" data-bs-target="#visualizations-section">Visualizations</h2>
             <div class="collapse show" id="visualizations-section">
-                <!-- Context Type Plots -->
-                <div class="subsection">
-                    <h3 class="text-secondary">Tasks by Context Type</h3>
-                    <div class="mb-4">
-                        {task_by_context_bar}
-                    </div>
-                    <div class="mb-4">
-                        {task_context_heatmap}
-                    </div>
-                </div>
-
-                <!-- Skill Type Plots -->
-                <div class="subsection">
-                    <h3 class="text-secondary">Tasks by Skill Type</h3>
-                    <div class="mb-4">
-                        {task_by_skill_bar}
-                    </div>
-                    <div class="mb-4">
-                        {task_skill_heatmap}
-                    </div>
-                </div>
+               <!-- Context Type Plots -->
+               <div class="subsection">
+                  <h3 class="text-secondary">Tasks by Context Type</h3>
+                  <div class="mb-4">
+                     {task_by_context_bar}
+                  </div>
+                  <div class="mb-4">
+                     {task_context_heatmap}
+                  </div>
+               </div>
+               <!-- Skill Type Plots -->
+               <div class="subsection">
+                  <h3 class="text-secondary">Tasks by Skill Type</h3>
+                  <div class="mb-4">
+                     {task_by_skill_bar}
+                  </div>
+                  <div class="mb-4">
+                     {task_skill_heatmap}
+                  </div>
+               </div>
             </div>
-        </div>
-
-        <div class="section">
+         </div>
+         <div class="section">
             <h2 class="text-primary" data-bs-toggle="collapse" data-bs-target="#tasks-by-context-section">Tasks by Context Type</h2>
             <div class="collapse" id="tasks-by-context-section">
-                <div class="mb-4">
-                    There is a total of {len(task_context_info)} tasks in the benchmark.
-                </div>
-                {task_by_context_list}
+               <div class="mb-4">
+                  There is a total of {len(task_context_info)} tasks in the benchmark.
+               </div>
+               {task_by_context_list}
             </div>
-        </div>
-
-        <div class="section">
+         </div>
+         <div class="section">
             <h2 class="text-primary" data-bs-toggle="collapse" data-bs-target="#tasks-by-skill-section">Tasks by Skill</h2>
             <div class="collapse" id="tasks-by-skill-section">
-                <div class="mb-4">
-                    There is a total of {len(task_skill_info)} tasks in the benchmark.
-                </div>
-                {task_by_skill_list}
+               <div class="mb-4">
+                  There is a total of {len(task_skill_info)} tasks in the benchmark.
+               </div>
+               {task_by_skill_list}
             </div>
-        </div>
-    </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
+         </div>
+         <div class="section">
+            <h2 class="text-primary" data-bs-toggle="collapse" data-bs-target="#results-section">Results</h2>
+            <div class="collapse show" id="results-section">
+               <div id="result-table"></div>
+            </div>
+         </div>
+      </div>
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+      <!-- Tables -->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+      <script src="https://unpkg.com/gridjs/dist/gridjs.umd.js"></script>
+      <script>
+         Papa.parse("https://raw.githubusercontent.com/aldro61/sc_task_stats/main/results.csv", {{
+           download: true,
+           complete: function(results) {{
+             new gridjs.Grid({{
+               columns: results.data[0].map(header => ({{
+                     name: header,
+               }})),
+               data: results.data.slice(1), // Skip the header row
+               search: true,
+               sort: true,
+               pagination: {{
+                 enabled: true,
+                 limit: 10
+               }},
+               fixedHeader: true,
+               autoWidth: true,
+               resizable: true
+             }}).render(document.getElementById("result-table"));
+           }}
+         }});
+      </script>
+   </body>
 </html>
 """
 
