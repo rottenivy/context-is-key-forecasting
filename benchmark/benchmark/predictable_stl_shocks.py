@@ -94,13 +94,25 @@ class STLModifierTask(UnivariateCRPSTask):
     def apply_modification(self):
         pass
 
-    def recompose_series(self, modified_component):
+    def recompose_series(self, modified_component, prediction_length):
         if self.target_component_name == "trend":
-            return modified_component + self.stl.fit().seasonal + self.stl.fit().resid
+            return (
+                modified_component
+                + self.stl.fit().seasonal[-prediction_length:]
+                + self.stl.fit().resid[-prediction_length:]
+            )
         elif self.target_component_name == "seasonal":
-            return self.stl.fit().trend + modified_component + self.stl.fit().resid
+            return (
+                self.stl.fit().trend[-prediction_length:]
+                + modified_component
+                + self.stl.fit().resid[-prediction_length:]
+            )
         elif self.target_component_name == "residual":
-            return self.stl.fit().trend + self.stl.fit().seasonal + modified_component
+            return (
+                self.stl.fit().trend[-prediction_length:]
+                + self.stl.fit().seasonal[-prediction_length:]
+                + modified_component
+            )
         else:
             raise ValueError(
                 "The modification parameter must be provided. 'trend' or 'seasonal' are valid options."
@@ -192,7 +204,9 @@ class STLPredMultiplierTask(STLModifierTask):
             start_idx, duration, future_series_component
         )
 
-        future_series = self.recompose_series(modified_component)
+        future_series = self.recompose_series(
+            modified_component, metadata.prediction_length
+        )
 
         scenario = self.get_scenario_context(start_datetime, end_datetime)
 
