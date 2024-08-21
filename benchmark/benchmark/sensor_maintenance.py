@@ -10,6 +10,46 @@ from gluonts.dataset.util import to_pandas
 from .base import UnivariateCRPSTask
 from .utils import get_random_window_univar, datetime_to_str
 
+# iport abstract class
+from abc import ABC, abstractmethod
+
+from benchmark.data.traffic_downloader import (
+    download_traffic_files,
+    TRAFFIC_SPLIT_PATH,
+    TRAFFIC_METADATA_PATH,
+)
+
+
+class FreshTrafficLoader:
+
+    def get_window(
+        self,
+        prediction_length: int = 24,
+        history_factor: int = 7,
+        sensor_file: str = None,
+        random: np.random.RandomState = None,
+        target: str = "Speed (mph)",
+    ):
+
+        if sensor_file is None:
+            sensor_files = glob.glob(os.path.join(self.traffic_split_path, "*.csv"))
+            sensor_file = random.choice(sensor_files)
+
+        dataset = pd.read_csv(sensor_file)
+        dataset["date"] = pd.to_datetime(dataset["Hour"])
+        dataset = dataset.set_index("date")
+
+        series = dataset[target]
+
+        window = get_random_window_univar(
+            series,
+            prediction_length=prediction_length,
+            history_factor=history_factor,
+            random=self.random,
+        )
+
+        return window
+
 
 from benchmark.data.pems import (
     load_traffic_series,
