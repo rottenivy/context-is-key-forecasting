@@ -102,14 +102,7 @@ class LLMPForecaster(Baseline):
         logging.info("Loading results from LLMP...")
         with open(self.output_data_path, "rb") as f:
             results = pickle.load(f)
-
-            samples = np.empty((len(results["gen"]), len(results["gen"][0])))
-
-            # Loop over every time point in the forecast
-            for i, point_samples in enumerate(results["gen"]):
-                # Loop over every sample for each time point
-                for j, sample in enumerate(point_samples):
-                    samples[i][j] = float(sample.split("\n")[0])
+            samples = np.array(results["y_test"]).transpose()
 
         return samples
 
@@ -173,7 +166,7 @@ Constraints:
 
         # Get results
         samples = self._load_results()
-        return samples.transpose()[
+        return samples[
             :, :, None
         ]  # XXX: Would need to be adapted when we expand to multivariate
 
