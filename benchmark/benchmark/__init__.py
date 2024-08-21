@@ -9,7 +9,6 @@ from .predictable_spikes_in_pred import __TASKS__ as PREDICTABLE_SPIKES_IN_PRED_
 from .predictable_stl_shocks import __TASKS__ as PREDICTABLE_STL_SHOCKS_TASKS
 from .sensor_maintenance import __TASKS__ as SENSOR_MAINTENANCE_TASKS
 from .tasks.causal_chambers import __TASKS__ as CAUSAL_CHAMBERS_TASKS
-
 from .dummy_traffic import __TASKS__ as DUMMY_TRAFFIC_TASKS
 from .bivariate_categorical_causal import __TASKS__ as CATEGORICAL_CAUSAL_TASKS
 from .tasks.solar_tasks import __TASKS__ as SOLAR_TASKS
