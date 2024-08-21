@@ -33,10 +33,6 @@ datasets.builder.has_sufficient_disk_space = lambda needed_bytes, directory=".":
 
 
 def download_raw_traffic_data():
-    # Check if the file already exists
-    # if os.path.exists(TRAFFIC_CSV_PATH):
-    #     print(f"File already exists at {TRAFFIC_CSV_PATH}. Skipping download.")
-    #     return
 
     # Create storage directory if it doesn't exist
     if not os.path.exists(TRAFFIC_STORAGE_PATH):
