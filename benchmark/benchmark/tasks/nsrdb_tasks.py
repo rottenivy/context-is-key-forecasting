@@ -59,7 +59,7 @@ class BaseIrradianceFromCloudStatus(UnivariateCRPSTask):
     In this task, the model is given
     """
 
-    _context_sources = ["c_cov"]
+    _context_sources = ["c_i", "c_cov"]
     # Part of the task involve understanding the impact of longer cloudy period (denser clouds)
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
