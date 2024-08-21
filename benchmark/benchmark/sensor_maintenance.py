@@ -10,8 +10,6 @@ from gluonts.dataset.util import to_pandas
 from .base import UnivariateCRPSTask
 from .utils import get_random_window_univar, datetime_to_str
 
-# iport abstract class
-from abc import ABC, abstractmethod
 
 from benchmark.data.traffic_downloader import (
     download_traffic_files,
