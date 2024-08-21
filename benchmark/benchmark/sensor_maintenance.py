@@ -18,6 +18,7 @@ class SensorPeriodicMaintenanceTask(UnivariateCRPSTask):
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_h"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def random_instance(self):
         datasets = ["electricity_hourly"]
@@ -101,6 +102,7 @@ class SensorTrendAccumulationTask(UnivariateCRPSTask):
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_h"]
     _skills = UnivariateCRPSTask._skills + ["instruction following", "reasoning: math"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def random_instance(self):
         datasets = ["traffic"]
@@ -190,6 +192,7 @@ class SensorSpikeTask(UnivariateCRPSTask):
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_h"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def random_instance(self):
         datasets = ["traffic"]
@@ -268,6 +271,7 @@ class SensorMaintenanceInPredictionTask(UnivariateCRPSTask):
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def random_instance(self):
         # TODO: This task can use all datasets where the notion of a "sensor" is meaningful

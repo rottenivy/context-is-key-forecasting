@@ -19,6 +19,9 @@ def random_baseline(task_instance, n_samples=50):
     )
 
 
+random_baseline.__version__ = "0.0.1"  # Modification will trigger re-caching
+
+
 def oracle_baseline(task_instance, n_samples=50):
     """
     A perfect baseline that looks at the future and returns it in multiple copies with a tiny jitter (like perfect samples)
@@ -33,3 +36,6 @@ def oracle_baseline(task_instance, n_samples=50):
         + np.random.rand(n_samples, target.shape[0], 1)
         * 1e-6  # For now, just univariate output of 1 variable
     )
+
+
+oracle_baseline.__version__ = "0.0.1"  # Modification will trigger re-caching

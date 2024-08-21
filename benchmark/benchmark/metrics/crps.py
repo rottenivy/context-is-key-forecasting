@@ -15,154 +15,6 @@ limitations under the License.
 import numpy as np
 
 
-def get_crps(
-    targets: list,  # list of (num_timesteps, )
-    forecasts: list,  # list of (num_timestes, num_samples)
-):
-    """
-    Returns both GluonTS CRPS and series-wise-normalized CRPS
-    """
-    # Extract the forecasts and targets from the outputs
-    series_quantile_losses = []
-    series_target_abs_sums = []
-
-    series_crps_list = []
-    num_tokens_list = []
-
-    for i in range(len(targets)):
-        target = targets[i]
-        forecast = forecasts[i]
-        i_quantile_losses, i_target_abs_sum = crps_quantile(
-            target,  # Of shape (num_timesteps, )
-            forecast.transpose(),  # Of shape (num_samples, num_timesteps)
-        )
-        series_quantile_losses.append(i_quantile_losses)
-        series_target_abs_sums.append(i_target_abs_sum)
-
-        # Get the sum of the CRPS for the series by integrating the quantiles over [0, 1]
-        crps_sum = i_quantile_losses.mean(axis=1).item()
-        abs_sum = i_target_abs_sum.item()
-        if abs_sum > 0:
-            crps_normalized = crps_sum / abs_sum
-            series_crps_list.append(crps_normalized)
-            num_tokens_list.append(target.shape[0])
-        else:
-            series_crps_list.append(float("nan"))
-            # Avoid changing the weighted average, since we will skip the NaNs in the numerator
-            num_tokens_list.append(0)
-
-    series_quantiles = np.concatenate(
-        series_quantile_losses
-    )  # Of shape (num_series, num_quantiles)
-    # Set NumPy to ignore divide by zero errors
-    with np.errstate(divide="ignore"):
-        series_weighted_quantiles = series_quantiles / np.atleast_2d(
-            np.array(series_target_abs_sums)
-        )
-    # series_crps_1 = series_weighted_quantiles.mean(axis=1)  # Of shape (num_series, )
-
-    overall_target_abs_sum = np.concatenate(series_target_abs_sums).sum()
-    overall_quantiles = series_quantiles.sum(axis=0)  # Of shape (num_quantiles, )
-    # Set NumPy to ignore divide by zero errors and instead return inf
-    with np.errstate(divide="ignore"):
-        overall_weighted_quantiles = overall_quantiles / overall_target_abs_sum
-    overall_gluonts_crps = overall_weighted_quantiles.mean()
-
-    # Convert the list to np.array for ease of manipulation
-    series_crps_2 = np.array(series_crps_list)
-    num_tokens = np.array(num_tokens_list)
-
-    # Weighted average by the number of tokens in each series, since we don't have
-    overall_series_wise_normalized_crps = (
-        np.nan_to_num(series_crps_2, 0) * num_tokens
-    ).sum() / num_tokens.sum()
-
-    return overall_gluonts_crps, overall_series_wise_normalized_crps
-
-
-def gluonts_crps(
-    targets: list,  # list of (num_timesteps, )
-    forecasts: list,  # list of (num_timestes, num_samples)
-):
-    """
-    Calculate the CRPS similarly to the GluonTS implementation.
-    Calculates quantile loss for each series and then sums them up.
-    Normalizes the quantile loss by the sum of the absolute values of the targets.
-    Note that this means that the CRPS is not invariant to the scale of the targets:
-    multiplying one target and its forecasts by the same constant will affect the overall CRPS.
-    """
-    # Extract the forecasts and targets from the outputs
-    series_quantile_losses = []
-    series_target_abs_sums = []
-    for i in range(len(targets)):
-        target = targets[i]
-        forecast = forecasts[i]
-        # target = outputs[i]["target"][np.newaxis, :]
-        # forecast = np.expand_dims(outputs[i]["forecast"], 1).transpose((2, 1, 0))
-        i_quantile_losses, i_target_abs_sum = crps_quantile(
-            target,  # (num_timesteps, )
-            forecast.transpose(),  # (num_samples, num_timesteps)
-        )
-        # crps_scores.append(crps_score)
-        series_quantile_losses.append(i_quantile_losses)
-        series_target_abs_sums.append(i_target_abs_sum)
-    # average_crps_score = np.array(crps_scores).mean()
-
-    series_quantiles = np.concatenate(
-        series_quantile_losses
-    )  # (num_series, num_quantiles)
-    # Set NumPy to ignore divide by zero errors
-    with np.errstate(divide="ignore"):
-        series_weighted_quantiles = series_quantiles / np.atleast_2d(
-            np.array(series_target_abs_sums)
-        )
-    series_crps = series_weighted_quantiles.mean(axis=1)  # (num_series, )
-
-    overall_target_abs_sum = np.concatenate(series_target_abs_sums).sum()
-    overall_quantiles = series_quantiles.sum(axis=0)  # (num_quantiles, )
-    # Set NumPy to ignore divide by zero errors and instead return inf
-    with np.errstate(divide="ignore"):
-        overall_weighted_quantiles = overall_quantiles / overall_target_abs_sum
-    overall_crps = overall_weighted_quantiles.mean()
-
-    return overall_crps, series_crps
-
-
-def series_wise_normalized_crps(
-    targets: list,  # list of (num_timesteps, )
-    forecasts: list,  # list of (num_timestes, num_samples)
-):
-    """
-    Compute the CRPS and normalize the result independently for each series.
-    The final result is the average CRPS, where the averaging is done per token,
-    so series with more tokens will naturally have a higher weight.
-    """
-    series_crps_list = []
-    num_tokens_list = []
-    for target, forecast in zip(targets, forecasts):
-        quantile_loss_sum, target_abs_sum = crps_quantile(target, forecast.transpose())
-        # Get the sum of the CRPS for the series by integrating the quantiles over [0, 1]
-        crps_sum = quantile_loss_sum.mean(axis=1).item()
-        abs_sum = target_abs_sum.item()
-        if abs_sum > 0:
-            crps_normalized = crps_sum / abs_sum
-            series_crps_list.append(crps_normalized)
-            num_tokens_list.append(target.shape[0])
-        else:
-            series_crps_list.append(float("nan"))
-            # Avoid changing the weighted average, since we will skip the NaNs in the numerator
-            num_tokens_list.append(0)
-
-    # Convert the list to np.array for ease of manipulation
-    series_crps = np.array(series_crps_list)
-    num_tokens = np.array(num_tokens_list)
-
-    # Weighted average by the number of tokens in each series, since we don't have
-    mean_crps = (np.nan_to_num(series_crps, 0) * num_tokens).sum() / num_tokens.sum()
-
-    return mean_crps, series_crps
-
-
 def crps_quantile(
     target: np.array,
     samples: np.array,
@@ -205,19 +57,47 @@ def crps_quantile(
     return series_QuantileLoss, abs_target_sum
 
 
-def crps_slow(target: np.array, samples: np.array) -> np.float32:
-    """This code is currently not adapted to our codebase."""
-    # Compute the CRPS using the definition:
-    # CRPS(y, X) = E |y - X| + 0.5 E |X - X'|, averaged over each dimension
-    assert target.shape[0] == samples.shape[1]
-    assert target.shape[1] == samples.shape[2]
+def crps(
+    target: np.array,
+    samples: np.array,
+) -> np.array:
+    """
+    Compute the CRPS using the probability weighted moment form.
+    See Eq ePWM from "Estimation of the Continuous Ranked Probability Score with
+    Limited Information and Applications to Ensemble Weather Forecasts"
+    https://link.springer.com/article/10.1007/s11004-017-9709-7
+
+    This is a O(n log n) per variable exact implementation, without estimation bias.
+
+    Parameters:
+    -----------
+    target: np.ndarray
+        The target values. (variable dimensions)
+    samples: np.ndarray
+        The forecast values. (n_samples, variable dimensions)
+
+    Returns:
+    --------
+    crps: np.ndarray
+        The CRPS for each of the (variable dimensions)
+    """
+    assert (
+        target.shape == samples.shape[1:]
+    ), f"shapes mismatch between: {target.shape} and {samples.shape}"
+
     num_samples = samples.shape[0]
+    num_dims = samples.ndim
+    sorted_samples = np.sort(samples, axis=0)
 
-    first_term = np.abs(samples - target[None, :, :]).mean(axis=0).mean()
-    s = np.float32(0)
-    for i in range(num_samples - 1):
-        for j in range(i + 1, num_samples):
-            s += np.abs(samples[i] - samples[j]).mean()
-    second_term = s / (num_samples * (num_samples - 1) / 2)
+    abs_diff = (
+        np.abs(np.expand_dims(target, axis=0) - sorted_samples).sum(axis=0)
+        / num_samples
+    )
 
-    return first_term - 0.5 * second_term
+    beta0 = sorted_samples.sum(axis=0) / num_samples
+
+    # An array from 0 to num_samples - 1, but expanded to allow broadcasting over the variable dimensions
+    i_array = np.expand_dims(np.arange(num_samples), axis=tuple(range(1, num_dims)))
+    beta1 = (i_array * sorted_samples).sum(axis=0) / (num_samples * (num_samples - 1))
+
+    return abs_diff + beta0 - 2 * beta1

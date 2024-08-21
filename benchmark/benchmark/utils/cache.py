@@ -10,6 +10,7 @@ from pathlib import Path
 
 from ..baselines.base import Baseline
 from ..config import DEFAULT_N_SAMPLES, RESULT_CACHE_PATH
+from ..utils import get_all_parent_classes
 
 
 def get_method_cache_name(method_callable):
@@ -50,13 +51,32 @@ def get_source(obj) -> str:
         return inspect.getsource(obj)
     else:
         # Get all parent classes that are not built-in
-        parent_classes = [
-            c
-            for c in inspect.getmro(obj.__class__)
-            if c.__module__ != builtins.__name__
-        ]
+        parent_classes = get_all_parent_classes(obj.__class__)
         # Concatenate source code of all parent classes and the method's class
         return "".join(inspect.getsource(c) for c in parent_classes + [obj.__class__])
+
+
+def get_versions(obj) -> str:
+    """
+    Get the versions associated with an object as a string.
+
+    Parameters:
+    -----------
+    obj: callable
+        Any object
+
+    Notes:
+    ------
+    If the object is a class, the version of all parent classes is also included.
+
+    """
+    if obj.__class__.__name__ == "function":
+        return obj.__version__
+    else:
+        # Get all parent classes that are not built-in
+        parent_classes = get_all_parent_classes(obj.__class__)
+        # Concatenate source code of all parent classes and the method's class
+        return ",".join(c.__version__ for c in parent_classes + [obj.__class__])
 
 
 class CacheMissError(Exception):
@@ -79,6 +99,10 @@ class ResultCache:
         Must be provided if method_callable is an instance of a class.
     cache_path: str, optional
         Path to the cache directory. Default is taken from RESULT_CACHE.
+    cache_method: str, optional
+        Method to use for caching. Default is "versions", which will look at the version of the
+        task class and method callable (and all parent classes, if applicable) to create a cache key.
+        Other option is "code", which uses the source code of the method and the task to create the key.
     raise_on_miss: bool, optional
         Whether to raise a CacheMissError if the cache is not found. Default is False.
 
@@ -89,17 +113,29 @@ class ResultCache:
         method_callable,
         method_name=None,
         cache_path=RESULT_CACHE_PATH,
+        cache_method="versions",
         raise_on_miss=False,
     ) -> None:
         self.logger = logging.getLogger("Result cache")
         self.method_callable = method_callable
+        self.raise_on_miss = raise_on_miss
+
+        # Cache configuration
         self.cache_dir = Path(cache_path) / (
             get_method_cache_name(method_callable)
             if method_name is None
             else method_name
         )
         self.cache = Cache(self.cache_dir)
-        self.raise_on_miss = raise_on_miss
+
+        # Set the cache key calculation method
+        self.cache_method = cache_method
+        if self.cache_method == "code":
+            self.key_extractor = get_source
+        elif self.cache_method == "versions":
+            self.key_extractor = get_versions
+        else:
+            raise ValueError("Invalid cache method.")
 
     def get_cache_key(self, task_instance, n_samples):
         """
@@ -124,11 +160,11 @@ class ResultCache:
         # Initialize the hash object
         hasher = hashlib.sha256()
 
-        # Hash task source code
-        hasher.update(get_source(task_instance.__class__).encode("utf-8"))
+        # Hash the task
+        hasher.update(self.key_extractor(task_instance).encode("utf-8"))
 
-        # Hash method source code
-        hasher.update(get_source(self.method_callable).encode("utf-8"))
+        # Hash the method
+        hasher.update(self.key_extractor(self.method_callable).encode("utf-8"))
 
         # Hash the number of samples
         hasher.update(str(n_samples).encode("utf-8"))

@@ -1,22 +1,133 @@
+from typing import Optional
 import numpy as np
-from benchmark.metrics.crps import crps_quantile
 
-import matplotlib.pyplot as plt
+from .constraints import Constraint
+from .crps import crps
 
 
-def crps_by_quantile_mean(target, samples):
-    if len(target) > 0:
-        return crps_quantile(target, samples)[0].mean() / len(target)
+def mean_crps(target, samples):
+    """
+    The mean of the CRPS over all variables
+    """
+    if target.size > 0:
+        return crps(target, samples).mean()
     else:
-        return 0
+        raise RuntimeError(
+            f"CRPS received an empty target. Shapes = {target.shape} and {samples.shape}"
+        )
 
 
+def threshold_weighted_crps(
+    target: np.array,
+    forecast: np.array,
+    region_of_interest=None,
+    roi_weight: float = 0.5,
+    constraint: Optional[Constraint] = None,
+    violation_factor: float = 5.0,
+    log_transform: bool = True,
+) -> dict[str, float]:
+    """
+    Compute the scaled twCRPS, which adds a penalty term when constraints are violated.
+
+    Reference for the twCRPS: https://arxiv.org/abs/2202.12732
+    (Evaluating forecasts for high-impact events using transformed kernel scores)
+
+    Without scaling and region of interest, the twCRPS is defined as:
+    twCRPS(X, y) = CRPS(v(X), v(y)),
+    where the multivariate CRPS is computed as the sum of the univariate CRPS over all dimensions,
+    and v(z) is an arbitrary transform.
+    In our case, we select the transform to be:
+    v(z) = [z / length(z), exp(violation_factor * constraint violation) - 1].
+
+    For the scaling, we divide the CRPS by the range of values in the target.
+
+    For the region of interest, we compute the mean CRPS individually on both the region of interest
+    and the rest of the forecast, which we then combine using the given weight.
+
+    Parameters:
+    ----------
+    target: np.array
+        The target values. (n_timesteps,)
+    forecast: np.array
+        The forecast values. (n_samples, n_timesteps)
+    region_of_interest: None, int, list of ints, slice, or boolean mask
+        The region of interest to apply the roi_metric to.
+    roi_weight: float
+        The weight to apply to the region of interest.
+    constraint: Constraint, optional
+        A constraint whose violation must be checked.
+    violation_factor: float, default 5.0
+        A multiplicative factor to the violation of the constraint, before sending to the exponential.
+    log_transform: bool, default False
+        If set to true, the metric is transformed using log(1 + m).
+
+    Returns:
+    --------
+    result: dict[str, float]
+        A dictionary containing the following entries:
+        "metric": the final metric.
+        "raw_metric": the metric before the log transformation.
+        "scaling": the scaling factor applied to the CRPS and the violations.
+        "crps": the weighted CRPS.
+        "roi_crps": the CRPS only for the region of interest.
+        "non_roi_crps": the CRPS only for the forecast not in the region of interest.
+        "violation_mean": the average constraint violation over the samples.
+        "violation_crps": the CRPS of the constraint violation.
+    """
+    target_range = np.max(target) - np.min(target)
+    scaling = 1.0 / target_range
+
+    if region_of_interest:
+        roi_mask = format_roi_mask(region_of_interest, forecast.shape)
+        roi_crps = mean_crps(target=target[roi_mask], samples=forecast[:, roi_mask])
+        non_roi_crps = mean_crps(
+            target=target[~roi_mask], samples=forecast[:, ~roi_mask]
+        )
+        crps_value = roi_weight * roi_crps + (1 - roi_weight) * non_roi_crps
+    else:
+        crps_value = mean_crps(target=target, samples=forecast)
+        # Those will only be used in the reporting
+        roi_crps = crps_value
+        non_roi_crps = crps_value
+
+    if constraint:
+        violation_amount = constraint.violation(samples=forecast, scaling=scaling)
+        violation_exp = np.exp(violation_factor * violation_amount) - 1
+        # The target is set to zero, since we make sure that the ground truth always satisfy the constraints
+        # The crps code assume multivariate input, so add a dummy dimension
+        violation_crps = crps(target=np.zeros(1), samples=violation_exp[:, None])[0]
+    else:
+        violation_amount = np.zeros(forecast.shape[0])
+        violation_exp = np.zeros(forecast.shape[0])
+        violation_crps = 0.0
+
+    raw_metric = scaling * crps_value + violation_crps
+    if log_transform:
+        metric = np.log(1 + raw_metric)
+    else:
+        metric = raw_metric
+
+    return {
+        "metric": metric,
+        "raw_metric": raw_metric,
+        "scaling": scaling,
+        "crps": scaling * crps_value,
+        "roi_crps": scaling * roi_crps,
+        "non_roi_crps": scaling * non_roi_crps,
+        "violation_mean": violation_amount.mean(),
+        "violation_crps": violation_crps,
+    }
+
+
+###############################################################################
+############################# OLD METRIC BELOW ################################
+###############################################################################
 def region_of_interest_constraint_metric(
     target,
     forecast,
     region_of_interest,
     roi_weight,
-    roi_metric=crps_by_quantile_mean,
+    roi_metric=mean_crps,
     constraints=None,
     tolerance_percentage=0.05,
 ):
@@ -34,7 +145,7 @@ def region_of_interest_constraint_metric(
     roi_weight: float
         The weight to apply to the region of interest.
     roi_metric: function, optional
-        The metric to apply to the region of interest. Default is crps_by_quantile_mean.
+        The metric to apply to the region of interest. Default is mean_crps.
     constraints: dict, optional
         A dictionary containing the constraints. The keys are "min" and "max". Default is None.
     tolerance_percentage: float, optional
@@ -187,6 +298,11 @@ def calculate_constraint_penalty(
     return average_penalty * scale_factor
 
 
+###############################################################################
+############################# OLD METRIC ABOVE ################################
+###############################################################################
+
+
 def format_roi_mask(region_of_interest, forecast_shape):
     """
     Formats the region of interest mask based on the given inputs.
@@ -235,144 +351,3 @@ def format_roi_mask(region_of_interest, forecast_shape):
         raise ValueError(
             "region_of_interest must be an int, a list of ints, a slice, or a boolean mask"
         )
-
-
-if __name__ == "__main__":
-
-    def plot_forecast(
-        ax, target, forecast, region_of_interest, metric_value, constraints, title
-    ):
-        ax.plot(target, label="Target", marker="o", color="g")
-        ax.plot(forecast.T, label="Forecast", linestyle="--", marker="x", alpha=0.7)
-
-        min_val = constraints.get("min", None)
-        max_val = constraints.get("max", None)
-        tolerance = tolerance_percentage * (np.max(target) - np.min(target))
-
-        if min_val is not None:
-            ax.axhline(y=min_val, color="r", linestyle="-", label="Min Constraint")
-            ax.axhline(
-                y=min_val - tolerance,
-                color="r",
-                linestyle=":",
-                label="Min Constraint - Tolerance",
-            )
-
-        if max_val is not None:
-            ax.axhline(y=max_val, color="b", linestyle="-", label="Max Constraint")
-            ax.axhline(
-                y=max_val + tolerance,
-                color="b",
-                linestyle=":",
-                label="Max Constraint + Tolerance",
-            )
-
-        ax.set_title(f"{title}\nMetric Value: {metric_value:.2f}")
-        ax.legend()
-        ax.set_xlabel("Timestep")
-        ax.set_ylabel("Value")
-        ax.set_ylim([0, 10])
-
-    # Creating sample target and forecast ndarrays
-    target_data = np.array([1, 2, 3, 4, 5])
-    # Original forecasts
-    forecasts = [
-        [1.0, 2.0, 3.0, 4.0, 5.0],  # Perfect forecast
-        [1.1, 2.1, 3.1, 4.1, 5.1],  # Slightly off, respects constraints
-        [5, 4, 3, 2, 1],  # Very off, respects constraints
-        [1, 2, 3, 4, 6],  # Slightly off, does not respect constraints
-        [6, 4, 2, 0, -2],  # Very off, does not respect constraints
-        [1, 3, 4, 4, 5],  # Bad forecast in region of interest
-        [2, 2, 3, 4, 4],  # Bad forecast in complement
-    ]
-
-    # Number of samples per forecast
-    n_samples = 3
-
-    # Generate multiple samples per forecast
-    multi_sample_forecasts = np.array(
-        [
-            np.array(forecast)
-            + np.random.normal(0, 0.01, size=(n_samples, len(forecast)))
-            for forecast in forecasts
-        ]
-    )
-
-    # Transpose to (n_forecasts, n_samples, n_timesteps)
-    forecasts = np.transpose(multi_sample_forecasts, (0, 1, 2))
-
-    # Initialize RegionOfInterestConstraintMetric with Min and Max Constraints
-    constraints = {"min": 1, "max": 5}
-    region_of_interest = slice(1, 4)
-    roi_weight = 0.91
-    tolerance_percentage = 0.1
-
-    # Titles for each forecast example
-    titles = [
-        "Perfect Forecast",
-        "Slightly Off, Respects Constraints",
-        "Very Off, Respects Constraints",
-        "Slightly Off, Does Not Respect Constraints",
-        "Very Off, Does Not Respect Constraints",
-        "Bad Forecast in Region of Interest",
-        "Bad Forecast in Complement",
-    ]
-
-    fig, axs = plt.subplots(4, 2, figsize=(15, 20))
-    fig.tight_layout(pad=5.0)
-
-    # Loop through each forecast and plot
-    for i, forecast in enumerate(forecasts):
-        metric_value = region_of_interest_constraint_metric(
-            target=target_data,
-            forecast=forecast,
-            region_of_interest=region_of_interest,
-            roi_weight=roi_weight,
-            roi_metric=crps_by_quantile_mean,
-            constraints=constraints,
-            tolerance_percentage=tolerance_percentage,
-        )
-        ax = axs[i // 2, i % 2]
-        plot_forecast(
-            ax,
-            target_data,
-            forecast,
-            region_of_interest,
-            metric_value,
-            constraints,
-            titles[i],
-        )
-        print(f"Forecast {i + 1} Metric Value: {metric_value:.2f}")
-
-    # Hide the last empty subplot if needed
-    if len(forecasts) % 2 != 0:
-        axs[-1, -1].axis("off")
-
-    plt.suptitle(
-        r"$\text{ROI\_crps} = \left( \sum_{i=1}^n w_i \cdot \text{CRPS}_i \right) \times \exp\left(penalty_{constraint} * \frac{\log(2)}{\text{tolerance\_percentage}}\right)$",
-        fontsize=14,
-        y=0.995,
-    )
-    plt.tight_layout()
-
-    txt = """
-            Each plot represents a single sample forecast.
-            Target in solid green, forecast in dashed yellow
-            The ground truth forecast is a line from 1 to 5.
-            The dashed line represents the forecast.
-            The red line represents the minimum constraint.
-            The blue line represents the maximum constraint.
-            The dotted lines represent the tolerance around the constraints 5(%).
-            The metric value is displayed in the title of each plot.
-            The metric value is calculated using the roi_metric * np.exp(penalty).
-            The roi_metric is calculated using CRPS (reduces to MAE for 1 sample).
-            The weight on the region of interest (timesteps 1,2,3) is 0.91.
-            The penalty is calculated using the constraints.
-            Hence, the metric values is roi_CRPS * exp(penalty).
-            """
-
-    plt.figtext(0.52, 0.1, txt, wrap=True, horizontalalignment="left", fontsize=12)
-
-    plt.savefig(
-        "/home/toolkit/starcaster/research-starcaster/benchmark/benchmark/metrics/forecast_comparison_functions.png"
-    )

@@ -10,6 +10,9 @@ from ..base import BaseTask
 
 
 class ExponentialSmoothingForecaster(Baseline):
+
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def __init__(
         self,
         trend: Literal["add", "mul", None] = "add",
@@ -83,6 +86,9 @@ class ExponentialSmoothingForecaster(Baseline):
 
 
 class ETSModelForecaster(Baseline):
+
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def __init__(
         self,
         trend: Literal["add", "mul", None] = "add",

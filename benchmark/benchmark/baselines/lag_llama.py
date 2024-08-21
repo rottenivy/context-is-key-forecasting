@@ -169,5 +169,8 @@ def lag_llama(task_instance, n_samples, batch_size=1, device=None):
     return format_llama_predictions(forecasts, dtype)
 
 
+lag_llama.__version__ = "0.0.1"  # Modification will trigger re-caching
+
+
 def format_llama_predictions(forecasts, dtype):
     return np.stack([f.samples for f in forecasts], axis=-1).astype(dtype)

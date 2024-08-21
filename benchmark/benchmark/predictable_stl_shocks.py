@@ -13,11 +13,15 @@ from abc import ABC, abstractmethod
 
 class STLNoDescriptionContext:
 
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def get_background_context():
         return None
 
 
 class STLShortDescriptionContext:
+
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def get_background_context():
         return """This task applies a multiplier to a component of the STL decomposition
@@ -26,6 +30,8 @@ class STLShortDescriptionContext:
 
 class STLMediumDescriptionContext:
 
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def get_background_context():
         return """This task applies a multiplier to a component of the STL decomposition
         of the series. The seasonal-trend decomposition with LOESS (STL) is a method for
@@ -33,6 +39,8 @@ class STLMediumDescriptionContext:
 
 
 class STLLongDescriptionContext:
+
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def get_background_context():
         return """This task applies a multiplier to a component of the STL decomposition
@@ -66,6 +74,7 @@ class STLModifierTask(UnivariateCRPSTask):
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following", "reasoning: math"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -113,6 +122,8 @@ class STLPredMultiplierTask(STLModifierTask):
     seed: int
         Seed for the random number generator
     """
+
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -242,6 +253,8 @@ class STLPredTrendMultiplierTask(STLPredMultiplierTask):
     Context: synthetic
     """
 
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def __init__(self, fixed_config: dict = None, seed: int = None):
         super().__init__(
             target_component_name="trend", fixed_config=fixed_config, seed=seed
@@ -255,6 +268,8 @@ class STLPredSeasonalMultiplierTask(STLPredMultiplierTask):
     Context: synthetic
     """
 
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def __init__(self, fixed_config: dict = None, seed: int = None):
         super().__init__(
             target_component_name="seasonal", fixed_config=fixed_config, seed=seed
@@ -267,6 +282,8 @@ class STLPredResidualMultiplierTask(STLPredMultiplierTask):
     Time series: agnostic
     Context: synthetic
     """
+
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
         super().__init__(
@@ -282,6 +299,8 @@ class STLPredTrendMultiplierWithNoDescriptionTask(STLPredTrendMultiplierTask):
     Context: synthetic
     """
 
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def get_background_context(self):
         return STLNoDescriptionContext.get_background_context()
 
@@ -293,6 +312,8 @@ class STLPredTrendMultiplierWithShortDescriptionTask(STLPredTrendMultiplierTask)
     Time series: agnostic
     Context: synthetic
     """
+
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def get_background_context(self):
         return STLShortDescriptionContext.get_background_context()
@@ -306,6 +327,8 @@ class STLPredTrendMultiplierWithMediumDescriptionTask(STLPredTrendMultiplierTask
     Context: synthetic
     """
 
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def get_background_context(self):
         return STLMediumDescriptionContext.get_background_context()
 
@@ -317,6 +340,8 @@ class STLPredTrendMultiplierWithLongDescriptionTask(STLPredTrendMultiplierTask):
     Time series: agnostic
     Context: synthetic
     """
+
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def get_background_context(self):
         return STLLongDescriptionContext.get_background_context()
@@ -330,6 +355,8 @@ class STLPredSeasonalMultiplierWithNoDescriptionTask(STLPredSeasonalMultiplierTa
     Context: synthetic
     """
 
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def get_background_context(self):
         return STLNoDescriptionContext.get_background_context()
 
@@ -341,6 +368,8 @@ class STLPredSeasonalMultiplierWithShortDescriptionTask(STLPredSeasonalMultiplie
     Time series: agnostic
     Context: synthetic
     """
+
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def get_background_context(self):
         return STLShortDescriptionContext.get_background_context()
@@ -354,6 +383,8 @@ class STLPredSeasonalMultiplierWithMediumDescriptionTask(STLPredSeasonalMultipli
     Context: synthetic
     """
 
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def get_background_context(self):
         return STLMediumDescriptionContext.get_background_context()
 
@@ -365,6 +396,8 @@ class STLPredSeasonalMultiplierWithLongDescriptionTask(STLPredSeasonalMultiplier
     Time series: agnostic
     Context: synthetic
     """
+
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def get_background_context(self):
         return STLLongDescriptionContext.get_background_context()
@@ -378,6 +411,8 @@ class STLPredResidualMultiplierWithNoDescriptionTask(STLPredResidualMultiplierTa
     Context: synthetic
     """
 
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def get_background_context(self):
         return STLNoDescriptionContext.get_background_context()
 
@@ -389,6 +424,8 @@ class STLPredResidualMultiplierWithShortDescriptionTask(STLPredResidualMultiplie
     Time series: agnostic
     Context: synthetic
     """
+
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def get_background_context(self):
         return STLShortDescriptionContext.get_background_context()
@@ -402,6 +439,8 @@ class STLPredResidualMultiplierWithMediumDescriptionTask(STLPredResidualMultipli
     Context: synthetic
     """
 
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def get_background_context(self):
         return STLMediumDescriptionContext.get_background_context()
 
@@ -414,6 +453,8 @@ class STLPredResidualMultiplierWithLongDescriptionTask(STLPredResidualMultiplier
     Context: synthetic
     """
 
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def get_background_context(self):
         return STLLongDescriptionContext.get_background_context()
 
@@ -424,6 +465,8 @@ class STLPredTrendRemovedTask(STLPredTrendMultiplierTask):
     Time series: agnostic
     Context: synthetic
     """
+
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def sample_multiplier(self, multiplier_min=-1, multiplier_max=1):
         return 0
@@ -443,6 +486,8 @@ class STLPredSeasonalRemovedTask(STLPredSeasonalMultiplierTask):
     Context: synthetic
     """
 
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def sample_multiplier(self, multiplier_min=-1, multiplier_max=1):
         return 0
 
@@ -460,6 +505,8 @@ class STLPredResidualRemovedTask(STLPredResidualMultiplierTask):
     Time series: agnostic
     Context: synthetic
     """
+
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def sample_multiplier(self, multiplier_min=-1, multiplier_max=1):
         return 0
@@ -480,6 +527,8 @@ class STLPredTrendRemovedWithNoDescriptionTask(STLPredTrendRemovedTask):
     Context: synthetic
     """
 
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def get_background_context(self):
         return STLNoDescriptionContext.get_background_context()
 
@@ -491,6 +540,8 @@ class STLPredTrendRemovedWithShortDescriptionTask(STLPredTrendRemovedTask):
     Time series: agnostic
     Context: synthetic
     """
+
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def get_background_context(self):
         return STLShortDescriptionContext.get_background_context()
@@ -504,6 +555,8 @@ class STLPredTrendRemovedWithMediumDescriptionTask(STLPredTrendRemovedTask):
     Context: synthetic
     """
 
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def get_background_context(self):
         return STLMediumDescriptionContext.get_background_context()
 
@@ -515,6 +568,8 @@ class STLPredTrendRemovedWithLongDescriptionTask(STLPredTrendRemovedTask):
     Time series: agnostic
     Context: synthetic
     """
+
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def get_background_context(self):
         return STLLongDescriptionContext.get_background_context()
@@ -528,6 +583,8 @@ class STLPredSeasonalRemovedWithNoDescriptionTask(STLPredSeasonalRemovedTask):
     Context: synthetic
     """
 
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def get_background_context(self):
         return STLNoDescriptionContext.get_background_context()
 
@@ -539,6 +596,8 @@ class STLPredSeasonalRemovedWithShortDescriptionTask(STLPredSeasonalRemovedTask)
     Time series: agnostic
     Context: synthetic
     """
+
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def get_background_context(self):
         return STLShortDescriptionContext.get_background_context()
@@ -552,6 +611,8 @@ class STLPredSeasonalRemovedWithMediumDescriptionTask(STLPredSeasonalRemovedTask
     Context: synthetic
     """
 
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def get_background_context(self):
         return STLMediumDescriptionContext.get_background_context()
 
@@ -563,6 +624,8 @@ class STLPredSeasonalRemovedWithLongDescriptionTask(STLPredSeasonalRemovedTask):
     Time series: agnostic
     Context: synthetic
     """
+
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def get_background_context(self):
         return STLLongDescriptionContext.get_background_context()
@@ -576,6 +639,8 @@ class STLPredResidualRemovedWithNoDescriptionTask(STLPredResidualRemovedTask):
     Context: synthetic
     """
 
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def get_background_context(self):
         return STLNoDescriptionContext.get_background_context()
 
@@ -587,6 +652,8 @@ class STLPredResidualRemovedWithShortDescriptionTask(STLPredResidualRemovedTask)
     Time series: agnostic
     Context: synthetic
     """
+
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def get_background_context(self):
         return STLShortDescriptionContext.get_background_context()
@@ -600,6 +667,8 @@ class STLPredResidualRemovedWithMediumDescriptionTask(STLPredResidualRemovedTask
     Context: synthetic
     """
 
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def get_background_context(self):
         return STLMediumDescriptionContext.get_background_context()
 
@@ -611,6 +680,8 @@ class STLPredResidualRemovedWithLongDescriptionTask(STLPredResidualRemovedTask):
     Time series: agnostic
     Context: synthetic
     """
+
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def get_background_context(self):
         return STLLongDescriptionContext.get_background_context()

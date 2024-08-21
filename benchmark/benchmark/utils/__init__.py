@@ -3,6 +3,9 @@ Utility functions
 
 """
 
+import abc
+import builtins
+import inspect
 import logging
 import numpy as np
 import pandas as pd
@@ -89,3 +92,26 @@ def datetime_to_str(dt: Union[pd.Timestamp, np.datetime64]) -> str:
     if isinstance(dt, np.datetime64):
         dt = pd.Timestamp(dt)
     return dt.strftime("%Y-%m-%d %H:%M:%S")
+
+
+def get_all_parent_classes(cls):
+    """
+    Get all parent classes of a class, excluding built-in classes and the ABC class.
+
+    Parameters
+    ----------
+    cls : class
+        The class to get the parent classes of.
+
+    Returns:
+    --------
+    list
+        List of parent classes
+    """
+    return [
+        c
+        for c in inspect.getmro(cls)
+        if c.__module__ != builtins.__name__
+        if c != cls
+        if c is not abc.ABC
+    ]

@@ -5,12 +5,13 @@ Base classes for the benchmark
 
 import numpy as np
 import pandas as pd
-from typing import Optional
+from typing import Optional, Union
 import statsmodels.tsa.tsatools
 
 from abc import ABC, abstractmethod
 
-from .metrics.roi_metric import region_of_interest_constraint_metric
+from .metrics.constraints import Constraint
+from .metrics.roi_metric import threshold_weighted_crps
 from .utils.plot import plot_task
 
 
@@ -42,6 +43,7 @@ class BaseTask(ABC):
 
     _context_sources = []
     _skills = ["forecasting", "natural language processing"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def __init__(self, seed: int = None, fixed_config: Optional[dict] = None):
         self.random = np.random.RandomState(seed)
@@ -166,21 +168,19 @@ class UnivariateCRPSTask(BaseTask):
     We use the last column of `future_time` as the ground truth for evaluation
     """
 
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def __init__(self, seed: int = None, fixed_config: Optional[dict] = None):
         # Instantiate task parameters
         if fixed_config is not None:
             self.region_of_interest = fixed_config["region_of_interest"]
             self.roi_weight = fixed_config["roi_weight"]
-            self.metric_constraints = fixed_config["metric_constraints"]
-            self.metric_constraints_tolerance = fixed_config[
-                "metric_constraints_tolerance"
-            ]
+            self.metric_constraint = fixed_config["metric_constraint"]
         else:
             # These will be filled during by random_instance(), called in BaseTask.__init__
             self.region_of_interest = None
             self.roi_weight = 0.5
-            self.metric_constraints = None
-            self.metric_constraints_tolerance = 0.05
+            self.metric_constraint = None
 
         super().__init__(seed=seed, fixed_config=fixed_config)
 
@@ -196,6 +196,16 @@ class UnivariateCRPSTask(BaseTask):
         errors = super().verify_config()
         if self.roi_weight < 0 or self.roi_weight > 1:
             errors.append(f"roi weight ({self.roi_weight}) is not between 0 and 1")
+        if self.metric_constraint:
+            only_column = self.future_time.columns[-1]
+            target = self.future_time[only_column]
+            violation = self.metric_constraint.violation(
+                samples=target.values[None, :], scaling=1.0
+            )[0]
+            if violation > 0.0:
+                errors.append(
+                    f"Constraint {self.metric_constraint} is violated by the ground truth"
+                )
         return errors
 
     def evaluate(self, samples):
@@ -205,11 +215,10 @@ class UnivariateCRPSTask(BaseTask):
         # This is the dual of pd.Series.to_frame(), compatible with any series name
         only_column = self.future_time.columns[-1]
         target = self.future_time[only_column]
-        return region_of_interest_constraint_metric(
+        return threshold_weighted_crps(
             target=target,
             forecast=samples,
             region_of_interest=self.region_of_interest,
             roi_weight=self.roi_weight,
-            constraints=self.metric_constraints,
-            tolerance_percentage=self.metric_constraints_tolerance,
-        )
+            constraint=self.metric_constraint,
+        )["metric"]
