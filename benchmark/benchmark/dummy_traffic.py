@@ -24,6 +24,7 @@ class DummyTrafficTask(UnivariateCRPSTask):
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_i"]
     _skills = ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def __init__(
         self,
