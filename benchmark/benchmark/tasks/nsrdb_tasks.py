@@ -81,8 +81,8 @@ class BaseIrradianceFromCloudStatus(UnivariateCRPSTask):
         num_windows = 0
         for _, df in all_data:
             # The constraints are as follow:
-            # - At least 8 cloudy hours during daytime in the first 2 days (history window)
-            # - At least 8 clear hours during daytime in the first 2 days
+            # - At least 12 cloudy hours during daytime in the first 2 days (history window)
+            # - At least 4 clear hours during daytime in the first 2 days
             # - At most 15 changes of weather during the full range
             # With the current data, this gives us 388 valid windows
             valid_test = df.resample("3D").apply(
@@ -90,11 +90,11 @@ class BaseIrradianceFromCloudStatus(UnivariateCRPSTask):
                     [
                         (
                             (sdf["Cloudy"] & (sdf["Clearsky GHI"] > 0)).iloc[:48].sum()
-                            >= 8
+                            >= 12
                             and (~sdf["Cloudy"] & (sdf["Clearsky GHI"] > 0))
                             .iloc[:48]
                             .sum()
-                            >= 8
+                            >= 4
                             and ((sdf["Cloudy"].shift(1) != sdf["Cloudy"]).sum() <= 15)
                         ),
                         # Store the indices, to be able to recreate the sub DataFrame after selection
@@ -148,7 +148,7 @@ class BaseIrradianceFromCloudStatus(UnivariateCRPSTask):
     def get_scenario(self, df: pd.DataFrame) -> str:
         current_state = df["Cloudy"].iloc[0]
         cloud_updates = [
-            "At the beginning of the series, the weather is "
+            "At the beginning of the series, the weather was "
             + ("cloudy" if current_state else "clear")
             + "."
         ]
@@ -158,7 +158,12 @@ class BaseIrradianceFromCloudStatus(UnivariateCRPSTask):
                 current_state = new_state
                 t = datetime_to_str(df.index[i])
                 c = "cloudy" if new_state else "clear"
-                cloud_updates.append(f"At {t}, the weather becomes {c}.")
+                if i < 48:
+                    cloud_updates.append(f"At {t}, the weather became {c}.")
+                else:
+                    cloud_updates.append(
+                        f"At {t}, we expect that the weather will become {c}."
+                    )
 
         return "\n".join(cloud_updates)
 
