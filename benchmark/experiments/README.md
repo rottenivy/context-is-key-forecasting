@@ -26,8 +26,8 @@ To generate a summary table with the results of multiple methods, simply make a 
 
 ## exp_launcher.py
 
-This is a script that lists all experiments (json) in the `./experiments` directory and launches them on toolkit.
+This is a script that lists all experiments (json) in a directory (--expdir argument; default `./experiments`) and launches them on toolkit.
 
-* Make sure all your environment variables are set locally, because this script will copy them to the cluster
 * The json files are expected to be suffixed with either `_c<x>` or `_g<x>`, which respectively specify that the job should be run on x CPUs or GPUs (e.g., _g3 means 3 x GPUs).
 * The script will launch individual jobs on toolkit for each of the experiments and they will run in parallel.
+* You can use `python exp_launcher.py --killall` to kill all your running experiments (this will only kill what was launched by this script).
