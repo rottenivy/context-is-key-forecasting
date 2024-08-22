@@ -169,13 +169,12 @@ class ResultCache:
         # Hash the number of samples
         hasher.update(str(n_samples).encode("utf-8"))
 
-        # Iterate over all attributes of the task instance
-        for attr, value in task_instance.__dict__.items():
-            # Hash the attribute name
-            hasher.update(attr.encode("utf-8"))
-
-            # Hash the attribute value
-            hasher.update(get_attr_hash(value))
+        # Hash the task attributes that get sent to the method callable
+        hasher.update(get_attr_hash(task_instance.past_time))
+        hasher.update(get_attr_hash(task_instance.future_time))
+        hasher.update(get_attr_hash(task_instance.background))
+        hasher.update(get_attr_hash(task_instance.constraints))
+        hasher.update(get_attr_hash(task_instance.scenario))
 
         # Return the hex digest of the hash
         return hasher.hexdigest()
@@ -183,7 +182,6 @@ class ResultCache:
     def __call__(self, task_instance, n_samples=DEFAULT_N_SAMPLES):
         self.logger.info("Attempting to load from cache.")
         cache_key = self.get_cache_key(task_instance, n_samples)
-
         if cache_key in self.cache:
             self.logger.info("Cache hit.")
             return self.cache[cache_key]
