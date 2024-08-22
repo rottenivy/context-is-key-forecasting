@@ -32,6 +32,35 @@ TRAFFIC_SPLIT_PATH = os.path.join(TRAFFIC_STORAGE_PATH, "traffic_split_sensor_da
 datasets.builder.has_sufficient_disk_space = lambda needed_bytes, directory=".": True
 
 
+def get_traffic_prediction_length():
+    return 24
+
+
+def load_traffic_series(
+    target: str = "Occupancy (%)",  #  'Speed (mph)' or 'Occupancy (%)'
+    random: np.randomState = None,
+):
+    if not os.path.exists(TRAFFIC_SPLIT_PATH) or not os.path.exists(
+        TRAFFIC_METADATA_PATH
+    ):
+        download_traffic_files()
+
+    sensor_files = glob.glob(os.path.join(TRAFFIC_SPLIT_PATH, "*.csv"))
+    sensor_file = random.choice(sensor_files)
+
+    dataset = pd.read_csv(sensor_file)
+    dataset["date"] = pd.to_datetime(dataset["Hour"])
+    dataset = dataset.set_index("date")
+
+    series = dataset[target]
+
+    return series
+
+
+def get_traffic_history_factor():
+    return 7
+
+
 def download_raw_traffic_data():
 
     # Create storage directory if it doesn't exist
@@ -48,7 +77,7 @@ def download_raw_traffic_data():
             local_dir=TRAFFIC_STORAGE_PATH,
         )
 
-        print(f"Data downloaded and saved to {TRAFFIC_CSV_PATH}")
+        # print(f"Data downloaded and saved to {TRAFFIC_CSV_PATH}")
 
 
 def download_traffic_metadata():
@@ -68,7 +97,7 @@ def split_and_save_wide_dataframes(
     output_dir=TRAFFIC_SPLIT_PATH,
 ):
     if os.path.exists(output_dir):
-        print(f"Data already split and saved to {output_dir}. Skipping split.")
+        # print(f"Data already split and saved to {output_dir}. Skipping split.")
         return
     # Load the combined data
     combined_data = pd.read_csv(input_path, delimiter="\t", header=0)
