@@ -77,8 +77,6 @@ def download_raw_traffic_data():
             local_dir=TRAFFIC_STORAGE_PATH,
         )
 
-        # print(f"Data downloaded and saved to {TRAFFIC_CSV_PATH}")
-
 
 def download_traffic_metadata():
 
@@ -97,7 +95,6 @@ def split_and_save_wide_dataframes(
     output_dir=TRAFFIC_SPLIT_PATH,
 ):
     if os.path.exists(output_dir):
-        # print(f"Data already split and saved to {output_dir}. Skipping split.")
         return
     # Load the combined data
     combined_data = pd.read_csv(input_path, header=0)
