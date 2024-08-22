@@ -174,9 +174,9 @@ def compile_results(results):
                     task_results.append(seed_res["score"])
 
             mean = np.mean(task_results)
-            std = np.std(task_results)
+            std = np.std(task_results, ddof=1)
             stderr = std / np.sqrt(len(task_results))
-            _method_results.append(f"{mean.round(3): .3f} +- {stderr.round(3) :.3f}")
+            _method_results.append(f"{mean.round(3): .3f} ± {stderr.round(3) :.3f}")
 
         results_[method] = _method_results
 
