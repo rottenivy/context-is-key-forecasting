@@ -1,11 +1,21 @@
 import logging
 import numpy as np
+import os
+import glob
+import pandas as pd
 
 from tactis.gluon.dataset import get_dataset
 from gluonts.dataset.util import to_pandas
 
 from .base import UnivariateCRPSTask
 from .utils import get_random_window_univar, datetime_to_str
+
+
+from benchmark.data.pems import (
+    load_traffic_series,
+    get_traffic_prediction_length,
+    get_traffic_history_factor,
+)
 
 
 class SensorPeriodicMaintenanceTask(UnivariateCRPSTask):
@@ -104,39 +114,54 @@ class SensorTrendAccumulationTask(UnivariateCRPSTask):
     _skills = UnivariateCRPSTask._skills + ["instruction following", "reasoning: math"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
+    def get_series(
+        self,
+        dataset_name: str = "traffic",
+        target=None,  #  'Speed (mph)' or 'Occupancy (%)'
+    ):
+        if dataset_name == "traffic":
+            if target is None:
+                target = "Occupancy (%)"
+            series = load_traffic_series(target=target, random=self.random)
+        else:
+            raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
+        return series
+
+    def get_prediction_length(self, dataset_name: str = "traffic"):
+        if dataset_name == "traffic":
+            return get_traffic_prediction_length()
+        else:
+            raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
+
+    def get_history_factor(self, dataset_name: str = "traffic"):
+        if dataset_name == "traffic":
+            return get_traffic_history_factor()
+        else:
+            raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
+
     def random_instance(self):
         datasets = ["traffic"]
 
-        # Select a random dataset
         dataset_name = self.random.choice(datasets)
-        dataset = get_dataset(dataset_name, regenerate=False)
 
-        assert len(dataset.train) == len(
-            dataset.test
-        ), "Train and test sets must contain the same number of time series"
-
-        # Get the dataset metadata
-        metadata = dataset.metadata
-
-        # Select a random time series
-        ts_index = self.random.choice(len(dataset.train))
-        full_series = to_pandas(list(dataset.test)[ts_index])
+        full_series = self.get_series(dataset_name=dataset_name)
+        prediction_length = self.get_prediction_length(dataset_name=dataset_name)
 
         # Select a random window
         window = get_random_window_univar(
             full_series,
-            prediction_length=metadata.prediction_length,
-            history_factor=self.random.randint(3, 7),
+            prediction_length=prediction_length,
+            history_factor=self.get_history_factor(dataset_name=dataset_name),
             random=self.random,
         )
 
         # Extract the history and future series
-        history_series = window.iloc[: -metadata.prediction_length]
-        future_series = window.iloc[-metadata.prediction_length :]
+        history_series = window.iloc[:-prediction_length]
+        future_series = window.iloc[-prediction_length:]
 
         if dataset_name == "traffic":
             # Sample a starting point in the first half of the history's index
-            history_series.index = history_series.index.to_timestamp()
+            history_series.index = pd.to_datetime(history_series.index)
             start_point = self.random.choice(
                 history_series.index[: len(history_series) // 2]
             )
@@ -163,7 +188,7 @@ class SensorTrendAccumulationTask(UnivariateCRPSTask):
             ] + np.float32(trend)
 
             # Convert future index to timestamp for consistency
-            future_series.index = future_series.index.to_timestamp()
+            future_series.index = pd.to_datetime(future_series.index)
 
             background = (
                 f"The sensor had a calibration problem starting from {datetime_to_str(start_point)} "

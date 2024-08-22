@@ -10,7 +10,7 @@ from benchmark.utils import get_random_window_univar
 from benchmark.base import UnivariateCRPSTask
 
 # TODO: add to package
-from benchmark.data.traffic_downloader import (
+from benchmark.data.pems import (
     download_traffic_files,
     TRAFFIC_SPLIT_PATH,
     TRAFFIC_METADATA_PATH,

@@ -4,6 +4,9 @@ import requests
 from io import StringIO
 import json
 
+import numpy as np
+import glob
+
 from importlib import resources
 
 import huggingface_hub
@@ -29,6 +32,48 @@ TRAFFIC_SPLIT_PATH = os.path.join(TRAFFIC_STORAGE_PATH, "traffic_split_sensor_da
 datasets.builder.has_sufficient_disk_space = lambda needed_bytes, directory=".": True
 
 
+def get_traffic_prediction_length():
+    return 24
+
+
+def load_traffic_series(
+    target: str = "Occupancy (%)",  #  'Speed (mph)' or 'Occupancy (%)'
+    random: np.random.RandomState = None,
+):
+    """
+    Load a random traffic series from the dataset.
+    Parameters
+    ----------
+    target : str
+        The target variable to load. Either 'Speed (mph)' or 'Occupancy (%)'
+    random : np.random.RandomState
+        Random state to use for reproducibility
+    Returns
+    -------
+    series : pd.Series
+        The traffic series from which a window will be sampled.
+    """
+    if not os.path.exists(TRAFFIC_SPLIT_PATH) or not os.path.exists(
+        TRAFFIC_METADATA_PATH
+    ):
+        download_traffic_files()
+
+    sensor_files = glob.glob(os.path.join(TRAFFIC_SPLIT_PATH, "*.csv"))
+    sensor_file = random.choice(sensor_files)
+
+    dataset = pd.read_csv(sensor_file)
+    dataset["date"] = pd.to_datetime(dataset["Hour"])
+    dataset = dataset.set_index("date")
+
+    series = dataset[target]
+
+    return series
+
+
+def get_traffic_history_factor():
+    return 7
+
+
 def download_raw_traffic_data():
 
     # Create storage directory if it doesn't exist
@@ -44,8 +89,6 @@ def download_raw_traffic_data():
             cache_dir=HF_CACHE_DIR,
             local_dir=TRAFFIC_STORAGE_PATH,
         )
-
-        print(f"Data downloaded and saved to {TRAFFIC_CSV_PATH}")
 
 
 def download_traffic_metadata():
@@ -65,7 +108,6 @@ def split_and_save_wide_dataframes(
     output_dir=TRAFFIC_SPLIT_PATH,
 ):
     if os.path.exists(output_dir):
-        print(f"Data already split and saved to {output_dir}. Skipping split.")
         return
     # Load the combined data
     combined_data = pd.read_csv(input_path, delimiter="\t", header=0)
@@ -78,13 +120,15 @@ def split_and_save_wide_dataframes(
         # Filter the DataFrame for the current sensor_id
         sensor_df = combined_data[combined_data["sensor_id"] == sensor_id]
 
+        # sort the DataFrame by the datetime
+        if not sensor_df["Hour"].is_monotonic_increasing:
+            sensor_df = sensor_df.sort_values("Hour")
+
         # Define the output file name based on sensor_id
         output_file = os.path.join(output_dir, f"sensor_{sensor_id}.csv")
 
         # Save the wide DataFrame to a CSV file
         sensor_df.to_csv(output_file, index=False)
-
-    print(f"Data split and saved to {output_dir}")
 
 
 def download_traffic_files():
