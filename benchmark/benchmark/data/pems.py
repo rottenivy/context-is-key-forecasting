@@ -100,7 +100,7 @@ def split_and_save_wide_dataframes(
         # print(f"Data already split and saved to {output_dir}. Skipping split.")
         return
     # Load the combined data
-    combined_data = pd.read_csv(input_path, delimiter="\t", header=0)
+    combined_data = pd.read_csv(input_path, header=0)
 
     # Create a directory to save the dataframes if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
