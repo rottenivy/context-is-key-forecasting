@@ -428,8 +428,8 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
 
         # Generate and set arbitrary timestamps
         ts = generate_timestamps(num_days=len(X_post_burn_in), start_date="2025-06-01")
-        self.past_time.index = ts[:history_length]
-        self.future_time.index = ts[history_length:]
+        self.past_time.index = pd.to_datetime(ts[:history_length])
+        self.future_time.index = pd.to_datetime(ts[history_length:])
 
         self.graph = W
         self.historical_parents = get_historical_parents(full_graph)
