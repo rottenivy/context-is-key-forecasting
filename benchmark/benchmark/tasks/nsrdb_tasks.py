@@ -218,3 +218,10 @@ class DiffuseHorizontalIrradianceFromCloudStatus(BaseIrradianceFromCloudStatus):
     irradiance_description: str = (
         "the total amount of sun energy (in Watts per squared meter) arriving indirectly on a horizontal surface, ignoring the direct sunlight"
     )
+
+
+__TASKS__ = [
+    GlobalHorizontalIrradianceFromCloudStatus,
+    DirectNormalIrradianceFromCloudStatus,
+    DiffuseHorizontalIrradianceFromCloudStatus,
+]
