@@ -40,6 +40,19 @@ def load_traffic_series(
     target: str = "Occupancy (%)",  #  'Speed (mph)' or 'Occupancy (%)'
     random: np.random.RandomState = None,
 ):
+    """
+    Load a random traffic series from the dataset.
+    Parameters
+    ----------
+    target : str
+        The target variable to load. Either 'Speed (mph)' or 'Occupancy (%)'
+    random : np.random.RandomState
+        Random state to use for reproducibility
+    Returns
+    -------
+    series : pd.Series
+        The traffic series from which a window will be sampled.
+    """
     if not os.path.exists(TRAFFIC_SPLIT_PATH) or not os.path.exists(
         TRAFFIC_METADATA_PATH
     ):
