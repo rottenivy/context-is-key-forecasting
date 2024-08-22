@@ -45,15 +45,6 @@ class CausalUnivariateCRPSTask(UnivariateCRPSTask):
 
         total_edges = num_nodes * (num_nodes - 1) // 2
         total_expected_edges = degree * num_nodes
-
-        if total_expected_edges >= total_edges:
-            print(
-                colored(
-                    f"Warning: For d={num_nodes} nodes and degree={degree}, full graphs will be generated",
-                    "red",
-                )
-            )
-
         p_threshold = float(total_expected_edges) / total_edges
         p_edge = (self.random.rand(num_nodes, num_nodes) < p_threshold).astype(float)
         L = np.tril(p_edge, k=-1)
@@ -414,37 +405,16 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
                     W, history_length, n_samples, noise_type, noise_scale
                 )
 
-                print(cov_desc)
-
                 # Check if X_post_burn_in has NaNs
                 if np.isnan(X_post_burn_in).any():
-                    print(
-                        colored(
-                            f"Has NaN, continuing.... (attempt {attempt} over)", "blue"
-                        )
-                    )
                     continue
 
             except (OverflowError, FloatingPointError):
-                print(
-                    colored(
-                        f"Has OverflowError or FloatingPointError.... (attempt {attempt} over)",
-                        "blue",
-                    )
-                )
                 continue
 
             # Find the max of X_post_burn_in
             if np.max(np.abs(X_post_burn_in)) < 1e4 or max_data_gen_trials <= 0:
                 simulate_flag = False
-
-            else:
-                print(
-                    colored(
-                        f"Has max value greater than 1e4, continuing.... (attempt {attempt} over)",
-                        "blue",
-                    )
-                )
 
         if max_data_gen_trials <= 0:
             raise ValueError(
@@ -469,16 +439,12 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
         background = f"Given are variables X_0 and X_1, where X_0 is a covariate and X_1 is the variable to forecast."
         background += f" Variables are generated from a linear Structural Vector Autoregressive (SVAR) model with additive {noise_type} noise and a noise scale of {noise_scale}, with lag = {L}."
         self.background = background
-        print(colored(f"\nBackground: {background}\n", "green"))
 
         self.scenario = self.get_scenario(
             const_hist_value, history_length, pred_length, cov_desc
         )
         self.constraints = None
-        print(colored(f"Scenario: {self.scenario}\n", "green"))
-
         self.causal_context = self.get_causal_context(W, L)
-        print(colored(f"Causal context: {self.causal_context}\n", "green"))
 
     def get_scenario(self, const_hist_value, history_length, pred_length, cov_desc):
         hist_cov_desc_list, pred_cov_desc_list = cov_desc
