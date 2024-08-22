@@ -38,7 +38,7 @@ def get_traffic_prediction_length():
 
 def load_traffic_series(
     target: str = "Occupancy (%)",  #  'Speed (mph)' or 'Occupancy (%)'
-    random: np.randomState = None,
+    random: np.random.RandomState = None,
 ):
     if not os.path.exists(TRAFFIC_SPLIT_PATH) or not os.path.exists(
         TRAFFIC_METADATA_PATH
