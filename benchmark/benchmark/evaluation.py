@@ -17,7 +17,7 @@ from .utils.cache import ResultCache, CacheMissError
 logger = logging.getLogger("Evaluation")
 
 
-def plot_forecast_univariate(task, samples, path):
+def plot_forecast_univariate(task, samples, path, return_fig=False):
     """
     Plot the first variable of a forecast.
 
@@ -77,7 +77,10 @@ def plot_forecast_univariate(task, samples, path):
 
     fig.savefig(path / "forecast.pdf")
     fig.savefig(path / "forecast.png", bbox_inches="tight")
-    plt.close(fig)
+    if return_fig:
+        return fig
+    else:
+        plt.close(fig)
 
 
 def save_context(task, path):
