@@ -13,7 +13,7 @@ import pandas as pd
 from collections import defaultdict
 from pathlib import Path
 
-from benchmark.baselines.gpt_processes import GPTForecaster
+from benchmark.baselines.crazycast import CrazyCast
 from benchmark.baselines.lag_llama import lag_llama
 from benchmark.baselines.llm_processes import LLMPForecaster
 from benchmark.baselines.naive import oracle_baseline, random_baseline
@@ -97,11 +97,11 @@ def experiment_statsmodels(
     )
 
 
-def experiment_gpt(
+def experiment_crazycast(
     llm, use_context, n_samples, output_folder, max_parallel=1, skip_cache_miss=False
 ):
     """
-    GPT baselines
+    CrazyCast baselines
 
     """
     # Costs per 1000 tokens
@@ -110,22 +110,23 @@ def experiment_gpt(
         "gpt-35-turbo": {"input": 0.002, "output": 0.002},
         "gpt-3.5-turbo": {"input": 0.003, "output": 0.006},  # OpenAI API
         "gpt-4o-mini": {"input": 0.00015, "output": 0.0006},  # OpenAI API
+        "llama-3.1-405b-instruct": {"input": 0.0, "output": 0.0},  # Toolkit
     }
     if llm not in openai_costs:
         raise ValueError(f"Invalid model: {llm} -- Not in cost dictionary")
 
-    gpt_forecaster = GPTForecaster(
+    cc_forecaster = CrazyCast(
         model=llm, use_context=use_context, token_cost=openai_costs[llm]
     )
     results = evaluate_all_tasks(
-        gpt_forecaster,
+        cc_forecaster,
         n_samples=n_samples,
-        output_folder=f"{output_folder}/{gpt_forecaster.cache_name}",
+        output_folder=f"{output_folder}/{cc_forecaster.cache_name}",
         max_parallel=max_parallel,
         skip_cache_miss=skip_cache_miss,
     )
-    total_cost = gpt_forecaster.total_cost
-    del gpt_forecaster
+    total_cost = cc_forecaster.total_cost
+    del cc_forecaster
 
     return results, {"total_cost": total_cost}
 
