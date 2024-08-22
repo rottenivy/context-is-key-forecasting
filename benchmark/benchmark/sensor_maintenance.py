@@ -11,10 +11,10 @@ from .base import UnivariateCRPSTask
 from .utils import get_random_window_univar, datetime_to_str
 
 
-from benchmark.data.traffic_downloader import (
-    download_traffic_files,
-    TRAFFIC_SPLIT_PATH,
-    TRAFFIC_METADATA_PATH,
+from benchmark.data.pems import (
+    load_traffic_series,
+    get_traffic_prediction_length,
+    get_traffic_history_factor,
 )
 
 
