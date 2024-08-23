@@ -18,7 +18,7 @@ class TrafficForecastTaskwithHolidaysInPredictionWindow(UnivariateCRPSTask):
     Forecasting task based on the Monash traffic dataset, with frequency hourly, where the history is 7 days (168 hours/timesteps) and prediction is 3 days (72 hours/timesteps), and windows are chosen such that there is a holiday in the middle of the prediction window.
     """
 
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(self, seed: int = None, fixed_config: Optional[dict] = None):
         # Holidays with observable differences from the preceeding 7 days
@@ -40,34 +40,9 @@ class TrafficForecastTaskwithHolidaysInPredictionWindow(UnivariateCRPSTask):
         super().__init__(seed=seed, fixed_config=fixed_config)
 
     def random_instance(self):
-        dataset = get_dataset("traffic", regenerate=False)
-
-        # Select a random time series
-        ts_index = self.random.choice(len(dataset.test))
-        full_series = to_pandas(list(dataset.test)[ts_index])
-
-        # The traffic dataset is for the whole years of 2015 and 2016, and is hourly.
-        # Get rid of the first (potentially) incomplete week, to always start on Monday.
-        first_day_of_week = full_series.index[0].day_of_week
-        full_series = full_series.iloc[(7 - first_day_of_week) * 24 :]
-
-        # Select a random holiday
-        holiday_date, holiday_name = self.holidays[
-            self.random.choice(len(self.holidays))
-        ]
-        holiday_datetime = pd.to_datetime(holiday_date)
-        holiday_index = full_series.index.get_loc(holiday_datetime)
-
-        # Prediction could start with this or end with this (both of which have length 2), or contain this in the middle (length 3)
-        # Here I implement starting with
-        # History could be as long as possible
-        history_series = full_series.iloc[
-            holiday_index - (24 * 8) : holiday_index - (24 * 1)
-        ]
-        future_series = full_series.iloc[
-            holiday_index - (24 * 1) : holiday_index + (24 * 2)
-        ]
-
+        history_series, future_series, holiday_date, holiday_name = (
+            self.find_interesting_series()
+        )
         background = self.get_background(future_series, holiday_date, holiday_name)
 
         # Instantiate the class variables
@@ -79,6 +54,45 @@ class TrafficForecastTaskwithHolidaysInPredictionWindow(UnivariateCRPSTask):
 
         # RoI is the holiday
         self.region_of_interest = slice(24, 48)
+
+    def find_interesting_series(self):
+        """
+        Performs series selection, to select series (i.e. highways) where the traffic is much lesser on the day of the holiday
+        """
+        dataset = get_dataset("traffic", regenerate=False)
+
+        assert len(dataset.train) == len(
+            dataset.test
+        ), "Train and test sets must contain the same number of time series"
+
+        window_is_interesting = False
+        num_iters = 0
+        while not window_is_interesting:
+            # Select a random time series
+            ts_index = self.random.choice(len(dataset.test))
+            full_series = to_pandas(list(dataset.test)[ts_index])
+
+            # The traffic dataset is for the whole years of 2015 and 2016, and is hourly.
+            # Get rid of the first (potentially) incomplete week, to always start on Monday.
+            first_day_of_week = full_series.index[0].day_of_week
+            full_series = full_series.iloc[(7 - first_day_of_week) * 24 :]
+
+            # Select a random holiday
+            holiday_date, holiday_name = self.holidays[
+                self.random.choice(len(self.holidays))
+            ]
+            holiday_datetime = pd.to_datetime(holiday_date)
+            holiday_index = full_series.index.get_loc(holiday_datetime)
+
+            # Here I implement the case where the prediction window starts with the holiday
+            history_series = full_series.iloc[holiday_index - (24 * 7) : holiday_index]
+            future_series = full_series.iloc[holiday_index : holiday_index + (24 * 2)]
+            holiday_series = full_series.iloc[holiday_index : holiday_index + 24]
+            if holiday_series.mean() <= 0.7 * history_series.mean():
+                window_is_interesting = True
+            num_iters += 1
+
+        return history_series, future_series, holiday_date, holiday_name
 
     @abstractmethod
     def get_background(self, future_series, holiday_date, holiday_name):
@@ -97,10 +111,10 @@ class ImplicitTrafficForecastTaskwithHolidaysInPredictionWindow(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_i"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def get_background(self, future_series, holiday_date, holiday_name):
-        background = "This series contains the road occupancy rates on a freeway in the San Francisco Bay area."
+        background = "This series contains the road occupancy rates on a freeway in the San Francisco Bay area. Note that traffic on this freeway typically reduces on holidays."
         return background
 
 
@@ -113,11 +127,11 @@ class ExplicitTrafficForecastTaskwithHolidaysInPredictionWindow(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_cov"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def get_background(self, future_series, holiday_date, holiday_name):
         background = "This series contains the road occupancy rates on a freeway in the San Francisco Bay area."
-        background += f" Note that {holiday_date} is a holiday due to {holiday_name}."
+        background += f" Note that {holiday_date} is a holiday due to {holiday_name}. Note that traffic on this freeway typically reduces on holidays."
         return background
 
 
@@ -130,7 +144,7 @@ class ExplicitWithDaysTrafficForecastTaskwithHolidaysInPredictionWindow(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_cov"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def get_background(self, future_series, holiday_date, holiday_name):
         background = "This series contains the road occupancy rates on a freeway in the San Francisco Bay area."
@@ -142,7 +156,7 @@ class ExplicitWithDaysTrafficForecastTaskwithHolidaysInPredictionWindow(
             background += f"{day_name}, "
             idx += 24
         background = background[:-2] + "."
-        background += f" Note that {holiday_date} is a holiday due to {holiday_name}."
+        background += f" Note that {holiday_date} is a holiday due to {holiday_name}. Note that traffic on this freeway typically reduces on holidays."
         return background
 
 
@@ -155,7 +169,7 @@ class ExplicitWithDatesAndDaysTrafficForecastTaskwithHolidaysInPredictionWindow(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_cov"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def get_background(self, future_series, holiday_date, holiday_name):
         background = "This series contains the road occupancy rates on a freeway in the San Francisco Bay area."
@@ -168,7 +182,7 @@ class ExplicitWithDatesAndDaysTrafficForecastTaskwithHolidaysInPredictionWindow(
             background += f"{day_name} {date}, "
             idx += 24
         background = background[:-2] + "."
-        background += f" Note that {holiday_date} is a holiday due to {holiday_name}."
+        background += f" Note that {holiday_date} is a holiday due to {holiday_name}. Note that traffic on this freeway typically reduces on holidays."
         return background
 
 
@@ -362,7 +376,7 @@ __TASKS__ = [
     ExplicitTrafficForecastTaskwithHolidaysInPredictionWindow,
     ExplicitWithDaysTrafficForecastTaskwithHolidaysInPredictionWindow,
     ExplicitWithDatesAndDaysTrafficForecastTaskwithHolidaysInPredictionWindow,
-    ExplicitTrafficForecastTaskwithHolidaysInPredictionWindowAndPastYearAnalogy,
-    ExplicitWithDaysTrafficForecastTaskwithHolidaysInPredictionWindowAndPastYearAnalogy,
-    ExplicitWithDatesAndDaysTrafficForecastTaskwithHolidaysInPredictionWindowAndPastYearAnalogy,
+    # ExplicitTrafficForecastTaskwithHolidaysInPredictionWindowAndPastYearAnalogy,
+    # ExplicitWithDaysTrafficForecastTaskwithHolidaysInPredictionWindowAndPastYearAnalogy,
+    # ExplicitWithDatesAndDaysTrafficForecastTaskwithHolidaysInPredictionWindowAndPastYearAnalogy,
 ]
