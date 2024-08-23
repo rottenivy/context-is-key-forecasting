@@ -17,7 +17,7 @@ class ElectricityIncreaseInPredictionTask(UnivariateCRPSTask):
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def random_instance(self):
         datasets = ["electricity_hourly"]
@@ -71,9 +71,7 @@ class ElectricityIncreaseInPredictionTask(UnivariateCRPSTask):
             # Convert future index to timestamp for consistency
             history_series.index = history_series.index.to_timestamp()
 
-            background = (
-                f"This is the electricity consumption recorded in Kilowatt (kW)."
-            )
+            background = f"This is the electricity consumption recorded in Kilowatt (kW) in city A."
             scenario = self.get_scenario(
                 spike_start_date, spike_duration, spike_magnitude
             )
@@ -85,7 +83,7 @@ class ElectricityIncreaseInPredictionTask(UnivariateCRPSTask):
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()
         self.constraints = None
-        self.background = None
+        self.background = background
         self.scenario = scenario
 
         # ROI metric parameters
@@ -94,14 +92,105 @@ class ElectricityIncreaseInPredictionTask(UnivariateCRPSTask):
         )
 
     def get_scenario(self, spike_start_date, spike_duration, spike_magnitude):
-        return f"Suppose that there is a heat wave from {datetime_to_str(spike_start_date)} for {spike_duration} {'hour' if spike_duration == 1 else 'hours'}, leading to excessive use of air conditioning, and {spike_magnitude} times the usual electricity being consumed."
+        return f"Suppose that there is a heat wave in city A from {datetime_to_str(spike_start_date)} for {spike_duration} {'hour' if spike_duration == 1 else 'hours'} in city A, leading to excessive use of air conditioning, and {spike_magnitude} times the usual electricity being consumed."
+
+
+class ElectricityIncreaseInPredictionWithDistractorText(
+    ElectricityIncreaseInPredictionTask
+):
+    """
+    ElectricityIncreaseInPredictionTask with 3 different distractors in the context. The model would have to retrieve the right context to succeed in this task.
+    """
+
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + [
+        "instruction following",
+        "retrieval: context",
+    ]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def get_scenario(self, spike_start_date, spike_duration, spike_magnitude):
+        relevant_context = f"Suppose that there is a heat wave in city A from {datetime_to_str(spike_start_date)} for {spike_duration} {'hour' if spike_duration == 1 else 'hours'}, leading to excessive use of air conditioning, and {spike_magnitude} times the usual electricity being consumed."
+
+        distractor_types = [1, 2, 3]
+        distractor_type = self.random.choice(distractor_types)
+        if distractor_type == 1:
+            distractor_factors = [3, 4, 5, 6, 7, 8]
+            distractor_factor = self.random.choice(distractor_factors)
+            distractor_text = f"There was a festival in neighbouring cities B and C that resulted in {spike_magnitude+distractor_factor} times the usual electricity being consumed there. But this did not affect electricity consumption in city A."
+        elif distractor_type == 2:
+            spike_month = spike_start_date.month
+            distractor_factors = [3, 4, 5, 6, 7, 8]
+            distractor_factor = self.random.choice(distractor_factors)
+            distractor_text = f"Historically, over the past 3 years, there have been patterns of increased electricity usage due to extreme cold weather in city A in the month of {spike_month}, decreasing electricity consumption by {spike_magnitude+distractor_factor} times the usual electricity being consumed there. But this year, the cold wave is not expected to happen."  # One concern with this is that both the history and the scenario probably belong to the same month, so this text may not affect the model
+        elif distractor_type == 3:
+            dip_percentages = [75, 85, 95]
+            dip_percentage = self.random.choice(dip_percentages)
+            distractor_text = f"A brief technical issue in the electricity grid caused a major dip of {dip_percentage}% in electricity consumption 2 weeks ago. This issue is not expected to happen again this week."
+
+        distractor_context_order = self.random.choice(
+            [1, 2]
+        )  # Put relevant context before or after the distractor
+        if distractor_context_order == 1:
+            return " ".join([distractor_text, relevant_context])
+        elif distractor_context_order == 2:
+            return " ".join([relevant_context, distractor_text])
+
+
+class ElectricityIncreaseInPredictionWithDistractorWithDates(
+    ElectricityIncreaseInPredictionTask
+):
+    """
+    ElectricityIncreaseInPredictionTask with a distractor with the same dates in the context. The model would have to retrieve the right context to succeed in this task.
+    """
+
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + [
+        "instruction following",
+        "retrieval: context",
+    ]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def get_scenario(self, spike_start_date, spike_duration, spike_magnitude):
+        distractor_types = [1, 2]
+        distractor_type = self.random.choice(distractor_types)
+
+        if distractor_type == 1:
+            distractor_factors = [3, 4, 5, 6, 7, 8]
+            distractor_factor = self.random.choice(distractor_factors)
+            distractor_text = f"There was a festival in neighbouring cities B and C that resulted in {spike_magnitude+distractor_factor} times the usual electricity being consumed there from {datetime_to_str(spike_start_date)} for {spike_duration} {'hour' if spike_duration == 1 else 'hours'}. But this did not affect electricity consumption in city A."
+        elif distractor_type == 2:
+            dip_percentages = [75, 85, 95]
+            dip_percentage = self.random.choice(dip_percentages)
+            distractor_text = f"A brief technical issue in the electricity grid in a nearby city caused a major dip of {dip_percentage}% from {datetime_to_str(spike_start_date)} for {spike_duration} {'hour' if spike_duration == 1 else 'hours'}. This issue has affected many nearby cities, but not this city."
+        return (
+            distractor_text
+            + f"Suppose that there is a heat wave in city A from {datetime_to_str(spike_start_date)} for {spike_duration} {'hour' if spike_duration == 1 else 'hours'}, leading to excessive use of air conditioning, and {spike_magnitude} times the usual electricity being consumed."
+        )
+
+
+class ElectricityIncreaseInPredictionWithSplitContext(
+    ElectricityIncreaseInPredictionTask
+):
+    """
+    ElectricityIncreaseInPredictionTask with a context providing the wrong magnitude of the spike, but correcting it later, providing the wrong magnitude of the spike.
+    The model would need to just follow instructions, but it would have to link instructions together to succeed.
+    """
+
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + ["instruction following"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def get_scenario(self, spike_start_date, spike_duration, spike_magnitude):
+        distractor_factors = [3, 4, 5, 6, 7, 8]
+        distractor_factor = self.random.choice(distractor_factors)
+        return f"Suppose that there is a heat wave in city A from {datetime_to_str(spike_start_date)} for {spike_duration} {'hour' if spike_duration == 1 else 'hours'}, which would typically lead to excessive use of air conditioning, and {spike_magnitude+distractor_factor} times the usual electricity being consumed. But in this case, residents sought to conserve energy and used lesser air conditioning, resulting in excessive usage of only {spike_magnitude} times the usual electricity."
 
 
 class ShortNewsElectricityIncreaseInPredictionTask(ElectricityIncreaseInPredictionTask):
     """
     A version of the ElectricityIncreaseInPredictionTask where the relevent
     information must be retrieved from within a short news article provided in context.
-
     """
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
@@ -123,7 +212,6 @@ class MediumNewsElectricityIncreaseInPredictionTask(
     """
     A version of the ElectricityIncreaseInPredictionTask where the relevent
     information must be retrieved from within a medium length news article provided in context.
-
     """
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
@@ -143,7 +231,6 @@ class LongNewsElectricityIncreaseInPredictionTask(ElectricityIncreaseInPredictio
     """
     A version of the ElectricityIncreaseInPredictionTask where the relevent
     information must be retrieved from within a long news article provided in context.
-
     """
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
@@ -161,6 +248,9 @@ class LongNewsElectricityIncreaseInPredictionTask(ElectricityIncreaseInPredictio
 
 __TASKS__ = [
     ElectricityIncreaseInPredictionTask,
+    ElectricityIncreaseInPredictionWithDistractorText,
+    ElectricityIncreaseInPredictionWithDistractorWithDates,
+    ElectricityIncreaseInPredictionWithSplitContext,
     ShortNewsElectricityIncreaseInPredictionTask,
     MediumNewsElectricityIncreaseInPredictionTask,
     LongNewsElectricityIncreaseInPredictionTask,
