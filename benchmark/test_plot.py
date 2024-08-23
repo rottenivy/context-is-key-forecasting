@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from benchmark.predictable_grocer_shocks import PredictableGrocerPersistentShockUnivariateTask
-from benchmark.tasks.causal_chambers import ExplicitPressureFromSpeedTask
+from benchmark.tasks.causal_chambers import ExplicitPressureFromSpeedTask, SpeedFromLoadTask
 from benchmark.baselines.statsmodels import (
     ExponentialSmoothingForecaster,
 )
@@ -18,6 +18,18 @@ results = evaluate_task(
     output_folder=Path("./plots/ExplicitPressureFromSpeedTask/"),
 )
 
+print(results)
+
+results = evaluate_task(
+    SpeedFromLoadTask,
+    5,
+    model,
+    10,
+    output_folder=Path("./plots/SpeedFromLoadTask/"),
+)
+
+print(results)
+
 results = evaluate_task(
     PredictableGrocerPersistentShockUnivariateTask,
     0,
@@ -25,3 +37,5 @@ results = evaluate_task(
     10,
     output_folder=Path("./plots/PredictableGrocerPersistentShockUnivariateTask/"),
 )
+
+print(results)
