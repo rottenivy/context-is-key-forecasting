@@ -1,7 +1,12 @@
 from pathlib import Path
 
-from benchmark.predictable_grocer_shocks import PredictableGrocerPersistentShockUnivariateTask
-from benchmark.tasks.causal_chambers import ExplicitPressureFromSpeedTask, SpeedFromLoadTask
+from benchmark.predictable_grocer_shocks import (
+    PredictableGrocerPersistentShockUnivariateTask,
+)
+from benchmark.tasks.causal_chambers import (
+    ExplicitPressureFromSpeedTask,
+    SpeedFromLoadTask,
+)
 from benchmark.baselines.statsmodels import (
     ExponentialSmoothingForecaster,
 )

@@ -66,8 +66,20 @@ def plot_forecast_univariate(task, samples, path):
 
     target_name = task.past_time.columns[-1]
     ax.set_ylim(
-        np.min([np.min(task.past_time[target_name]), np.min(task.future_time[target_name]), np.min(samples)]),
-        np.max([np.max(task.past_time[target_name]), np.max(task.future_time[target_name]), np.max(samples)]),
+        np.min(
+            [
+                np.min(task.past_time[target_name]),
+                np.min(task.future_time[target_name]),
+                np.min(samples),
+            ]
+        ),
+        np.max(
+            [
+                np.max(task.past_time[target_name]),
+                np.max(task.future_time[target_name]),
+                np.max(samples),
+            ]
+        ),
     )
 
     handles, labels = ax.get_legend_handles_labels()
