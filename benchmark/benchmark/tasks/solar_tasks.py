@@ -21,7 +21,7 @@ class BaseHalfDaySolarForecastTask(UnivariateCRPSTask):
     learns the daily shape of the signal.
     """
 
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def random_instance(self):
         dataset = get_dataset("solar_10_minutes", regenerate=False)
