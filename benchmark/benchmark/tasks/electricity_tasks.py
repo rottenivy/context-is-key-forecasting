@@ -74,7 +74,9 @@ class ElectricityIncreaseInPredictionTask(UnivariateCRPSTask):
             background = (
                 f"This is the electricity consumption recorded in Kilowatt (kW)."
             )
-            scenario = f"Suppose that there is a heat wave from {datetime_to_str(spike_start_date)} for {spike_duration} {'hour' if spike_duration == 1 else 'hours'}, leading to excessive use of air conditioning, and {spike_magnitude} times the usual electricity being consumed."
+            scenario = self.get_scenario(
+                spike_start_date, spike_duration, spike_magnitude
+            )
 
         else:
             raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
@@ -91,5 +93,75 @@ class ElectricityIncreaseInPredictionTask(UnivariateCRPSTask):
             spike_start_point, spike_start_point + spike_duration
         )
 
+    def get_scenario(self, spike_start_date, spike_duration, spike_magnitude):
+        return f"Suppose that there is a heat wave from {datetime_to_str(spike_start_date)} for {spike_duration} {'hour' if spike_duration == 1 else 'hours'}, leading to excessive use of air conditioning, and {spike_magnitude} times the usual electricity being consumed."
 
-__TASKS__ = [ElectricityIncreaseInPredictionTask]
+
+class ShortNewsElectricityIncreaseInPredictionTask(ElectricityIncreaseInPredictionTask):
+    """
+    A version of the ElectricityIncreaseInPredictionTask where the relevent
+    information must be retrieved from within a short news article provided in context.
+
+    """
+
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + [
+        "instruction following",
+        "retrieval: context",
+    ]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def get_scenario(self, spike_start_date, spike_duration, spike_magnitude):
+        # This news article was generated with the assistance of Claude
+        scenario = f"A heatwave struck the city, which began on {datetime_to_str(spike_start_date)} and lasted for approximately {spike_duration} {'hour' if spike_duration == 1 else 'hours'}, saw temperatures soar to unprecedented levels. According to the city's electricity provider, power consumption during the peak of the heatwave reached approximately {spike_magnitude} times the typical usage for this time of year."
+        return scenario
+
+
+class MediumNewsElectricityIncreaseInPredictionTask(
+    ElectricityIncreaseInPredictionTask
+):
+    """
+    A version of the ElectricityIncreaseInPredictionTask where the relevent
+    information must be retrieved from within a medium length news article provided in context.
+
+    """
+
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + [
+        "instruction following",
+        "retrieval: context",
+    ]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def get_scenario(self, spike_start_date, spike_duration, spike_magnitude):
+        # This news article was generated with the assistance of Claude
+        scenario = f"A sudden and intense heatwave struck the city, causing a dramatic surge in electricity consumption as residents sought refuge from the scorching temperatures. The extreme weather event, which began on {datetime_to_str(spike_start_date)} and lasted for approximately {spike_duration} {'hour' if spike_duration == 1 else 'hours'}, saw temperatures soar to unprecedented levels. In response, citizens across the metropolitan area turned to their air conditioning units en masse, leading to a significant strain on the local power grid. According to the city's electricity provider, power consumption during the peak of the heatwave reached approximately {spike_magnitude} times the typical usage for this time of year. \nFor now, citizens are encouraged to stay hydrated, check on vulnerable neighbors, and use air conditioning responsibly as the community works together to beat the heat."
+        return scenario
+
+
+class LongNewsElectricityIncreaseInPredictionTask(ElectricityIncreaseInPredictionTask):
+    """
+    A version of the ElectricityIncreaseInPredictionTask where the relevent
+    information must be retrieved from within a long news article provided in context.
+
+    """
+
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + [
+        "instruction following",
+        "retrieval: context",
+    ]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def get_scenario(self, spike_start_date, spike_duration, spike_magnitude):
+        # This news article was generated with the assistance of Claude
+        scenario = f"A sudden and intense heatwave struck the city, causing a dramatic surge in electricity consumption as residents sought refuge from the scorching temperatures. The extreme weather event, which began on {datetime_to_str(spike_start_date)} and lasted for approximately {spike_duration} {'hour' if spike_duration == 1 else 'hours'}, saw temperatures soar to unprecedented levels. In response, citizens across the metropolitan area turned to their air conditioning units en masse, leading to a significant strain on the local power grid.According to the city's electricity provider, power consumption during the peak of the heatwave reached approximately {spike_magnitude} times the typical usage for this time of year. \"We've never seen anything quite like this,\" said Jane Smith, spokesperson for PowerCity Utilities. \"The sudden spike in demand pushed our systems to their limits.\" \nAs the city recovers from this unprecedented power surge, experts are already discussing long-term solutions to manage similar situations in the future. These may include upgrades to the power grid, incentives for energy-efficient appliances, and the development of more robust emergency response protocols. \nFor now, citizens are encouraged to stay hydrated, check on vulnerable neighbors, and use air conditioning responsibly as the community works together to beat the heat."
+        return scenario
+
+
+__TASKS__ = [
+    ElectricityIncreaseInPredictionTask,
+    ShortNewsElectricityIncreaseInPredictionTask,
+    MediumNewsElectricityIncreaseInPredictionTask,
+    LongNewsElectricityIncreaseInPredictionTask,
+]
