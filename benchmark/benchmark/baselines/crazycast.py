@@ -5,6 +5,10 @@ Open AI based LLM Process
 
 import logging
 import numpy as np
+import os
+import requests
+
+from types import SimpleNamespace
 
 from .base import Baseline
 from ..config import (
@@ -16,12 +20,70 @@ from ..config import (
 from .utils import extract_html_tags
 
 
-logger = logging.getLogger("GPT Processes")
+logger = logging.getLogger("CrazyCast")
 
 
-class GPTForecaster(Baseline):
+def dict_to_obj(data):
+    if isinstance(data, dict):
+        # Recursively convert dictionary values
+        return SimpleNamespace(
+            **{key: dict_to_obj(value) for key, value in data.items()}
+        )
+    elif isinstance(data, list):
+        # Recursively convert each item in the list
+        return [dict_to_obj(item) for item in data]
+    else:
+        # Return the data if it's neither a dict nor a list
+        return data
+
+
+def llama_3_1_405b_instruct_client(
+    model, messages, n=1, max_tokens=1000, temperature=0.7
+):
     """
-    A simple baseline that uses any GPT model to produce forecastss
+    Request completions from the Llama 3.1 405B Instruct model hosted on Toolkit
+
+    Parameters:
+    -----------
+    messages: list
+        The list of messages to send to the model (same format as OpenAI API)
+    max_tokens: int, default=1000
+        The maximum number of tokens to use in the completion
+    temperature: float, default=0.7
+        The temperature to use in the completion
+    n: int, default=1
+        The number of completions to generate
+
+    """
+
+    headers = {
+        "Authorization": f"Bearer {os.environ['LLAMA_31_405B_TOOLKIT_TOKEN']}",
+        "Content-Type": "application/json",
+    }
+
+    payload = {
+        "model": "meta-llama/Meta-Llama-3.1-405B-Instruct-FP8",
+        "messages": messages,
+        "max_tokens": max_tokens,
+        "temperature": temperature,
+        "n": n,
+    }
+
+    response = requests.post(
+        "https://snow-research-tapes-vllm_llama405b.job.toolkit-sp.yul201.service-now.com/v1/chat/completions",
+        headers=headers,
+        json=payload,
+        verify=False,
+        timeout=600,
+    )
+    response.raise_for_status()
+
+    return dict_to_obj(response.json())
+
+
+class CrazyCast(Baseline):
+    """
+    A simple baseline that uses any instruction-tuned LLM to produce forecastss
 
     Parameters:
     -----------
@@ -67,32 +129,39 @@ class GPTForecaster(Baseline):
         Setup the OpenAI client based on configuration preferences
 
         """
-        if OPENAI_USE_AZURE:
-            logger.info("Using Azure OpenAI client.")
-            from openai import AzureOpenAI
+        if self.model.startswith("gpt"):
+            if OPENAI_USE_AZURE:
+                logger.info("Using Azure OpenAI client.")
+                from openai import AzureOpenAI
 
-            client = AzureOpenAI(
-                api_key=OPENAI_API_KEY,
-                api_version=OPENAI_API_VERSION,
-                azure_endpoint=OPENAI_AZURE_ENDPOINT,
-            )
+                client = AzureOpenAI(
+                    api_key=OPENAI_API_KEY,
+                    api_version=OPENAI_API_VERSION,
+                    azure_endpoint=OPENAI_AZURE_ENDPOINT,
+                ).chat.completions.create
+            else:
+                logger.info("Using standard OpenAI client.")
+                from openai import OpenAI
+
+                client = OpenAI(api_key=OPENAI_API_KEY).chat.completions.create
+
+        elif self.model == "llama-3.1-405b-instruct":
+            return llama_3_1_405b_instruct_client
+
         else:
-            logger.info("Using standard OpenAI client.")
-            from openai import OpenAI
-
-            client = OpenAI(api_key=OPENAI_API_KEY)
+            raise NotImplementedError(f"Model {self.model} not supported.")
 
         return client
 
     def make_prompt(self, task_instance, max_digits=6):
         """
-        Generate the prompt for the GPT model
+        Generate the prompt for the model
 
         Notes:
         - Assumes a uni-variate time series
 
         """
-        logger.info("Building prompt for GPT model.")
+        logger.info("Building prompt for model.")
 
         # Extract time series data
         hist_time = task_instance.past_time.index.strftime("%Y-%m-%d %H:%M:%S").values
@@ -147,7 +216,7 @@ Example:
 
     def __call__(self, task_instance, n_samples):
         """
-        Infer forecasts from the GPT model
+        Infer forecasts from the model
 
         Parameters:
         -----------
@@ -159,7 +228,7 @@ Example:
             The number of rejection sampling steps
         batch_size_on_retry: int
             The batch size to use on retries. This is useful to avoid asking for way too many samples
-            from the openai API.
+            from the API.
 
         Returns:
         --------
@@ -183,8 +252,8 @@ Example:
         valid_forecasts = []
         n_retries = self.n_retries
         while len(valid_forecasts) < n_samples and n_retries > 0:
-            logger.info(f"Requesting forecast of {batch_size} samples from GPT model.")
-            chat_completion = self.client.chat.completions.create(
+            logger.info(f"Requesting forecast of {batch_size} samples from the model.")
+            chat_completion = self.client(
                 model=self.model, n=batch_size, messages=messages
             )
             total_tokens["input"] += chat_completion.usage.prompt_tokens

@@ -1,3 +1,0 @@
-[
-    {"label": "GPT-4o-mini (no ctx)", "method": "gpt", "llm": "gpt-4o-mini", "use_context": false}
-]
