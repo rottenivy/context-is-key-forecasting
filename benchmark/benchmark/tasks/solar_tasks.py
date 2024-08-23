@@ -32,7 +32,7 @@ class BaseHalfDaySolarForecastTask(UnivariateCRPSTask):
 
         # The solar_10_minutes dataset is for the whole year of 2006.
         # Select a day for the forecast between 2006-07-01 (182nd day) and 2006-12-31 (365th day).
-        day = self.random.randint(low=181, high=366)
+        day = self.random.randint(low=181, high=365)
         # Select the start of the forecast period, from 10:30 to 13:30.
         forecast_time = self.random.randint(low=10 * 6 + 3, high=13 * 6 + 3 + 1)
         # history = first 12 hours of the day, target = second 12 hours of the day
