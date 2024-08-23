@@ -12,4 +12,3 @@ datasets
 causalchamber==0.1.1
 diskcache
 termcolor
-pathlib==1.0.1
