@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Literal
 import numpy as np
 
 from .constraints import Constraint
@@ -23,8 +23,9 @@ def threshold_weighted_crps(
     region_of_interest=None,
     roi_weight: float = 0.5,
     constraint: Optional[Constraint] = None,
-    violation_factor: float = 5.0,
-    log_transform: bool = True,
+    violation_factor: float = 10.0,
+    violation_function: Literal["linear", "exponential"] = "linear",
+    log_transform: bool = False,
 ) -> dict[str, float]:
     """
     Compute the scaled twCRPS, which adds a penalty term when constraints are violated.
@@ -37,7 +38,8 @@ def threshold_weighted_crps(
     where the multivariate CRPS is computed as the sum of the univariate CRPS over all dimensions,
     and v(z) is an arbitrary transform.
     In our case, we select the transform to be:
-    v(z) = [z / length(z), exp(violation_factor * constraint violation) - 1].
+    v(z) = [z / length(z), violation_function(violation_factor * constraint violation)].
+    With violation_function(z) = z by default.
 
     For the scaling, we divide the CRPS by the range of values in the target.
 
@@ -56,8 +58,10 @@ def threshold_weighted_crps(
         The weight to apply to the region of interest.
     constraint: Constraint, optional
         A constraint whose violation must be checked.
-    violation_factor: float, default 5.0
-        A multiplicative factor to the violation of the constraint, before sending to the exponential.
+    violation_factor: float, default 10.0
+        A multiplicative factor to the violation of the constraint, before sending it to the violation_function.
+    violation_function: "linear" or "exponential", default "linear"
+        Which function to use to transform the constraint violation, before sending it to the CRPS.
     log_transform: bool, default False
         If set to true, the metric is transformed using log(1 + m).
 
@@ -92,13 +96,18 @@ def threshold_weighted_crps(
 
     if constraint:
         violation_amount = constraint.violation(samples=forecast, scaling=scaling)
-        violation_exp = np.exp(violation_factor * violation_amount) - 1
+        if violation_function == "linear":
+            violation_func = violation_factor * violation_amount
+        elif violation_function == "exponential":
+            violation_func = np.exp(violation_factor * violation_amount) - 1
+        else:
+            raise RuntimeError(f"Unknown violation_function = {violation_function}")
         # The target is set to zero, since we make sure that the ground truth always satisfy the constraints
         # The crps code assume multivariate input, so add a dummy dimension
-        violation_crps = crps(target=np.zeros(1), samples=violation_exp[:, None])[0]
+        violation_crps = crps(target=np.zeros(1), samples=violation_func[:, None])[0]
     else:
         violation_amount = np.zeros(forecast.shape[0])
-        violation_exp = np.zeros(forecast.shape[0])
+        violation_func = np.zeros(forecast.shape[0])
         violation_crps = 0.0
 
     raw_metric = scaling * crps_value + violation_crps

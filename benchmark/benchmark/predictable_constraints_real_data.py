@@ -198,7 +198,7 @@ class OraclePredUnivariateConstraintsTask(UnivariateCRPSTask):
         context: str
             Synthetic context that describes the constraints
         """
-        parts = ["Suppose that in the forecast,"]
+        parts = ["Suppose that in the forecast"]
 
         for constraint, value in constraints.items():
             if constraint == "min":
