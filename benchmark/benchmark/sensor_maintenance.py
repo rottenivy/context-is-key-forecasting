@@ -272,9 +272,9 @@ class SensorSpikeTask(UnivariateCRPSTask):
             )  # Arbitrarily picked from 1,2,3
             # Arbitrary way to select a start date: sort the values of future_series (excluding the last spike_duration+1 points), pick it from the largest 5 values
             spike_start_point = self.random.choice(
-                np.argsort(future_series.values[: -(spike_duration + 1)])[-5:][::-1]
+                np.argsort(history_series.values[: -(spike_duration + 1)])[-5:][::-1]
             )
-            spike_start_date = future_series.index[spike_start_point]
+            spike_start_date = history_series.index[spike_start_point]
             spike_type = self.random.choice([-1, 1])  # Upward spike or downward spike
             spike_magnitude = (
                 self.random.choice([2, 3]) * history_series.max()
