@@ -180,9 +180,9 @@ Constraints:
     #     # Clean up CPU/GPU memory
     #     del self.model
     #     del self.tokenizer
-        # if torch.cuda.is_available():
-        #     torch.cuda.empty_cache()
-        # gc.collect()
+    # if torch.cuda.is_available():
+    #     torch.cuda.empty_cache()
+    # gc.collect()
 
     @property
     def cache_name(self):
