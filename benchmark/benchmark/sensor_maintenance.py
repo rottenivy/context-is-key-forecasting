@@ -266,7 +266,7 @@ class SensorSpikeTask(UnivariateCRPSTask):
 
         if dataset_name == "traffic":
             # Sample a starting point in the first half of the history's index
-            history_series.index = history_series.index.to_timestamp()
+            history_series.index = pd.to_datetime(history_series.index)
             spike_duration = self.random.choice(
                 [1, 2, 3]
             )  # Arbitrarily picked from 1,2,3
@@ -285,7 +285,7 @@ class SensorSpikeTask(UnivariateCRPSTask):
             ] = (spike_type * spike_magnitude)
 
             # Convert future index to timestamp for consistency
-            future_series.index = future_series.index.to_timestamp()
+            future_series.index = pd.to_datetime(future_series.index)
 
             background = f"The sensor experienced an unexpected glitch resulting in a spike starting from {datetime_to_str(spike_start_date)} for {spike_duration} {'hour' if spike_duration == 1 else 'hours'}. Assume that the sensor will not have this glitch in the future."
 
