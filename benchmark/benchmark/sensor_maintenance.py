@@ -150,7 +150,7 @@ class SensorTrendAccumulationTask(UnivariateCRPSTask):
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_h"]
     _skills = UnivariateCRPSTask._skills + ["instruction following", "reasoning: math"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def get_series(
         self,
@@ -255,37 +255,52 @@ class SensorSpikeTask(UnivariateCRPSTask):
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_h"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2 "  # Modification will trigger re-caching
+
+    def get_series(
+        self,
+        dataset_name: str = "traffic",
+        target=None,  #  'Speed (mph)' or 'Occupancy (%)'
+    ):
+        if dataset_name == "traffic":
+            if target is None:
+                target = "Occupancy (%)"
+            series = load_traffic_series(target=target, random=self.random)
+        else:
+            raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
+        return series
+
+    def get_prediction_length(self, dataset_name: str = "traffic"):
+        if dataset_name == "traffic":
+            return get_traffic_prediction_length()
+        else:
+            raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
+
+    def get_history_factor(self, dataset_name: str = "traffic"):
+        if dataset_name == "traffic":
+            return get_traffic_history_factor()
+        else:
+            raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
 
     def random_instance(self):
         datasets = ["traffic"]
 
-        # Select a random dataset
         dataset_name = self.random.choice(datasets)
-        dataset = get_dataset(dataset_name, regenerate=False)
 
-        assert len(dataset.train) == len(
-            dataset.test
-        ), "Train and test sets must contain the same number of time series"
-
-        # Get the dataset metadata
-        metadata = dataset.metadata
-
-        # Select a random time series
-        ts_index = self.random.choice(len(dataset.train))
-        full_series = to_pandas(list(dataset.test)[ts_index])
+        full_series = self.get_series(dataset_name=dataset_name)
+        prediction_length = self.get_prediction_length(dataset_name=dataset_name)
 
         # Select a random window
         window = get_random_window_univar(
             full_series,
-            prediction_length=metadata.prediction_length,
-            history_factor=self.random.randint(3, 7),
+            prediction_length=prediction_length,
+            history_factor=self.get_history_factor(dataset_name=dataset_name),
             random=self.random,
         )
 
         # Extract the history and future series
-        history_series = window.iloc[: -metadata.prediction_length]
-        future_series = window.iloc[-metadata.prediction_length :]
+        history_series = window.iloc[:-prediction_length]
+        future_series = window.iloc[-prediction_length:]
 
         if dataset_name == "traffic":
             # Sample a starting point in the first half of the history's index
