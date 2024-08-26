@@ -38,7 +38,7 @@ def dict_to_obj(data):
 
 
 def llama_3_1_405b_instruct_client(
-    model, messages, n=1, max_tokens=1000, temperature=0.7
+    model, messages, n=1, max_tokens=10000, temperature=0.7
 ):
     """
     Request completions from the Llama 3.1 405B Instruct model hosted on Toolkit
@@ -47,7 +47,7 @@ def llama_3_1_405b_instruct_client(
     -----------
     messages: list
         The list of messages to send to the model (same format as OpenAI API)
-    max_tokens: int, default=1000
+    max_tokens: int, default=10000
         The maximum number of tokens to use in the completion
     temperature: float, default=0.7
         The temperature to use in the completion
