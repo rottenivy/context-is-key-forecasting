@@ -221,4 +221,4 @@ class UnivariateCRPSTask(BaseTask):
             region_of_interest=self.region_of_interest,
             roi_weight=self.roi_weight,
             constraint=self.metric_constraint,
-        )["metric"]
+        )

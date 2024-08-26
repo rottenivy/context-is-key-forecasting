@@ -4,6 +4,7 @@ import multiprocessing
 import numpy as np
 import pandas as pd
 import traceback
+from pprint import pprint
 
 from collections import defaultdict
 from functools import partial
@@ -116,6 +117,14 @@ Scenario:
         )
 
 
+def save_evaluation(evaluation, path):
+    """
+    Save the content of the task evaluation content to a file for future reference.
+    """
+    with open(path / "evaluation", "w") as f:
+        pprint(evaluation, f)
+
+
 def evaluate_task(
     task_cls,
     seed,
@@ -134,9 +143,12 @@ def evaluate_task(
 
         logger.info(f"Method {method_callable} - Task {task.name} - Seed {seed}")
         samples = method_callable(task_instance=task, n_samples=n_samples)
+        evaluation = task.evaluate(samples)
         result = {
             "seed": seed,
-            "score": task.evaluate(samples),
+            "score": (
+                evaluation["metric"] if isinstance(evaluation, dict) else evaluation
+            ),
         }
 
         if output_folder:
@@ -145,6 +157,9 @@ def evaluate_task(
 
             # Save context
             save_context(task=task, path=seed_folder)
+
+            # Save metric content
+            save_evaluation(evaluation=evaluation, path=seed_folder)
 
         return (task_cls.__name__, result)
 
