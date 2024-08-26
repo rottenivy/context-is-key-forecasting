@@ -170,19 +170,19 @@ Constraints:
             :, :, None
         ]  # XXX: Would need to be adapted when we expand to multivariate
 
-    def __del__(self):
-        """
-        Clean up the temporary directory
+    # def __del__(self):
+    #     """
+    #     Clean up the temporary directory
 
-        """
-        self.tmpdir.cleanup()
+    #     """
+    #     self.tmpdir.cleanup()
 
-        # Clean up CPU/GPU memory
-        del self.model
-        del self.tokenizer
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-        gc.collect()
+    #     # Clean up CPU/GPU memory
+    #     del self.model
+    #     del self.tokenizer
+    # if torch.cuda.is_available():
+    #     torch.cuda.empty_cache()
+    # gc.collect()
 
     @property
     def cache_name(self):
