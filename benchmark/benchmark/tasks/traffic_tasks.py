@@ -13,6 +13,7 @@ from gluonts.dataset.repository import get_dataset
 from ..base import UnivariateCRPSTask
 
 # TODO: rename to traffic_holiday_tasks.py
+from benchmark.data.pems import load_traffic_series
 
 
 class TrafficForecastTaskwithHolidaysInPredictionWindow(UnivariateCRPSTask):
@@ -22,22 +23,35 @@ class TrafficForecastTaskwithHolidaysInPredictionWindow(UnivariateCRPSTask):
 
     __version__ = "0.0.2"  # Modification will trigger re-caching
 
-    def __init__(self, seed: int = None, fixed_config: Optional[dict] = None):
+    def __init__(
+        self, seed: int = None, fixed_config: Optional[dict] = None, fresh_data=True
+    ):
+        self.fresh_data = fresh_data
         # Holidays with observable differences from the preceeding 7 days
-        self.holidays = [
-            (datetime.date(2015, 5, 25), "Memorial Day"),
-            (datetime.date(2015, 7, 4), "Independence Day"),
-            (datetime.date(2015, 9, 7), "Labor Day"),
-            (datetime.date(2015, 11, 11), "Veterans Day"),
-            (datetime.date(2015, 11, 26), "Thanksgiving"),
-            (datetime.date(2015, 12, 25), "Christmas Day"),
-            (datetime.date(2016, 5, 30), "Memorial Day"),
-            (datetime.date(2016, 7, 4), "Independence Day"),
-            (datetime.date(2016, 9, 5), "Labor Day"),
-            (datetime.date(2016, 11, 11), "Veterans Day"),
-            (datetime.date(2016, 11, 24), "Thanksgiving"),
-            (datetime.date(2016, 12, 25), "Christmas Day"),
-        ]
+        if self.fresh_data:
+            self.holidays = [
+                (datetime.date(2024, 5, 27), "Memorial Day"),
+                (datetime.date(2024, 7, 4), "Independence Day"),
+                # (datetime.date(2024, 9, 2), "Labor Day"), # not occurred yet
+                # (datetime.date(2024, 11, 11), "Veterans Day"), # not occurred yet
+                # (datetime.date(2024, 11, 28), "Thanksgiving"), # not occurred yet
+                # (datetime.date(2024, 12, 25), "Christmas Day"), # not occurred yet
+            ]
+        else:
+            self.holidays = [
+                (datetime.date(2015, 5, 25), "Memorial Day"),
+                (datetime.date(2015, 7, 4), "Independence Day"),
+                (datetime.date(2015, 9, 7), "Labor Day"),
+                (datetime.date(2015, 11, 11), "Veterans Day"),
+                (datetime.date(2015, 11, 26), "Thanksgiving"),
+                (datetime.date(2015, 12, 25), "Christmas Day"),
+                (datetime.date(2016, 5, 30), "Memorial Day"),
+                (datetime.date(2016, 7, 4), "Independence Day"),
+                (datetime.date(2016, 9, 5), "Labor Day"),
+                (datetime.date(2016, 11, 11), "Veterans Day"),
+                (datetime.date(2016, 11, 24), "Thanksgiving"),
+                (datetime.date(2016, 12, 25), "Christmas Day"),
+            ]
 
         super().__init__(seed=seed, fixed_config=fixed_config)
 
@@ -55,41 +69,71 @@ class TrafficForecastTaskwithHolidaysInPredictionWindow(UnivariateCRPSTask):
         self.scenario = None
 
         # RoI is the holiday
-        self.region_of_interest = slice(24, 48)
+        self.region_of_interest = slice(0, 24)
+
+    def get_series(
+        self,
+        dataset_name: str = "traffic",
+        target=None,  #  'Speed (mph)' or 'Occupancy (%)'
+    ):
+        if dataset_name == "traffic":
+            if target is None:
+                target = "Occupancy (%)"
+            series = load_traffic_series(target=target, random=self.random)
+        else:
+            raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
+        return series
 
     def find_interesting_series(self):
         """
         Performs series selection, to select series (i.e. highways) where the traffic is much lesser on the day of the holiday
         """
-        dataset = get_dataset("traffic", regenerate=False)
 
-        assert len(dataset.train) == len(
-            dataset.test
-        ), "Train and test sets must contain the same number of time series"
+        if not self.fresh_data:
+            dataset = get_dataset("traffic", regenerate=False)
+
+            assert len(dataset.train) == len(
+                dataset.test
+            ), "Train and test sets must contain the same number of time series"
 
         window_is_interesting = False
         num_iters = 0
         while not window_is_interesting:
-            # Select a random time series
-            ts_index = self.random.choice(len(dataset.test))
-            full_series = to_pandas(list(dataset.test)[ts_index])
+
+            if self.fresh_data:
+                full_series = self.get_series(dataset_name="traffic")
+                full_series.index = pd.to_datetime(full_series.index)
+
+            else:
+                ts_index = self.random.choice(len(dataset.test))
+                full_series = to_pandas(list(dataset.test)[ts_index])
 
             # The traffic dataset is for the whole years of 2015 and 2016, and is hourly.
             # Get rid of the first (potentially) incomplete week, to always start on Monday.
             first_day_of_week = full_series.index[0].day_of_week
-            full_series = full_series.iloc[(7 - first_day_of_week) * 24 :]
+            full_series_no_first_day = full_series.iloc[(7 - first_day_of_week) * 24 :]
 
             # Select a random holiday
             holiday_date, holiday_name = self.holidays[
                 self.random.choice(len(self.holidays))
             ]
             holiday_datetime = pd.to_datetime(holiday_date)
-            holiday_index = full_series.index.get_loc(holiday_datetime)
+            try:
+                holiday_index = full_series_no_first_day.index.get_loc(holiday_datetime)
+            except KeyError:
+                # If the holiday is not in the series, try again
+                continue
 
             # Here I implement the case where the prediction window starts with the holiday
-            history_series = full_series.iloc[holiday_index - (24 * 7) : holiday_index]
-            future_series = full_series.iloc[holiday_index : holiday_index + (24 * 2)]
-            holiday_series = full_series.iloc[holiday_index : holiday_index + 24]
+            history_series = full_series_no_first_day.iloc[
+                holiday_index - (24 * 7) : holiday_index
+            ]
+            future_series = full_series_no_first_day.iloc[
+                holiday_index : holiday_index + (24 * 2)
+            ]
+            holiday_series = full_series_no_first_day.iloc[
+                holiday_index : holiday_index + 24
+            ]
             if holiday_series.mean() <= 0.7 * history_series.mean():
                 window_is_interesting = True
             num_iters += 1
@@ -154,7 +198,9 @@ class ExplicitWithDaysTrafficForecastTaskwithHolidaysInPredictionWindow(
         idx = 0
         while idx < len(future_series):
             day = future_series.index[idx]
-            day_name = day.to_timestamp().day_name()
+            if not isinstance(day, pd.Timestamp):
+                day = pd.Timestamp(day)
+            day_name = day.day_name()
             background += f"{day_name}, "
             idx += 24
         background = background[:-2] + "."
@@ -179,8 +225,10 @@ class ExplicitWithDatesAndDaysTrafficForecastTaskwithHolidaysInPredictionWindow(
         idx = 0
         while idx < len(future_series):
             day = future_series.index[idx]
-            date = day.to_timestamp().date()
-            day_name = day.to_timestamp().day_name()
+            if not isinstance(day, pd.Timestamp):
+                day = pd.Timestamp(day)
+            date = day.date()
+            day_name = day.day_name()
             background += f"{day_name} {date}, "
             idx += 24
         background = background[:-2] + "."
