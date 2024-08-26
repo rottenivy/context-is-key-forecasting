@@ -18,44 +18,6 @@ from benchmark.data.pems import (
 )
 
 
-class FreshTrafficLoader:
-
-    def get_window(
-        self,
-        prediction_length: int = 24,
-        history_factor: int = 7,
-        sensor_file: str = None,
-        random: np.random.RandomState = None,
-        target: str = "Speed (mph)",
-    ):
-
-        if sensor_file is None:
-            sensor_files = glob.glob(os.path.join(self.traffic_split_path, "*.csv"))
-            sensor_file = random.choice(sensor_files)
-
-        dataset = pd.read_csv(sensor_file)
-        dataset["date"] = pd.to_datetime(dataset["Hour"])
-        dataset = dataset.set_index("date")
-
-        series = dataset[target]
-
-        window = get_random_window_univar(
-            series,
-            prediction_length=prediction_length,
-            history_factor=history_factor,
-            random=self.random,
-        )
-
-        return window
-
-
-from benchmark.data.pems import (
-    load_traffic_series,
-    get_traffic_prediction_length,
-    get_traffic_history_factor,
-)
-
-
 class SensorPeriodicMaintenanceTask(UnivariateCRPSTask):
     """
     A task where the history contains misleading information due to periodic
