@@ -33,6 +33,7 @@ def calculate_yearly_sum_stats_for_months(df, months, cutoff_year=None):
 class MontrealFireNauticalRescueAnalogyTask(UnivariateCRPSTask):
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_h", "c_i"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: analogy", "retrieval: context"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -168,6 +169,8 @@ class MontrealFireNauticalRescueAnalogyTask(UnivariateCRPSTask):
 class MontrealFireNauticalRescueAnalogyFullLocalizationTask(
     MontrealFireNauticalRescueAnalogyTask
 ):
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def __init__(self, seed=None, fixed_config=None):
         super().__init__(
             seed=seed,
@@ -180,7 +183,9 @@ class MontrealFireNauticalRescueAnalogyFullLocalizationTask(
 class MontrealFireNauticalRescueAnalogyTargetLocalizationTask(
     MontrealFireNauticalRescueAnalogyTask
 ):
+
     _skills = MontrealFireNauticalRescueAnalogyTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def __init__(self, seed=None, fixed_config=None):
         super().__init__(
@@ -195,6 +200,7 @@ class MontrealFireNauticalRescueAnalogyReferenceLocalizationTask(
     MontrealFireNauticalRescueAnalogyTask
 ):
     _skills = MontrealFireNauticalRescueAnalogyTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def __init__(self, seed=None, fixed_config=None):
         super().__init__(
@@ -209,6 +215,7 @@ class MontrealFireNauticalRescueAnalogyNoLocalizationTask(
     MontrealFireNauticalRescueAnalogyTask
 ):
     _skills = MontrealFireNauticalRescueAnalogyTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def __init__(self, seed=None, fixed_config=None):
         super().__init__(
