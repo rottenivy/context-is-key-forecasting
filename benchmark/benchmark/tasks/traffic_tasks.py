@@ -111,7 +111,7 @@ class TrafficForecastTaskwithHolidaysInPredictionWindow(UnivariateCRPSTask):
             # The traffic dataset is for the whole years of 2015 and 2016, and is hourly.
             # Get rid of the first (potentially) incomplete week, to always start on Monday.
             first_day_of_week = full_series.index[0].day_of_week
-            full_series_no_first_day = full_series.iloc[(7 - first_day_of_week) * 24 :]
+            full_series = full_series.iloc[(7 - first_day_of_week) * 24 :]
 
             # Select a random holiday
             holiday_date, holiday_name = self.holidays[
@@ -119,21 +119,15 @@ class TrafficForecastTaskwithHolidaysInPredictionWindow(UnivariateCRPSTask):
             ]
             holiday_datetime = pd.to_datetime(holiday_date)
             try:
-                holiday_index = full_series_no_first_day.index.get_loc(holiday_datetime)
+                holiday_index = full_series.index.get_loc(holiday_datetime)
             except KeyError:
                 # If the holiday is not in the series, try again
                 continue
 
             # Here I implement the case where the prediction window starts with the holiday
-            history_series = full_series_no_first_day.iloc[
-                holiday_index - (24 * 7) : holiday_index
-            ]
-            future_series = full_series_no_first_day.iloc[
-                holiday_index : holiday_index + (24 * 2)
-            ]
-            holiday_series = full_series_no_first_day.iloc[
-                holiday_index : holiday_index + 24
-            ]
+            history_series = full_series.iloc[holiday_index - (24 * 7) : holiday_index]
+            future_series = full_series.iloc[holiday_index : holiday_index + (24 * 2)]
+            holiday_series = full_series.iloc[holiday_index : holiday_index + 24]
             if holiday_series.mean() <= 0.7 * history_series.mean():
                 window_is_interesting = True
             num_iters += 1
