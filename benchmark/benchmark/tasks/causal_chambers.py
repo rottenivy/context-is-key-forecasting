@@ -14,7 +14,7 @@ Window = namedtuple("Window", ["seed", "history_start", "future_start", "time_en
 
 class WindTunnelTask(UnivariateCRPSTask):
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -105,7 +105,11 @@ class WindTunnelTask(UnivariateCRPSTask):
                 Downsampling rule (see https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.resample.html), by default "1s".
         """
 
-        window_idx = self.random.choice(self._get_number_instances())
+        # with random choice we are not sure to sample different windows at evaluation
+        if self.seed is not None:
+            window_idx = self.seed % self._get_number_instances()
+        else:
+            window_idx = self.random.choice(self._get_number_instances())
         (
             self.window,
             self.past_time,
@@ -156,7 +160,7 @@ class SpeedFromLoadTask(WindTunnelTask):
         "reasoning: math",
         "instruction following",
     ]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -169,10 +173,10 @@ class SpeedFromLoadTask(WindTunnelTask):
             Window(7, 0, 613, 1000),
             Window(3, 300, 807, 1420),
             Window(4, 0, 1886, 2000),
-            Window(5, 0, 502, 600),
+            # Window(5, 0, 502, 600), # commenting because prediction is almost constant which is problematic for our current metric
             Window(6, 0, 686, 880),
             Window(2, 0, 440, 700),
-            Window(0, 0, 1159, 1300),
+            # Window(0, 0, 1159, 1300), # commenting because prediction is almost constant which is problematic for our current metric
             Window(1, 0, 779, 900),
             Window(1, 0, 779, 1400),
         ]
@@ -201,7 +205,7 @@ class ExplicitPressureFromSpeedTask(WindTunnelTask):
         "reasoning: math",
         "instruction following",
     ]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -244,7 +248,7 @@ class ImplicitPressureFromSpeedTask(ExplicitPressureFromSpeedTask):
         "reasoning: math",
         "instruction following",
     ]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
