@@ -18,7 +18,7 @@ from ..data.pems import load_traffic_series
 
 class TrafficForecastTaskwithHolidaysInPredictionWindow(UnivariateCRPSTask):
     """
-    Forecasting task based on the Monash traffic dataset, with frequency hourly, where the history is 7 days (168 hours/timesteps) and prediction is 3 days (72 hours/timesteps), and windows are chosen such that there is a holiday in the middle of the prediction window.
+    Forecasting task based on the Monash traffic dataset or PEMS data after 01/01/2024 if fresh_data==True, with frequency hourly, where the history is 7 days (168 hours/timesteps) and prediction is 2 days (48 hours/timesteps), and windows are chosen such that there is a holiday at the beginning of the prediction window.
     """
 
     __version__ = "0.0.3"  # Modification will trigger re-caching
