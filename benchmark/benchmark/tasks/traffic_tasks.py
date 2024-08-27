@@ -21,7 +21,7 @@ class TrafficForecastTaskwithHolidaysInPredictionWindow(UnivariateCRPSTask):
     Forecasting task based on the Monash traffic dataset, with frequency hourly, where the history is 7 days (168 hours/timesteps) and prediction is 3 days (72 hours/timesteps), and windows are chosen such that there is a holiday in the middle of the prediction window.
     """
 
-    __version__ = "0.0.2"  # Modification will trigger re-caching
+    __version__ = "0.0.3"  # Modification will trigger re-caching
 
     def __init__(
         self, seed: int = None, fixed_config: Optional[dict] = None, fresh_data=True
