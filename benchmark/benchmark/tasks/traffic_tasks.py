@@ -69,6 +69,7 @@ class TrafficForecastTaskwithHolidaysInPredictionWindow(UnivariateCRPSTask):
         self.scenario = None
 
         # RoI is the holiday
+        # does not impact the metric for 2-day horizon, but is useful for logging
         self.region_of_interest = slice(0, 24)
 
     def get_series(
