@@ -14,6 +14,7 @@ from .bivariate_categorical_causal import __TASKS__ as CATEGORICAL_CAUSAL_TASKS
 from .tasks.solar_tasks import __TASKS__ as SOLAR_TASKS
 from .tasks.traffic_tasks import __TASKS__ as TRAFFIC_TASKS
 from .tasks.nsrdb_tasks import __TASKS__ as NSRDB_TASKS
+from .tasks.montreal_fire import __TASKS__ as MONTREAL_FIRE_TASKS
 
 # All tasks that are officially included in the benchmark
 ALL_TASKS = (
@@ -31,4 +32,5 @@ ALL_TASKS = (
     + SOLAR_TASKS
     + TRAFFIC_TASKS
     + NSRDB_TASKS
+    + MONTREAL_FIRE_TASKS
 )
