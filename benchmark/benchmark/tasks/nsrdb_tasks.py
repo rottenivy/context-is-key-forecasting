@@ -252,7 +252,10 @@ class BaseIrradianceFromClearsky(UnivariateCRPSTask):
                 sdf[self.irradiance_column].iloc[48:].max() < 200
                 or
                 # This can happen rarely due to the values coming from different models
-                sdf[self.irradiance_column] > sdf["Clearsky " + self.irradiance_column]
+                (
+                    sdf[self.irradiance_column]
+                    > sdf["Clearsky " + self.irradiance_column]
+                ).any()
             ):
                 return pd.Series([False, sdf.index.min(), sdf.index.max()])
             else:
