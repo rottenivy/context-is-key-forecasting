@@ -173,10 +173,10 @@ class SpeedFromLoadTask(WindTunnelTask):
             Window(7, 0, 613, 1000),
             Window(3, 300, 807, 1420),
             Window(4, 0, 1886, 2000),
-            # Window(5, 0, 502, 600),
+            # Window(5, 0, 502, 600), # commenting because prediction is almost constant which is problematic for our current metric
             Window(6, 0, 686, 880),
             Window(2, 0, 440, 700),
-            # Window(0, 0, 1159, 1300),
+            # Window(0, 0, 1159, 1300), # commenting because prediction is almost constant which is problematic for our current metric
             Window(1, 0, 779, 900),
             Window(1, 0, 779, 1400),
         ]
