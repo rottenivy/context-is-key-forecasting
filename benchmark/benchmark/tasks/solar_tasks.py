@@ -206,7 +206,7 @@ class ExplicitSimilarLocationDaySolarForecastTask(SimilarLocationDaySolarForecas
         self, full_history_series: pd.Series, forecast_date: pd.Timestamp
     ) -> str:
 
-        return "This series estimates the power production for a given day of a new solar power plant located in the state of Georgia, which has a climate similar to Alabama."
+        return "This series estimates the power production for a given day of a new solar power plant located in the state of Georgia, which has a climate similar to Alabama's."
 
 
 class SimilarLocationWithReferenceDaySolarForecastTask(
