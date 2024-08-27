@@ -13,7 +13,7 @@ from gluonts.dataset.repository import get_dataset
 from ..base import UnivariateCRPSTask
 
 # TODO: rename to traffic_holiday_tasks.py
-from benchmark.data.pems import load_traffic_series
+from ..data.pems import load_traffic_series
 
 
 class TrafficForecastTaskwithHolidaysInPredictionWindow(UnivariateCRPSTask):
