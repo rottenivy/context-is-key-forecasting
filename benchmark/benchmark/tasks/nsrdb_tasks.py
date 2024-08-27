@@ -242,53 +242,47 @@ class BaseIrradianceFromClearsky(UnivariateCRPSTask):
         Uniformly select a 3 days window amongst all of the 60 minutes files on Hugging Face,
         such that a forecast which would simply copy from past would break the constraints.
         """
-        # All lot of this work is repeated for all instances, so it wouldn't hurt to cache it.
-        all_data = download_all_nsrdb_datasets(interval=60)
-        valid_windows = []
-        num_windows = 0
-        for _, df in all_data:
-            valid_test = df.resample("3D").apply(
-                lambda sdf: pd.Series(
+
+        def validation_function(sdf: pd.DataFrame) -> pd.Series:
+            if (
+                # Avoid the last window, if incomplete
+                len(sdf) != 72
+                or
+                # Avoid cases where the irradiance is almost zero in the forecasting period.
+                sdf[self.irradiance_column].iloc[48:].max() < 200
+                or
+                # This can happen rarely due to the values coming from different models
+                sdf[self.irradiance_column] > sdf["Clearsky " + self.irradiance_column]
+            ):
+                return pd.Series([False, sdf.index.min(), sdf.index.max()])
+            else:
+                # How much the constraint would be broken if we used the irradiance from a day as the forecast
+                max_values = sdf["Clearsky " + self.irradiance_column].iloc[48:].values
+                error_day1 = (
+                    (sdf[self.irradiance_column].iloc[:24].values - max_values)
+                    .clip(min=0)
+                    .sum()
+                )
+                error_day2 = (
+                    (sdf[self.irradiance_column].iloc[24:48].values - max_values)
+                    .clip(min=0)
+                    .sum()
+                )
+                return pd.Series(
                     [
-                        len(sdf) == 72
-                        and (
-                            (
-                                sdf[self.irradiance_column].iloc[:24].values
-                                - sdf["Clearsky " + self.irradiance_column]
-                                .iloc[48:]
-                                .values
-                            )
-                            .clip(min=0)
-                            .sum()
-                            >= 200
-                            or (
-                                sdf[self.irradiance_column].iloc[24:48].values
-                                - sdf["Clearsky " + self.irradiance_column]
-                                .iloc[48:]
-                                .values
-                            )
-                            .clip(min=0)
-                            .sum()
-                            >= 200
-                        )
-                        and (
-                            # Avoid cases where the irradiance is almost zero in the forecasting period.
-                            sdf[self.irradiance_column].iloc[48:].max()
-                            >= 200
-                        )
-                        and (
-                            # This can happen rarely due to the values coming from different models
-                            (
-                                sdf[self.irradiance_column]
-                                <= sdf["Clearsky " + self.irradiance_column]
-                            ).all()
-                        ),
+                        (error_day1 >= 200 or error_day2 >= 200),
                         # Store the indices, to be able to recreate the sub DataFrame after selection
                         sdf.index.min(),
                         sdf.index.max(),
                     ]
                 )
-            )
+
+        # All lot of this work is repeated for all instances, so it wouldn't hurt to cache it.
+        all_data = download_all_nsrdb_datasets(interval=60)
+        valid_windows = []
+        num_windows = 0
+        for _, df in all_data:
+            valid_test = df.resample("3D").apply(validation_function)
             valid_windows.append(
                 [
                     (valid_test[1].iloc[w], valid_test[2].iloc[w])
