@@ -193,6 +193,22 @@ class SimilarLocationDaySolarForecastTask(BaseHalfDaySolarForecastTask):
         return "This series estimates the power production for a given day of a new solar power plant located in the state of Georgia, which has a humid subtropical climate."
 
 
+class ExplicitSimilarLocationDaySolarForecastTask(SimilarLocationDaySolarForecastTask):
+    """
+    Version of the task where the average time at which the daily maximum is reached is mentioned.
+    """
+
+    _context_sources = ["c_i", "c_h"]
+    _skills = SimilarLocationDaySolarForecastTask._skills
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def get_background(
+        self, full_history_series: pd.Series, forecast_date: pd.Timestamp
+    ) -> str:
+
+        return "This series estimates the power production for a given day of a new solar power plant located in the state of Georgia, which has a climate similar to Alabama."
+
+
 class SimilarLocationWithReferenceDaySolarForecastTask(
     SimilarLocationDaySolarForecastTask
 ):
@@ -202,8 +218,7 @@ class SimilarLocationWithReferenceDaySolarForecastTask(
 
     _context_sources = ["c_i", "c_h"]
     _skills = BaseHalfDaySolarForecastTask._skills + [
-        "reasoning: analogy",
-        "reasoning: math",
+        "reasoning: deduction",
     ]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -236,5 +251,6 @@ __TASKS__ = [
     LocaleInfoHalfDaySolarForecastTask,
     ZenithInfoHalfDaySolarForecastTask,
     SimilarLocationDaySolarForecastTask,
+    ExplicitSimilarLocationDaySolarForecastTask,
     SimilarLocationWithReferenceDaySolarForecastTask,
 ]
