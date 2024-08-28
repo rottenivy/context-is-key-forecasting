@@ -6,7 +6,7 @@ def get_incident_log():
     local_filename = huggingface_hub.hf_hub_download(
         repo_id="yatsbm/montreal_fire",
         repo_type="dataset",
-        filename=f"montreal_fire_2024-08-27.csv",
+        filename=f"montreal_fire_2024-08-28.csv",
     )
 
     return pd.read_csv(local_filename)
