@@ -67,6 +67,9 @@ class MontrealFireNauticalRescueAnalogyTask(UnivariateCRPSTask):
 
         super().__init__(seed=seed, fixed_config=fixed_config)
 
+    def seasonal_period(self):
+        return -1
+
     def _get_data(self):
         incidents = get_incident_log()
         return get_time_count_series_by_borough(
@@ -129,7 +132,7 @@ class MontrealFireNauticalRescueAnalogyTask(UnivariateCRPSTask):
         count_stats = calculate_yearly_sum_stats_for_months(
             self.all_series[ref], months=stat_months, cutoff_year=stats_cutoff_year
         )
-        context += f"\nFor reference, here are some statistics for two of the city's boroughs.\nThe values are historical incident counts (min, max) between {stats_month_start_str} and {stats_month_end_str} for the past {count_stats['n']} years:\n"
+        context += f"\nFor reference, here are some statistics for two of the city's boroughs.\nThe values are historical incident counts [min, max] between {stats_month_start_str} and {stats_month_end_str} for the past {count_stats['n']} years:\n"
         context += f"* {ref}{desc} (pop.: {boroughs[ref]['pop']}): [{count_stats['min']}, {count_stats['max']}] incidents\n"
         # ... without water
         ref = self.random.choice(
@@ -184,7 +187,7 @@ class MontrealFireNauticalRescueAnalogyTargetLocalizationTask(
     MontrealFireNauticalRescueAnalogyTask
 ):
 
-    _skills = MontrealFireNauticalRescueAnalogyTask._skills + ["reasoning: deduction"]
+    _skills = MontrealFireNauticalRescueAnalogyTask._skills + ["retrieval: memory"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def __init__(self, seed=None, fixed_config=None):
@@ -196,19 +199,21 @@ class MontrealFireNauticalRescueAnalogyTargetLocalizationTask(
         )
 
 
-class MontrealFireNauticalRescueAnalogyReferenceLocalizationTask(
-    MontrealFireNauticalRescueAnalogyTask
-):
-    _skills = MontrealFireNauticalRescueAnalogyTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+# XXX: Commented out since this requires guessing our own opinion about if a
+#      borough name sounds aquatic or not.
+# class MontrealFireNauticalRescueAnalogyReferenceLocalizationTask(
+#     MontrealFireNauticalRescueAnalogyTask
+# ):
+#     _skills = MontrealFireNauticalRescueAnalogyTask._skills + ["reasoning: deduction"]
+#     __version__ = "0.0.1"  # Modification will trigger re-caching
 
-    def __init__(self, seed=None, fixed_config=None):
-        super().__init__(
-            seed=seed,
-            fixed_config=fixed_config,
-            explicit_location=False,
-            include_reference_location=True,
-        )
+#     def __init__(self, seed=None, fixed_config=None):
+#         super().__init__(
+#             seed=seed,
+#             fixed_config=fixed_config,
+#             explicit_location=False,
+#             include_reference_location=True,
+#         )
 
 
 class MontrealFireNauticalRescueAnalogyNoLocalizationTask(
@@ -229,6 +234,6 @@ class MontrealFireNauticalRescueAnalogyNoLocalizationTask(
 __TASKS__ = [
     MontrealFireNauticalRescueAnalogyFullLocalizationTask,
     MontrealFireNauticalRescueAnalogyTargetLocalizationTask,
-    MontrealFireNauticalRescueAnalogyReferenceLocalizationTask,
+    # MontrealFireNauticalRescueAnalogyReferenceLocalizationTask, (see above comment for reason of leaving out)
     MontrealFireNauticalRescueAnalogyNoLocalizationTask,
 ]
