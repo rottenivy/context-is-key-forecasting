@@ -166,7 +166,7 @@ def create_task_summary_page(tasks):
     for task_cls in tasks:
         task_name = task_cls.__name__
         seeds = ""
-        for seed in range(1, 4):
+        for seed in range(1, 6):
             task = task_cls(seed=seed)
 
             seeds += f"""
