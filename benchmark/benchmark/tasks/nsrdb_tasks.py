@@ -69,6 +69,8 @@ class BaseIrradianceFromCloudStatus(UnivariateCRPSTask):
     irradiance_column: str = ""
     irradiance_short_description: str = ""
     irradiance_description: str = ""
+    # Optionally can be overriden
+    irradiance_explicit_effect: str = ""
 
     def select_window(self) -> tuple[pd.Series, pd.DataFrame]:
         """
@@ -143,6 +145,8 @@ class BaseIrradianceFromCloudStatus(UnivariateCRPSTask):
         background += (
             f"The {self.irradiance_short_description} is {self.irradiance_description}."
         )
+        if self.irradiance_explicit_effect:
+            background += " " + self.irradiance_explicit_effect
 
         return background
 
@@ -199,6 +203,7 @@ class GlobalHorizontalIrradianceFromCloudStatus(BaseIrradianceFromCloudStatus):
     irradiance_description: str = (
         "the total amount of sun energy (in Watts per squared meter) arriving on a horizontal surface"
     )
+    irradiance_explicit_effect: str = ""
 
 
 class DirectNormalIrradianceFromCloudStatus(BaseIrradianceFromCloudStatus):
@@ -209,6 +214,19 @@ class DirectNormalIrradianceFromCloudStatus(BaseIrradianceFromCloudStatus):
     irradiance_description: str = (
         "the total amount of sun energy (in Watts per squared meter) arriving directly from the sun on a surface perpendicular to the sunlight direction"
     )
+    irradiance_explicit_effect: str = ""
+
+
+class ExplicitDirectNormalIrradianceFromCloudStatus(
+    DirectNormalIrradianceFromCloudStatus
+):
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+    irradiance_explicit_effect: str = (
+        "When there are no clouds to block the sun, the Direct Normal Irradiance is mostly a function of the position of the sun in the sky, "
+        + "with only small variations from factors such as water vapour and dust particles levels. "
+        + "Since it only measures the sun light coming straight from the sun, any light which gets scattered by clouds will not be measured. "
+        + "Therefore, cloudy weather conditions will reduce the Direct Normal Irradiance measurements."
+    )
 
 
 class DiffuseHorizontalIrradianceFromCloudStatus(BaseIrradianceFromCloudStatus):
@@ -218,6 +236,21 @@ class DiffuseHorizontalIrradianceFromCloudStatus(BaseIrradianceFromCloudStatus):
     irradiance_short_description: str = "Diffuse Horizontal Irradiance"
     irradiance_description: str = (
         "the total amount of sun energy (in Watts per squared meter) arriving indirectly on a horizontal surface, ignoring the direct sunlight"
+    )
+    irradiance_explicit_effect: str = ""
+
+
+class ExplicitDiffuseHorizontalIrradianceFromCloudStatus(
+    DiffuseHorizontalIrradianceFromCloudStatus
+):
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+    irradiance_explicit_effect: str = (
+        "Even when there are no clouds to scattered the sun light, there will still be some Diffuse Horizontal Irradiance, "
+        + "since clouds are not the only cause of light scattering. "
+        + "When there are no clouds, the Diffuse Horizontal Irradiance is mostly a function of the position of the sun in the sky, "
+        + "with only small variations from factors such as water vapour and dust particles levels. "
+        + "If the cloud cover is light, the Diffuse Horizontal Irradiance will increase due to the increase scattering of sun light, "
+        + "but heavy cloud cover will decrease it due to some sun light no longer being able to reach the ground."
     )
 
 
@@ -399,9 +432,11 @@ class DirectNormalIrradianceFromClearsky(BaseIrradianceFromClearsky):
 
 
 __TASKS__ = [
-    GlobalHorizontalIrradianceFromCloudStatus,
+    # GlobalHorizontalIrradianceFromCloudStatus,  # Commented-out due to not having a strong enough effect between cloudy and clear days
     DirectNormalIrradianceFromCloudStatus,
+    ExplicitDirectNormalIrradianceFromCloudStatus,
     DiffuseHorizontalIrradianceFromCloudStatus,
+    ExplicitDiffuseHorizontalIrradianceFromCloudStatus,
     GlobalHorizontalIrradianceFromClearsky,
     DirectNormalIrradianceFromClearsky,
 ]
