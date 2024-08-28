@@ -67,6 +67,7 @@ class MontrealFireNauticalRescueAnalogyTask(UnivariateCRPSTask):
 
         super().__init__(seed=seed, fixed_config=fixed_config)
 
+    @property
     def seasonal_period(self):
         return -1
 
@@ -234,6 +235,7 @@ class MontrealFireNauticalRescueAnalogyNoLocalizationTask(
 __TASKS__ = [
     MontrealFireNauticalRescueAnalogyFullLocalizationTask,
     MontrealFireNauticalRescueAnalogyTargetLocalizationTask,
-    # MontrealFireNauticalRescueAnalogyReferenceLocalizationTask, (see above comment for reason of leaving out)
-    MontrealFireNauticalRescueAnalogyNoLocalizationTask,
+    # XXX: see above comment for reason of leaving out
+    # MontrealFireNauticalRescueAnalogyReferenceLocalizationTask,
+    # MontrealFireNauticalRescueAnalogyNoLocalizationTask,
 ]
