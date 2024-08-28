@@ -225,7 +225,8 @@ class ExplicitDirectNormalIrradianceFromCloudStatus(
         "When there are no clouds to block the sun, the Direct Normal Irradiance is mostly a function of the position of the sun in the sky, "
         + "with only small variations from factors such as water vapour and dust particles levels. "
         + "Since it only measures the sun light coming straight from the sun, any light which gets scattered by clouds will not be measured. "
-        + "Therefore, cloudy weather conditions will reduce the Direct Normal Irradiance measurements."
+        + "Therefore, cloudy weather conditions will reduce the Direct Normal Irradiance measurements, "
+        + "and clear weather conditions will see them at their highest possible values."
     )
 
 
@@ -245,7 +246,7 @@ class ExplicitDiffuseHorizontalIrradianceFromCloudStatus(
 ):
     __version__ = "0.0.1"  # Modification will trigger re-caching
     irradiance_explicit_effect: str = (
-        "Even when there are no clouds to scattered the sun light, there will still be some Diffuse Horizontal Irradiance, "
+        "Even when there are no clouds to scatter the sun light, there will still be some Diffuse Horizontal Irradiance, "
         + "since clouds are not the only cause of light scattering. "
         + "When there are no clouds, the Diffuse Horizontal Irradiance is mostly a function of the position of the sun in the sky, "
         + "with only small variations from factors such as water vapour and dust particles levels. "
