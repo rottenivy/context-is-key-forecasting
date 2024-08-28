@@ -169,9 +169,12 @@ def create_task_summary_page(tasks):
         for seed in range(1, 6):
             task = task_cls(seed=seed)
 
-            task.background = task.background.replace("\n", "<br />")
-            task.constraints = task.constraints.replace("\n", "<br />")
-            task.scenario = task.scenario.replace("\n", "<br />")
+            if task.background:
+                task.background = task.background.replace("\n", "<br />")
+            if task.constraints:
+                task.constraints = task.constraints.replace("\n", "<br />")
+            if tasks.scenario:
+                task.scenario = task.scenario.replace("\n", "<br />")
 
             seeds += f"""
         <div class="section">
