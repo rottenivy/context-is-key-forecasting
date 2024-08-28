@@ -21,6 +21,7 @@ ALLOWED_SKILLS = [
     "natural language processing",
     "instruction following",
     "retrieval: context",
+    "retrieval: memory",
     "reasoning: analogy",
     "reasoning: deduction",
     "reasoning: math",
