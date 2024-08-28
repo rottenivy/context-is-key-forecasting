@@ -173,7 +173,7 @@ def create_task_summary_page(tasks):
                 task.background = task.background.replace("\n", "<br />")
             if task.constraints:
                 task.constraints = task.constraints.replace("\n", "<br />")
-            if tasks.scenario:
+            if task.scenario:
                 task.scenario = task.scenario.replace("\n", "<br />")
 
             seeds += f"""
