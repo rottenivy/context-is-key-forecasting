@@ -169,12 +169,16 @@ def create_task_summary_page(tasks):
         for seed in range(1, 6):
             task = task_cls(seed=seed)
 
+            task.background = task.background.replace("\n", "<br />")
+            task.constraints = task.constraints.replace("\n", "<br />")
+            task.scenario = task.scenario.replace("\n", "<br />")
+
             seeds += f"""
         <div class="section">
             <h2 class="text-center text-primary">Seed {seed}</h2>
-            <p class="text-center"><strong>Background:</strong> {task.background.replace("\n", "<br />")}</p>
-            <p class="text-center"><strong>Constraints:</strong> {task.constraints.replace("\n", "<br />")}</p>
-            <p class="text-center"><strong>Scenario:</strong> {task.scenario.replace("\n", "<br />")}</p>
+            <p class="text-center"><strong>Background:</strong> {task.background}</p>
+            <p class="text-center"><strong>Constraints:</strong> {task.constraints}</p>
+            <p class="text-center"><strong>Scenario:</strong> {task.scenario}</p>
             <p class="text-center">
                 {_figure_to_html(task.plot())}
             </p>
