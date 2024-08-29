@@ -5,14 +5,16 @@ Configuration variables for the benchmark
 
 import os
 
+from pathlib import Path
+
 # Model weight storage
-MODEL_STORAGE_PATH = os.environ.get("STARCASTER_MODEL_STORE", "./models")
+MODEL_STORAGE_PATH = Path(os.environ.get("STARCASTER_MODEL_STORE", "./models"))
 if not os.path.exists(MODEL_STORAGE_PATH):
     os.makedirs(MODEL_STORAGE_PATH, exist_ok=True)
 
 # Evaluation configuration
 DEFAULT_N_SAMPLES = 50
-RESULT_CACHE_PATH = os.environ.get("STARCASTER_RESULT_CACHE", "./inference_cache")
+RESULT_CACHE_PATH = Path(os.environ.get("STARCASTER_RESULT_CACHE", "./inference_cache"))
 
 # OpenAI configuration
 OPENAI_USE_AZURE = (
@@ -23,6 +25,6 @@ OPENAI_API_VERSION = os.environ.get("STARCASTER_OPENAI_API_VERSION", None)
 OPENAI_AZURE_ENDPOINT = os.environ.get("STARCASTER_OPENAI_AZURE_ENDPOINT", None)
 
 
-DATA_STORAGE_PATH = os.environ.get("STARCASTER_DATA_STORE", "benchmark/data")
-if not os.path.exists(DATA_STORAGE_PATH):
-    os.makedirs(DATA_STORAGE_PATH, exist_ok=True)
+DATA_STORAGE_PATH = Path(os.environ.get("STARCASTER_DATA_STORE", "benchmark/data"))
+if not DATA_STORAGE_PATH.exists():
+    DATA_STORAGE_PATH.mkdir(parents=True, exist_ok=True)
