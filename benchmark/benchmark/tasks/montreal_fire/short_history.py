@@ -102,6 +102,8 @@ class MontrealFireShortHistoryTask(UnivariateCRPSTask):
 
 
 class MontrealFireFieldFireExplicitShortHistoryTask(MontrealFireShortHistoryTask):
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def __init__(self, seed=None, fixed_config=None):
         super().__init__(
             seed=seed,
@@ -114,6 +116,8 @@ class MontrealFireFieldFireExplicitShortHistoryTask(MontrealFireShortHistoryTask
 
 
 class MontrealFireFieldFireImplicitShortHistoryTask(MontrealFireShortHistoryTask):
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def __init__(self, seed=None, fixed_config=None):
         super().__init__(
             seed=seed,
@@ -126,6 +130,8 @@ class MontrealFireFieldFireImplicitShortHistoryTask(MontrealFireShortHistoryTask
 
 
 class MontrealFireTrashFireExplicitShortHistoryTask(MontrealFireShortHistoryTask):
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def __init__(self, seed=None, fixed_config=None):
         super().__init__(
             seed=seed,
@@ -138,6 +144,8 @@ class MontrealFireTrashFireExplicitShortHistoryTask(MontrealFireShortHistoryTask
 
 
 class MontrealFireTrashFireImplicitShortHistoryTask(MontrealFireShortHistoryTask):
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def __init__(self, seed=None, fixed_config=None):
         super().__init__(
             seed=seed,
@@ -150,6 +158,8 @@ class MontrealFireTrashFireImplicitShortHistoryTask(MontrealFireShortHistoryTask
 
 
 class MontrealFireNauticalRescueExplicitShortHistoryTask(MontrealFireShortHistoryTask):
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def __init__(self, seed=None, fixed_config=None):
         super().__init__(
             seed=seed,
@@ -162,6 +172,8 @@ class MontrealFireNauticalRescueExplicitShortHistoryTask(MontrealFireShortHistor
 
 
 class MontrealFireNauticalRescueImplicitShortHistoryTask(MontrealFireShortHistoryTask):
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def __init__(self, seed=None, fixed_config=None):
         super().__init__(
             seed=seed,
@@ -174,6 +186,8 @@ class MontrealFireNauticalRescueImplicitShortHistoryTask(MontrealFireShortHistor
 
 
 class MontrealFireIceRescueExplicitShortHistoryTask(MontrealFireShortHistoryTask):
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def __init__(self, seed=None, fixed_config=None):
         super().__init__(
             seed=seed,
@@ -186,6 +200,8 @@ class MontrealFireIceRescueExplicitShortHistoryTask(MontrealFireShortHistoryTask
 
 
 class MontrealFireIceRescueImplicitShortHistoryTask(MontrealFireShortHistoryTask):
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def __init__(self, seed=None, fixed_config=None):
         super().__init__(
             seed=seed,
