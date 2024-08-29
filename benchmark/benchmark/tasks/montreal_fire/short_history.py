@@ -84,7 +84,7 @@ class MontrealFireShortHistoryTask(UnivariateCRPSTask):
 
         # Calculate the total number of incidents
         count_per_year = calculate_yearly_sum_stats_for_months(
-            series, list(range(13)), cutoff_year=2024
+            series, list(range(1, 13)), cutoff_year=2024
         )["values"]
         del count_per_year[history_start_date.year]
         del count_per_year[forecast_end_date.year]
