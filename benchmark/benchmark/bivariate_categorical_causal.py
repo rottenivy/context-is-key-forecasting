@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from .base import UnivariateCRPSTask
 import pandas as pd
 import numpy as np
@@ -207,6 +208,7 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
         assert (
             self.causal_config["num_forecast_vars"] == 1
         ), "Only 1 forecast variable supported"
+        self.start_date = "2025-06-01"
         super().__init__(seed=seed, fixed_config=fixed_config)
 
     def generate_regimes(
@@ -301,11 +303,24 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
         trunc_hist_values, trunc_hist_lengths = truncate_regime(
             hist_regime_values, hist_regime_lengths, max_length=history_length
         )
-        hist_cov_desc = verbalize_variable_values(trunc_hist_values, trunc_hist_lengths)
+
+        hist_start_timestamp = datetime.strptime(self.start_date, "%Y-%m-%d")
+        hist_cov_desc = verbalize_variable_values(
+            trunc_hist_values,
+            trunc_hist_lengths,
+            current_date=hist_start_timestamp,
+            increment="daily",
+        )
+
+        num_hist_days = trunc_hist_lengths.sum().item()
+        pred_start_timestamp = hist_start_timestamp + timedelta(days=num_hist_days)
 
         pred_regime_values, pred_regime_lengths = pred_regime_details
         pred_cov_desc = verbalize_variable_values(
-            pred_regime_values, pred_regime_lengths
+            pred_regime_values,
+            pred_regime_lengths,
+            current_date=pred_start_timestamp,
+            increment="daily",
         )
 
         covariate_values = np.concatenate(
@@ -427,7 +442,9 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
         self.future_time = full_time_series_df[history_length:]
 
         # Generate and set arbitrary timestamps
-        ts = generate_timestamps(num_days=len(X_post_burn_in), start_date="2025-06-01")
+        ts = generate_timestamps(
+            num_days=len(X_post_burn_in), start_date=self.start_date
+        )
         self.past_time.index = pd.to_datetime(ts[:history_length])
         self.future_time.index = pd.to_datetime(ts[history_length:])
 
@@ -454,11 +471,11 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
 
         if self.fluctuate_history:
             hist_val = ", ".join(hist_cov_desc_list)
-            line2 = f"For the first {history_length} time steps, the covariate X_0 takes a value of {hist_val}."
+            line2 = f"For the first {history_length} days, the covariate X_0 takes a value of {hist_val}."
         else:
-            line2 = f"For the first {history_length} time steps, the covariate X_0 is constant at {const_hist_value}."
+            line2 = f"For the first {history_length} days, the covariate X_0 is constant at {const_hist_value}."
 
-        line3 = f"For the next {pred_length} time steps, the covariate X_0 takes a value of {pred_cov_desc}."
+        line3 = f"For the next {pred_length} days, the covariate X_0 takes a value of {pred_cov_desc}. Each day can be treated as a timestep for the forecasting task."
 
         scenario = f"{line1}\n{line2}\n{line3}"
         return scenario
