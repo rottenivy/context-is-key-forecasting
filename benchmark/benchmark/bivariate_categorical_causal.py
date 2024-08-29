@@ -609,6 +609,9 @@ class FullCausalContextExplicitEquationBivarLinSVAR(
 
             graph_desc.append(desc_i)
 
+        graph_desc.append(
+            "\epsilon_{i}^{t} given in the equations corresponds to the noise variable with the given noise scale, for X_i^{t}"
+        )
         textual_causal_desc = "\n".join(graph_desc)
         causal_context = (
             f"The causal parents affect the child variables at different lags.\n"
