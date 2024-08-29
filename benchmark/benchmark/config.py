@@ -13,6 +13,9 @@ if not os.path.exists(MODEL_STORAGE_PATH):
 # Evaluation configuration
 DEFAULT_N_SAMPLES = 50
 RESULT_CACHE_PATH = os.environ.get("STARCASTER_RESULT_CACHE", "./inference_cache")
+METRIC_SCALING_CACHE_PATH = os.environ.get(
+    "STARCASTER_METRIC_SCALING_CACHE", "./metric_scaling_cache"
+)
 
 # OpenAI configuration
 OPENAI_USE_AZURE = (
