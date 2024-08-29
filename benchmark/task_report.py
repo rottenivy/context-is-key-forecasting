@@ -81,7 +81,7 @@ def get_task_skill_info(tasks, omit=[]):
     return pd.DataFrame(task_info).set_index("task")
 
 
-def list_tasks_per_column(task_info, suffix):
+def list_tasks_per_column(task_info):
     """
     Produce an HTML list where each column is a heading and the tasks
     with a True value for that column are listed under it as a bullet list
@@ -104,13 +104,13 @@ def list_tasks_per_column(task_info, suffix):
             # Add the tasks as a bullet list
             html += "<ul class='list-group'>\n"
             for task in tasks:
-                html += f"<li class='list-group-item'><a href='./{task}_{suffix}.html'>{task}</a></li>\n"
+                html += f"<li class='list-group-item'><a href='./{task}.html'>{task}</a></li>\n"
             html += "</ul>\n"
 
     return html
 
 
-def create_task_summary_page(tasks, suffix):
+def create_task_summary_page(tasks):
     """
     Create a summary page for the benchmark tasks
 
@@ -181,7 +181,7 @@ def create_task_summary_page(tasks, suffix):
             </p>
         </div>
     """
-        with open(f"{task_name}_{suffix}.html", "w") as f:
+        with open(f"{task_name}.html", "w") as f:
             f.write(summary.format(task_name=task_name, seeds=seeds))
 
 
@@ -256,15 +256,6 @@ def plot_task_barchart(task_info, plot_topic="Context Type"):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--suffix",
-        type=str,
-        default="",
-        help="Suffix to append to the output file names",
-    )
-    args = parser.parse_args()
-
     tasks = ALL_TASKS
     task_context_info = get_task_context_info(tasks)
     task_skill_info = get_task_skill_info(
@@ -279,14 +270,14 @@ if __name__ == "__main__":
     task_context_heatmap = plot_task_heatmap(
         task_context_info, plot_topic="Context Type"
     )
-    task_by_context_list = list_tasks_per_column(task_context_info, suffix=args.suffix)
+    task_by_context_list = list_tasks_per_column(task_context_info)
 
     # # Stats by skill
     task_by_skill_bar = plot_task_barchart(task_skill_info, plot_topic="Skill")
     task_skill_heatmap = plot_task_heatmap(task_skill_info, plot_topic="Skill")
-    task_by_skill_list = list_tasks_per_column(task_skill_info, suffix=args.suffix)
+    task_by_skill_list = list_tasks_per_column(task_skill_info)
 
-    create_task_summary_page(tasks, suffix=args.suffix)
+    create_task_summary_page(tasks)
 
     report = f"""
 <!DOCTYPE html>
@@ -429,5 +420,5 @@ if __name__ == "__main__":
 </html>
 """
 
-    with open(f"index_{args.suffix}.html", "w") as f:
+    with open(f"index.html", "w") as f:
         f.write(report)
