@@ -11,6 +11,7 @@ from gluonts.dataset.util import to_pandas
 from gluonts.dataset.repository import get_dataset
 
 from ..base import UnivariateCRPSTask
+from ..config import DATA_STORAGE_PATH
 
 
 class BaseHalfDaySolarForecastTask(UnivariateCRPSTask):
@@ -24,7 +25,9 @@ class BaseHalfDaySolarForecastTask(UnivariateCRPSTask):
     __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def random_instance(self):
-        dataset = get_dataset("solar_10_minutes", regenerate=False)
+        dataset = get_dataset(
+            "solar_10_minutes", regenerate=False, path=DATA_STORAGE_PATH
+        )
 
         # Select a random time series
         ts_index = self.random.choice(len(dataset.test))

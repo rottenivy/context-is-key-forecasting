@@ -3,14 +3,19 @@ Tasks based on the NN5 dataset (nn5_daily_without_missing), which is a dataset (
 Machines (ATM) in the UK.
 """
 
+from functools import partial
 from tactis.gluon.dataset import get_dataset
 from gluonts.dataset.util import to_pandas
 import numpy as np
 
 from ..base import UnivariateCRPSTask
+from ..config import DATA_STORAGE_PATH
 from ..utils import get_random_window_univar, datetime_to_str
 
 from abc import ABC, abstractmethod
+
+
+get_dataset = partial(get_dataset, path=DATA_STORAGE_PATH)
 
 
 class CashDepletedinATMScenarioTask(UnivariateCRPSTask):
