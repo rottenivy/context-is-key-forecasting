@@ -3,6 +3,7 @@ from gluonts.dataset.util import to_pandas
 import numpy as np
 
 from ..base import UnivariateCRPSTask
+from ..config import DATA_STORAGE_PATH
 from ..utils import get_random_window_univar, datetime_to_str
 
 
@@ -24,7 +25,7 @@ class ElectricityIncreaseInPredictionTask(UnivariateCRPSTask):
 
         # Select a random dataset
         dataset_name = self.random.choice(datasets)
-        dataset = get_dataset(dataset_name, regenerate=False)
+        dataset = get_dataset(dataset_name, regenerate=False, path=DATA_STORAGE_PATH)
 
         assert len(dataset.train) == len(
             dataset.test

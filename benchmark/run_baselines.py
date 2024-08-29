@@ -21,6 +21,7 @@ from benchmark.baselines.statsmodels import (
     ExponentialSmoothingForecaster,
 )
 from benchmark.evaluation import evaluate_all_tasks
+from benchmark.config import RESULT_CACHE_PATH
 
 
 logging.basicConfig(level=logging.INFO)
@@ -214,6 +215,11 @@ def upload_results(results_path):
     # Clean up
     os.chdir("/tmp")
     os.system(f"rm -rf {tmp_dir}")
+
+    # Copy results to the cache path in a file tagged with current timestamp
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    destination_path = os.path.join(RESULT_CACHE_PATH, f"results_{timestamp}.csv")
+    os.system(f"cp {results_path} {destination_path}")
 
 
 def main():

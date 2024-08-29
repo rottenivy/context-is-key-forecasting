@@ -1,18 +1,15 @@
-import numpy as np
-
-import pandas as pd
 import json
 import os
-
-from .utils import get_random_window_univar
+import numpy as np
+import pandas as pd
 
 from .base import UnivariateCRPSTask
-
-from benchmark.data.dominicks import (
+from .data.dominicks import (
     download_dominicks,
     DOMINICK_JSON_PATH,
     DOMINICK_CSV_PATH,
 )
+from .utils import get_random_window_univar
 
 
 class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
