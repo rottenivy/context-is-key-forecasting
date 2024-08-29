@@ -20,6 +20,7 @@ def mean_crps(target, samples):
 def threshold_weighted_crps(
     target: np.array,
     forecast: np.array,
+    scaling: float,
     region_of_interest=None,
     roi_weight: float = 0.5,
     constraint: Optional[Constraint] = None,
@@ -52,6 +53,8 @@ def threshold_weighted_crps(
         The target values. (n_timesteps,)
     forecast: np.array
         The forecast values. (n_samples, n_timesteps)
+    scaling: float
+        The scaling factor, by which to multiply the twCRPS
     region_of_interest: None, int, list of ints, slice, or boolean mask
         The region of interest to apply the roi_metric to.
     roi_weight: float
@@ -78,9 +81,6 @@ def threshold_weighted_crps(
         "violation_mean": the average constraint violation over the samples.
         "violation_crps": the CRPS of the constraint violation.
     """
-    target_range = np.max(target) - np.min(target)
-    scaling = 1.0 / target_range
-
     if region_of_interest:
         roi_mask = format_roi_mask(region_of_interest, forecast.shape)
         roi_crps = mean_crps(target=target[roi_mask], samples=forecast[:, roi_mask])

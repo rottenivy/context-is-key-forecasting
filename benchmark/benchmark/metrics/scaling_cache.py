@@ -6,7 +6,11 @@ import hashlib
 
 from ..config import METRIC_SCALING_CACHE_PATH
 from ..utils import get_all_parent_classes
-from ..utils.cache import CacheMissError, get_source
+
+
+# Cannot be imported from the benchmark.utils.cache due to circular imports
+class CacheMissError(Exception):
+    pass
 
 
 def get_versions_class(cls) -> str:
@@ -74,14 +78,14 @@ class ScalingCache:
 
     def get_cache_key(self, task_class, seeds: list[int]):
         """
-        Get cache key by hashing the task class version tags, the scaling method source code, and the seeds.
+        Get cache key by hashing the task class version tags, the scaling method version id, and the seeds.
         """
 
         # Initialize the hash object
         hasher = hashlib.sha256()
 
         # Hash the task
-        hasher.update(get_source(self.scaling_method).encode("utf-8"))
+        hasher.update(self.scaling_method.__version__.encode("utf-8"))
         hasher.update(get_versions_class(task_class).encode("utf-8"))
         hasher.update(",".join([str(s) for s in seeds]).encode("utf-8"))
 
@@ -130,6 +134,11 @@ def inverse_mean_forecast_range(task_class, seeds) -> float:
         widths.append(target.max() - target.min())
     mean_width = sum(widths) / len(widths)
     return 1 / mean_width
+
+
+inverse_mean_forecast_range.__version__ = (
+    "0.0.1"  # Modification will trigger re-caching
+)
 
 
 # This is the Scaling Cache that is connected to the UnivariateCRPSTask evaluation code
