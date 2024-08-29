@@ -5,13 +5,13 @@ Base classes for the benchmark
 
 import numpy as np
 import pandas as pd
-from typing import Optional, Union
+from typing import Optional
 import statsmodels.tsa.tsatools
 
 from abc import ABC, abstractmethod
 
-from .metrics.constraints import Constraint
 from .metrics.roi_metric import threshold_weighted_crps
+from .metrics.scaling_cache import DefaultScalingCache
 from .utils.plot import plot_task
 
 
@@ -210,6 +210,10 @@ class UnivariateCRPSTask(BaseTask):
         return errors
 
     def evaluate(self, samples):
+        task_scaling = DefaultScalingCache(self.__class__)
+        if task_scaling is None:
+            return float("nan")
+
         if len(samples.shape) == 3:
             samples = samples[:, :, 0]
 
@@ -219,6 +223,7 @@ class UnivariateCRPSTask(BaseTask):
         return threshold_weighted_crps(
             target=target,
             forecast=samples,
+            scaling=task_scaling,
             region_of_interest=self.region_of_interest,
             roi_weight=self.roi_weight,
             constraint=self.metric_constraint,
