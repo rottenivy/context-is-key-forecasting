@@ -200,7 +200,7 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
             "burn_in": 30,
             "noise_type": "gauss",
             "noise_scale": 0.1,
-            "time_window": 200,
+            "time_window": 160,
             "max_data_gen_trials": 100,
             "num_forecast_vars": 1,  # CODE DOES NOT SUPPORT MULTIPLE FORECAST VARIABLES
         }
@@ -283,7 +283,7 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
 
         historical_covariates, hist_regime_details = self.generate_regimes(
             T=total_length - n_samples + history_length,
-            values=[2, 6, 8],
+            values=[2, 8, 12, 20],
             value_type=hist_value_type,
             double_regimes=False,
             regime_limits=(40, 60),
@@ -291,7 +291,7 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
 
         future_covariates, pred_regime_details = self.generate_regimes(
             T=pred_length,
-            values=[10, 12, 30],
+            values=[10, 12, 30, 40],
             value_type=future_val_type,
             double_regimes=True,
             regime_limits=(10, 20),
@@ -544,7 +544,7 @@ class FullCausalContextImplicitEquationBivarLinSVAR(
     __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
-        self.fluctuate_history = False
+        self.fluctuate_history = True
         self.plot_name = "FullContextImplicitBivarCatLinSVAR"
         super().__init__(fixed_config, seed)
 
@@ -595,7 +595,7 @@ class FullCausalContextExplicitEquationBivarLinSVAR(
     __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
-        self.fluctuate_history = False
+        self.fluctuate_history = True
         self.plot_name = "FullContextExplicitBivarCatLinSVAR"
         super().__init__(fixed_config, seed)
 
