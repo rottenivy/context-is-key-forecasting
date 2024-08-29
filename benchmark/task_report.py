@@ -1,3 +1,4 @@
+import argparse
 import base64
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -426,5 +427,5 @@ if __name__ == "__main__":
 </html>
 """
 
-    with open("index.html", "w") as f:
+    with open(f"index.html", "w") as f:
         f.write(report)

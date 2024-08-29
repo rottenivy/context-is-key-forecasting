@@ -3,31 +3,12 @@ Tasks for the Montreal Fire dataset.
 
 """
 
-from ..base import UnivariateCRPSTask
-from ..data.montreal_fire.load import get_incident_log, get_time_count_series_by_borough
-
-
-def calculate_yearly_sum_stats_for_months(df, months, cutoff_year=None):
-    """
-    Calculates the sum over some months, each year, and then returns the average.
-
-    Parameters:
-    df (pd.DataFrame): The DataFrame with a DateTimeIndex.
-    months (list): List of months (1-12) to filter the DataFrame.
-    cutoff_year: int
-        Will only consider data older than this year
-
-    Returns:
-    float: The average yearly sum for the specified months.
-    """
-    filtered_df = df.loc[df.index.month.isin(months) & df.index.year < cutoff_year]
-    yearly_sums = filtered_df.groupby(filtered_df.index.year).sum()
-    return {
-        "min": yearly_sums.min(),
-        "max": yearly_sums.max(),
-        "mean": yearly_sums.mean(),
-        "n": len(yearly_sums),
-    }
+from .utils import calculate_yearly_sum_stats_for_months
+from ...base import UnivariateCRPSTask
+from ...data.montreal_fire.load import (
+    get_incident_log,
+    get_time_count_series_by_borough,
+)
 
 
 class MontrealFireNauticalRescueAnalogyTask(UnivariateCRPSTask):
