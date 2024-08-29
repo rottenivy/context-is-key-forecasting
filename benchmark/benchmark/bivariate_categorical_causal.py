@@ -208,7 +208,6 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
         assert (
             self.causal_config["num_forecast_vars"] == 1
         ), "Only 1 forecast variable supported"
-        self.start_date = "2025-06-01"
         super().__init__(seed=seed, fixed_config=fixed_config)
 
     def generate_regimes(
@@ -383,6 +382,11 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
         noise_type = self.causal_config["noise_type"]
         noise_scale = self.causal_config["noise_scale"]
 
+        if not hasattr(self, "start_date"):
+            self.start_date = self.random.choice(
+                pd.date_range("2021-01-01", "2028-01-01").strftime("%Y-%m-%d")
+            )
+
         attempt = 0
         simulate_flag = True
 
@@ -462,6 +466,9 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
         )
         self.scenario += " " + self.get_causal_context(W, L)
         self.constraints = None
+
+        print(self.background)
+        print(self.scenario)
 
     def get_scenario(self, const_hist_value, history_length, pred_length, cov_desc):
         hist_cov_desc_list, pred_cov_desc_list = cov_desc
