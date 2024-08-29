@@ -104,7 +104,7 @@ class CrazyCast(Baseline):
 
     """
 
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -167,8 +167,11 @@ class CrazyCast(Baseline):
         hist_time = task_instance.past_time.index.strftime("%Y-%m-%d %H:%M:%S").values
         hist_value = task_instance.past_time.values[:, -1]
         pred_time = task_instance.future_time.index.strftime("%Y-%m-%d %H:%M:%S").values
+        # "g" Print up to max_digits digits, although it switch to scientific notation when y >= 1e6,
+        # so switch to "f" without any digits after the dot if y is too large.
         history = "\n".join(
-            f"({x}, {np.round(y, max_digits)})" for x, y in zip(hist_time, hist_value)
+            f"({x}, {y:.{max_digits}g})" if y < 10**max_digits else f"({x}, {y:.0f})"
+            for x, y in zip(hist_time, hist_value)
         )
 
         # Extract context

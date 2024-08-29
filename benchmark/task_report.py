@@ -1,3 +1,4 @@
+import argparse
 import base64
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -166,8 +167,15 @@ def create_task_summary_page(tasks):
     for task_cls in tasks:
         task_name = task_cls.__name__
         seeds = ""
-        for seed in range(1, 4):
+        for seed in range(1, 6):
             task = task_cls(seed=seed)
+
+            if task.background:
+                task.background = task.background.replace("\n", "<br />")
+            if task.constraints:
+                task.constraints = task.constraints.replace("\n", "<br />")
+            if task.scenario:
+                task.scenario = task.scenario.replace("\n", "<br />")
 
             seeds += f"""
         <div class="section">
@@ -419,5 +427,5 @@ if __name__ == "__main__":
 </html>
 """
 
-    with open("index.html", "w") as f:
+    with open(f"index.html", "w") as f:
         f.write(report)

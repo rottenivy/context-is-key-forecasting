@@ -4,11 +4,16 @@ import os
 import glob
 import pandas as pd
 
-from tactis.gluon.dataset import get_dataset
+from functools import partial
 from gluonts.dataset.util import to_pandas
+from tactis.gluon.dataset import get_dataset
 
 from .base import UnivariateCRPSTask
+from .config import DATA_STORAGE_PATH
 from .utils import get_random_window_univar, datetime_to_str
+
+
+get_dataset = partial(get_dataset, path=DATA_STORAGE_PATH)
 
 
 from benchmark.data.pems import (
@@ -311,7 +316,7 @@ class SensorMaintenanceInPredictionTask(UnivariateCRPSTask):
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def random_instance(self):
         # TODO: This task can use all datasets where the notion of a "sensor" is meaningful
@@ -358,13 +363,15 @@ class SensorMaintenanceInPredictionTask(UnivariateCRPSTask):
             # Convert history index to timestamp for consistency
             history_series.index = history_series.index.to_timestamp()
 
-            scenario = f"Consider that the sensor will be offline for maintenance between {datetime_to_str(maintenance_start_date)} and {datetime_to_str(maintenance_end_date)}, which results in zero readings."
+            background = f"This series represents electricity consumption recordings captured by a meter."
+            scenario = f"Consider that the meter will be offline for maintenance between {datetime_to_str(maintenance_start_date)} and {datetime_to_str(maintenance_end_date)}, which results in zero readings."
         else:
             raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
 
         # Instantiate the class variables
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()
+        self.background = background
         self.scenario = scenario
 
         # ROI metric parameters

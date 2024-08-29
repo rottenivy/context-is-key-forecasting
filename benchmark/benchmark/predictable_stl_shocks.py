@@ -4,6 +4,7 @@ from gluonts.time_feature import get_seasonality
 from tactis.gluon.dataset import get_dataset
 
 from .base import UnivariateCRPSTask
+from .config import DATA_STORAGE_PATH
 from .utils import get_random_window_univar, datetime_to_str
 
 from statsmodels.tsa.seasonal import STL
@@ -157,7 +158,7 @@ class STLPredMultiplierTask(STLModifierTask):
         # load dataset
         datasets = ["electricity_hourly"]
         dataset_name = self.random.choice(datasets)
-        dataset = get_dataset(dataset_name, regenerate=False)
+        dataset = get_dataset(dataset_name, regenerate=False, path=DATA_STORAGE_PATH)
 
         assert len(dataset.train) == len(
             dataset.test

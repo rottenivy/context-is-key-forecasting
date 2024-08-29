@@ -11,6 +11,6 @@ for file in *.json; do
 done
 
 # Convert the combined list into a valid JSON array and save it to summary.json
-echo "${combined_list[@]}" | jq -s '.' > _hide/summary.json
+echo "${combined_list[@]}" | jq -s '.' > _summary.json
 
 echo "Combined JSON list saved to summary.json"

@@ -105,6 +105,33 @@ class MinConstraint(Constraint):
         return f"MinConstraint(min={self.threshold})"
 
 
+class VariableMaxConstraint(Constraint):
+    """
+    Constraint of the form: x_i <= threshold_i for i in S
+    Where S doesn't have to be the full range
+    """
+
+    def __init__(self, indices: np.array, thresholds: np.array) -> None:
+        super().__init__()
+
+        assert len(indices) == len(
+            thresholds
+        ), f"Unequal dimensions for indices and thresholds: {len(indices)} != {len(thresholds)}"
+
+        self.indices = indices
+        self.thresholds = thresholds
+
+    def violation(self, samples: np.array, scaling: float) -> float:
+        indexed_samples = samples[:, self.indices]
+        scaled_samples = scaling * indexed_samples
+        scaled_thresholds = scaling * self.thresholds
+
+        return (scaled_samples - scaled_thresholds[None, :]).clip(min=0).mean(axis=1)
+
+    def __repr__(self) -> str:
+        return f"VariableMaxConstraint(indices={list(self.indices)}, thresholds={list(self.thresholds)})"
+
+
 class MeanEqualityConstraint(Constraint):
     """
     Constraint of the form: mean(x) == value

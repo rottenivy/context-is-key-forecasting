@@ -132,14 +132,14 @@ def evaluate_task(
     n_samples,
     output_folder=None,
 ):
+    if output_folder:
+        task_folder = output_folder / task_cls.__name__
+        seed_folder = task_folder / f"{seed}"
+        seed_folder.mkdir(parents=True, exist_ok=True)
+
     try:
         # Instantiate the task
         task = task_cls(seed=seed)
-
-        if output_folder:
-            task_folder = output_folder / task.name
-            seed_folder = task_folder / f"{seed}"
-            seed_folder.mkdir(parents=True, exist_ok=True)
 
         logger.info(f"Method {method_callable} - Task {task.name} - Seed {seed}")
         samples = method_callable(task_instance=task, n_samples=n_samples)
