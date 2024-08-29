@@ -51,6 +51,10 @@ class MontrealFireShortHistoryTask(UnivariateCRPSTask):
         self.include_max_month = include_max_month
         super().__init__(seed=seed, fixed_config=fixed_config)
 
+        assert (
+            history_length < 12
+        ), "History length must be less than 12 months. To leave room for forecasting."
+
     @property
     def seasonal_period(self):
         return -1
@@ -76,7 +80,11 @@ class MontrealFireShortHistoryTask(UnivariateCRPSTask):
         self.past_time = series[history_start_date:history_end_date].to_frame()
         self.future_time = series[forecast_start_date:forecast_end_date].to_frame()
 
-        self.background = f'This series contains the number of "{self.series}" incidents responded to by the Montreal Fire Department.'
+        # Add randomness to the background
+        if self.random.random() < 0.5:
+            self.background = f'This series contains the number of "{self.series}" incidents responded to by the Montreal Fire Department.'
+        else:
+            self.background = f'This is the number of "{self.series}" incidents responded to by Montreal firefighters.'
 
         # Get the other windows to calculate stats
         other = list(valid_start_dates)
@@ -88,15 +96,25 @@ class MontrealFireShortHistoryTask(UnivariateCRPSTask):
         )["values"]
         del count_per_year[history_start_date.year]
         del count_per_year[forecast_end_date.year]
-        self.background += f" In other years, the average number of incidents was {np.mean(list(count_per_year.values())):.0f}"
+
+        # Add randomness to the background
+        if self.random.random() < 0.5:
+            self.background += f" In other years, the average number of incidents was {np.mean(list(count_per_year.values())):.0f}"
+        else:
+            self.background += f" On average, they respond to {np.mean(list(count_per_year.values())):.0f} incidents per year"
 
         if self.include_max_month:
             max_month = stats.mode(
                 [series[o : o + 12].idxmax().month for o in other]
             ).mode
-            self.background += (
-                f" and the month with the most incidents was {month_name[max_month]}."
-            )
+
+            # Add randomness to the background
+            if self.random.random() < 0.5:
+                self.background += f" and the month with the most incidents was {month_name[max_month]}."
+            else:
+                self.background += (
+                    f" with the busiest month being {month_name[max_month]}."
+                )
         else:
             self.background += "."
 
