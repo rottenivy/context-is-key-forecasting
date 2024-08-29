@@ -4,16 +4,22 @@ Tasks based on the Monash `traffic` dataset
 
 import datetime
 import pandas as pd
+
 from typing import Optional
 from abc import abstractmethod
-
+from functools import partial
 from gluonts.dataset.util import to_pandas
 from gluonts.dataset.repository import get_dataset
 
 from ..base import UnivariateCRPSTask
+from ..config import DATA_STORAGE_PATH
+
 
 # TODO: rename to traffic_holiday_tasks.py
 from ..data.pems import load_traffic_series
+
+
+get_dataset = partial(get_dataset, path=DATA_STORAGE_PATH)
 
 
 class TrafficForecastTaskwithHolidaysInPredictionWindow(UnivariateCRPSTask):

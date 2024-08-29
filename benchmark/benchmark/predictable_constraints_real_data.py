@@ -1,18 +1,22 @@
 import numpy as np
 
-from .base import UnivariateCRPSTask
-from .metrics.constraints import ListConstraint, MaxConstraint, MinConstraint
-from tactis.gluon.dataset import get_dataset
+from functools import partial
 from gluonts.dataset.util import to_pandas
+from tactis.gluon.dataset import get_dataset
 
+from .base import UnivariateCRPSTask
+from .config import DATA_STORAGE_PATH
+from .metrics.constraints import ListConstraint, MaxConstraint, MinConstraint
 from .utils import get_random_window_univar
-
 from .window_selection import (
     intersection_over_union_is_low,
     quartile_intersection_over_union_is_low,
     median_absolute_deviation_intersection_is_low,
     is_baseline_prediction_poor,
 )
+
+
+get_dataset = partial(get_dataset, path=DATA_STORAGE_PATH)
 
 
 class OraclePredUnivariateConstraintsTask(UnivariateCRPSTask):
