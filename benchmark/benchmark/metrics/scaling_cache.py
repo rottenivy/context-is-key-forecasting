@@ -109,7 +109,7 @@ class ScalingCache:
             raise CacheMissError()
 
         if self.compute_on_miss:
-            self.logger.info("Cache miss. Running inference.")
+            self.logger.info("Cache miss. Computing scaling.")
             scaling = self.scaling_method(task_class=task_class, seeds=self.seeds)
 
             # Update cache on disk
