@@ -18,7 +18,7 @@ from .base import Baseline
 class LLMPForecaster(Baseline):
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
-    def __init__(self, llm_type, use_context=True):
+    def __init__(self, llm_type, use_context=True, dry_run=False):
         f"""
         Get predictions from LLM processes
 
@@ -28,12 +28,14 @@ class LLMPForecaster(Baseline):
             Type of LLM model to use. Options are: {llm_map.keys()}
         use_context: bool
             Whether to include context in the prompt
+        dry_run: bool
+            If true, the model and tokenizer are not loaded.
 
         Notes:
         ------
         * TODO: No multivariate support
         * By default, the model is set in autoregressive mode
-        
+
         """
         self.llm_type = llm_type
         self.use_context = use_context
@@ -56,15 +58,19 @@ class LLMPForecaster(Baseline):
         }
 
         # Load the model and tokenizer
-        logging.info("Loading model and tokenizer...")
-        try:
-            self.model, self.tokenizer = get_model_and_tokenizer(
-                llm_path=None, llm_type=self.llmp_args["--llm_type"]
-            )
-        except KeyError:
-            raise ValueError(
-                f"Model type {self.llmp_args['--llm_type']} not supported. Options are: {llm_map.keys()}"
-            )
+        if not dry_run:
+            logging.info("Loading model and tokenizer...")
+            try:
+                self.model, self.tokenizer = get_model_and_tokenizer(
+                    llm_path=None, llm_type=self.llmp_args["--llm_type"]
+                )
+            except KeyError:
+                raise ValueError(
+                    f"Model type {self.llmp_args['--llm_type']} not supported. Options are: {llm_map.keys()}"
+                )
+        else:
+            logging.info("Dry run: Model and tokenizer not loaded.")
+            self.model, self.tokenizer = None, None
 
     def _prepare_data(self, task_instance):
         """
@@ -112,7 +118,7 @@ class LLMPForecaster(Baseline):
 
         """
         prompt = f"""
-Forecast the future values of this time series, while considering the following 
+Forecast the future values of this time series, while considering the following
 background knowledge, scenario, and constraints.
 
 Background knowledge:
