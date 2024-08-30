@@ -12,6 +12,7 @@ from gluonts.dataset.repository import get_dataset
 
 from ..base import UnivariateCRPSTask
 from ..config import DATA_STORAGE_PATH
+from ..metrics.constraints import MinConstraint
 
 
 class BaseHalfDaySolarForecastTask(UnivariateCRPSTask):
@@ -144,8 +145,115 @@ class ZenithInfoHalfDaySolarForecastTask(BaseHalfDaySolarForecastTask):
         )
 
 
+class SimilarLocationDaySolarForecastTask(BaseHalfDaySolarForecastTask):
+    """
+    Version of the task where the average time at which the daily maximum is reached is mentioned.
+    """
+
+    _context_sources = ["c_i", "c_h"]
+    _skills = BaseHalfDaySolarForecastTask._skills + ["reasoning: analogy"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def random_instance(self):
+        dataset = get_dataset("solar_10_minutes", regenerate=False)
+
+        # Average over all time series
+        df = pd.concat(
+            [to_pandas(list(dataset.test)[i]) for i in range(len(dataset.test))], axis=1
+        )
+        full_series = df.mean(1)
+
+        # The solar_10_minutes dataset is for the whole year of 2006.
+        # Select a day for the forecast between 2006-07-01 (182nd day) and 2006-12-31 (365th day).
+        day = self.random.randint(low=181, high=365)
+        # Select the start of the forecast period, from 8:30 to 10:30.
+        forecast_time = self.random.randint(low=8 * 6 + 3, high=10 * 6 + 3 + 1)
+        # Predict rest of the day
+        full_history_series = full_series.iloc[: (day * 24 * 6)]
+        history_series = full_series.iloc[
+            (day * 24 * 6) : (day * 24 * 6) + forecast_time
+        ]
+        future_series = full_series.iloc[
+            (day * 24 * 6) + forecast_time : (day * 24 * 6) + 24 * 6
+        ]
+
+        background = self.get_background(
+            full_history_series, future_series.index[0].start_time
+        )
+
+        # Instantiate the class variables
+        self.past_time = history_series.to_frame()
+        self.future_time = future_series.to_frame()
+        self.constraints = None
+        self.metric_constraint = MinConstraint(0)
+        self.background = background
+        self.scenario = None
+
+    def get_background(
+        self, full_history_series: pd.Series, forecast_date: pd.Timestamp
+    ) -> str:
+
+        return "This series estimates the power production for a given day of a new solar power plant located in the state of Georgia, which has a humid subtropical climate."
+
+
+class ExplicitSimilarLocationDaySolarForecastTask(SimilarLocationDaySolarForecastTask):
+    """
+    Version of the task where the average time at which the daily maximum is reached is mentioned.
+    """
+
+    _context_sources = ["c_i", "c_h"]
+    _skills = SimilarLocationDaySolarForecastTask._skills
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def get_background(
+        self, full_history_series: pd.Series, forecast_date: pd.Timestamp
+    ) -> str:
+
+        return "This series estimates the power production for a given day of a new solar power plant located in the state of Georgia, which has a climate similar to Alabama's."
+
+
+class SimilarLocationWithReferenceDaySolarForecastTask(
+    SimilarLocationDaySolarForecastTask
+):
+    """
+    Version of the task where the average time at which the daily maximum is reached is mentioned.
+    """
+
+    _context_sources = ["c_i", "c_h"]
+    _skills = BaseHalfDaySolarForecastTask._skills + [
+        "reasoning: deduction",
+    ]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def get_background(
+        self, full_history_series: pd.Series, forecast_date: pd.Timestamp
+    ) -> str:
+
+        def get_max(s):
+            p = s.idxmax()
+            max_value = s.max()
+            t = p.start_time.time()
+            return (
+                3600 * t.hour + 60 * t.minute + t.second + 1e-6 * t.microsecond,
+                max_value,
+            )
+
+        # Use the longest day for reference
+        day = 171
+        reference_series = full_history_series.iloc[day * 24 * 6 : day * (24 + 1) * 6]
+        zenith_seconds, max_power = get_max(reference_series)
+        zenith_formated = (
+            datetime.datetime.fromtimestamp(zenith_seconds).time().strftime("%H:%M:%S")
+        )
+
+        return f"This series estimates the power production for a given day of a new solar power plant located in the state of Georgia, which has a humid subtropical climate. As reference, the maximal power production in similar states on June 20th was of {max_power:.2f} at {zenith_formated}."
+
+
 __TASKS__ = [
     MinimalInfoHalfDaySolarForecastTask,
     LocaleInfoHalfDaySolarForecastTask,
     ZenithInfoHalfDaySolarForecastTask,
+    SimilarLocationDaySolarForecastTask,
+    ExplicitSimilarLocationDaySolarForecastTask,
+    SimilarLocationWithReferenceDaySolarForecastTask,
 ]
