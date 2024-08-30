@@ -102,7 +102,7 @@ class MontrealFireFieldAndTrashCausalConfoundingTask(MontrealFireCausalConfoundi
             covariate_series="Trash fire",
             action_descriptions=[
                 "daily spraying of all piles of trash with water",
-                "daily sparying of all piles of trash with fire retardant foam",
+                "daily spraying of all piles of trash with fire retardant foam",
                 "daily collection of all trash and storage in a fire-proof facility",
             ],
             seed=seed,
