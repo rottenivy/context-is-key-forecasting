@@ -4,9 +4,13 @@ This must be run to allow UnivariateCRPSTask subclasses to compute their metrics
 """
 
 import traceback
+import logging
 
 from benchmark.metrics.scaling_cache import ScalingCache, DefaultScalingCache
 from benchmark import ALL_TASKS
+
+
+logging.basicConfig(level=logging.INFO)
 
 
 ComputeScalingCache = ScalingCache(

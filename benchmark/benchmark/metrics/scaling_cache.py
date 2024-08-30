@@ -78,7 +78,7 @@ class ScalingCache:
 
     def get_cache_key(self, task_class, seeds: list[int]):
         """
-        Get cache key by hashing the task class version tags, the scaling method version id, and the seeds.
+        Get cache key by hashing the task class version tags + its name, the scaling method version id, and the seeds.
         """
 
         # Initialize the hash object
@@ -86,6 +86,8 @@ class ScalingCache:
 
         # Hash the task
         hasher.update(self.scaling_method.__version__.encode("utf-8"))
+        # Don't use str(task_class) to avoid invalidating the cache if we move the class to a new folder
+        hasher.update(task_class.__name__.encode("utf-8"))
         hasher.update(get_versions_class(task_class).encode("utf-8"))
         hasher.update(",".join([str(s) for s in seeds]).encode("utf-8"))
 
