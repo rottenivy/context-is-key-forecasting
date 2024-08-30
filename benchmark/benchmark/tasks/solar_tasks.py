@@ -158,9 +158,8 @@ class SimilarLocationDaySolarForecastTask(BaseHalfDaySolarForecastTask):
         dataset = get_dataset("solar_10_minutes", regenerate=False)
 
         # Average over all time series
-        df = pd.concat(
-            [to_pandas(list(dataset.test)[i]) for i in range(len(dataset.test))], axis=1
-        )
+        dataset_list = list(dataset.test)
+        df = pd.concat([to_pandas(d) for d in dataset_list], axis=1)
         full_series = df.mean(1)
 
         # The solar_10_minutes dataset is for the whole year of 2006.
