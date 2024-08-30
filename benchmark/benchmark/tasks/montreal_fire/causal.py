@@ -83,12 +83,12 @@ class MontrealFireCausalConfoundingTask(MontrealFireShortHistoryTask):
         covariate_series = self.covariate_series.lower()
         self.background += f"""
 
-The Mayor is determined to completely erradicate this kind of incident.
-Fortunately, the city's public safety research group, a team of highly-qualified experts, identified that {target_series}s and {covariate_series}s tend to co-occur.
+The Mayor is determined to completely eradicate this kind of incident.
+Fortunately, the city's public safety research group, a team of highly qualified experts, identified that {target_series}s and {covariate_series}s tend to co-occur.
 When the amount of {target_series}s increases, the amount of {covariate_series}s also tends to increase. The same applies to decreases.
 
-The Mayor has plan: they will implement {action_desc} starting on {self.forecast_start_date}.
-In a recent interview, they claimed "this is a bulletproof plan and I am certain it will immediately put and end to {target_series}s."
+The Mayor has a plan: they will implement {action_desc} starting on {self.forecast_start_date}.
+In a recent interview, they claimed, "This is a bulletproof plan, and I am certain it will immediately put an end to {target_series}s."
 """
 
 
@@ -123,7 +123,7 @@ class MontrealFireTrashAndNauticalCausalConfoundingTask(
             action_descriptions=[
                 "a strict prohibition of all nautical activities",
                 "constrained zones with great supervision for nautical activities and astonishing fines for violators",
-                "high metal fences that prevent access to all water bassins in and around the city",
+                "high metal fences that prevent access to all water basins in and around the city",
             ],
             seed=seed,
             fixed_config=fixed_config,
@@ -161,7 +161,7 @@ class MontrealFireTrashAndNauticalCausalConfoundingTask(
             action_descriptions=[
                 "a strict prohibition of all nautical activities",
                 "constrained zones with great supervision for nautical activities and astonishing fines for violators",
-                "high metal fences that prevent access to all water bassins in and around the city",
+                "high metal fences that prevent access to all water basins in and around the city",
             ],
             seed=seed,
             fixed_config=fixed_config,
@@ -180,7 +180,7 @@ class MontrealFireTrashAndBicycleCausalConfoundingTask(
             covariate_series="Bicycle accident",
             action_descriptions=[
                 "a strict prohibition of all cycling activities in the city",
-                "the immediate emprisonment of anyone caught riding a bicycle",
+                "the immediate imprisonment of anyone caught riding a bicycle",
             ],
             seed=seed,
             fixed_config=fixed_config,
