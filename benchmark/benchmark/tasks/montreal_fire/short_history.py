@@ -36,7 +36,7 @@ class MontrealFireShortHistoryTask(UnivariateCRPSTask):
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_h"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -127,7 +127,7 @@ class MontrealFireShortHistoryTask(UnivariateCRPSTask):
 
         # Add randomness to the background
         if self.random.random() < 0.5:
-            self.background += f" In other years, the average number of incidents was {np.mean(list(count_per_year.values())):.0f}"
+            self.background += f" In other years, the yearly average number of incidents was {np.mean(list(count_per_year.values())):.0f}"
         else:
             self.background += f" On average, they respond to {np.mean(list(count_per_year.values())):.0f} incidents per year"
 
