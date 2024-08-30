@@ -137,7 +137,7 @@ class BaseFREDCountyUsingStateData(UnivariateCRPSTask):
         self.scenario = self.get_scenario(state_data, state_names)
 
     def get_background(self, county: str, state: str) -> str:
-        return f"This is the {self.dataset_description} for {county}, in the USA. However, the last 6 months of data have not yet been released."
+        return f"This is the {self.dataset_description} for {county}, in the USA."
 
     def get_scenario(self, state_data: list[pd.Series], state_names: list[str]) -> str:
         if self.number_of_other_states == 0:
