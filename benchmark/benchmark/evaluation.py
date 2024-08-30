@@ -58,11 +58,10 @@ def plot_forecast_univariate(task, samples, path, return_fig=False):
             label=label,
             zorder=zorder,
         )
-        
+
         if quant == 0.05:
             min_quantile_value = np.min(lower_quantile)
             max_quantile_value = np.max(upper_quantile)
-
 
     ax.plot(
         future_timesteps,
