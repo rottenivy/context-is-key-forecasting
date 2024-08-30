@@ -5,18 +5,6 @@ from ...data.montreal_fire.load import (
 from .short_history import MontrealFireShortHistoryTask
 from .utils import calculate_yearly_sum_stats_for_months
 
-"""
-Narrative:
-
-* Give two highly correlated series (e.g., two summer seasonal)
-* Tell the model that they move alike
-* Give the model a scenario that suggests that the covariate will go down drastically
-* The model should not forecast that decrease.
-* Use monthly data over past years
-
-
-"""
-
 
 class MontrealFireCausalConfoundingTask(MontrealFireShortHistoryTask):
     """
