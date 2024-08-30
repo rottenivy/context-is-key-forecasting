@@ -29,12 +29,14 @@ class MontrealFireShortHistoryTask(UnivariateCRPSTask):
         The number of months of historical data to use.
     include_max_month : bool, default True
         Whether to include information about the month with the most incidents in the past.
-
+    min_occurrences: int, default 10
+        The minimum number yearly occurrences of a "series" incidents each year (on average)
+        in order for a borough's data to be included in the task instances.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_h"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -44,11 +46,13 @@ class MontrealFireShortHistoryTask(UnivariateCRPSTask):
         history_start_month=12,
         history_length=6,
         include_max_month=True,
+        min_occurrences=10,
     ):
         self.series = series
         self.history_start_month = history_start_month
         self.history_length = history_length
         self.include_max_month = include_max_month
+        self.min_occurrences = min_occurrences
         super().__init__(seed=seed, fixed_config=fixed_config)
 
         assert (
@@ -61,10 +65,28 @@ class MontrealFireShortHistoryTask(UnivariateCRPSTask):
 
     def _get_data(self):
         incidents = get_incident_log()
-        return get_time_count_series_by_borough(incidents, self.series, frequency="M")
+
+        all_series = get_time_count_series_by_borough(
+            incidents, self.series, frequency="M"
+        )
+
+        valid_boroughs = []
+        for borough, b_series in all_series.items():
+            if borough == "Indéterminé":
+                continue
+            if (
+                calculate_yearly_sum_stats_for_months(df=b_series, cutoff_year=2024)[
+                    "mean"
+                ]
+                > self.min_occurrences
+            ):
+                valid_boroughs.append(borough)
+
+        random_borough = self.random.choice(valid_boroughs)
+        return all_series[random_borough], random_borough
 
     def random_instance(self):
-        series = self._get_data()["total"]
+        series, borough = self._get_data()
 
         valid_start_dates = [
             date
@@ -72,34 +94,40 @@ class MontrealFireShortHistoryTask(UnivariateCRPSTask):
             if len(series[date:]) >= 12
         ]
 
-        history_start_date = self.random.choice(valid_start_dates)
-        history_end_date = history_start_date + self.history_length - 1
-        forecast_start_date = history_end_date + 1
-        forecast_end_date = forecast_start_date + 12 - self.history_length
+        self.history_start_date = self.random.choice(valid_start_dates)
+        self.history_end_date = self.history_start_date + self.history_length - 1
+        self.forecast_start_date = self.history_end_date + 1
+        self.forecast_end_date = self.forecast_start_date + 12 - self.history_length
 
-        self.past_time = series[history_start_date:history_end_date].to_frame()
-        self.future_time = series[forecast_start_date:forecast_end_date].to_frame()
+        self.past_time = series[
+            self.history_start_date : self.history_end_date
+        ].to_frame()
+        self.future_time = series[
+            self.forecast_start_date : self.forecast_end_date
+        ].to_frame()
+
+        self.background = "The Montreal Fire Department is in charge of responding to various kind of public safety incidents. "
 
         # Add randomness to the background
         if self.random.random() < 0.5:
-            self.background = f'This series contains the number of "{self.series}" incidents responded to by the Montreal Fire Department.'
+            self.background += f"This series contains the number of {self.series.lower()} incidents responded to by the Montreal Fire Department in the {borough} borough."
         else:
-            self.background = f'This is the number of "{self.series}" incidents responded to by Montreal firefighters.'
+            self.background += f"This is the number of {self.series.lower()} incidents responded to by Montreal firefighters in the {borough} borough."
 
         # Get the other windows to calculate stats
         other = list(valid_start_dates)
-        other.remove(history_start_date)
+        other.remove(self.history_start_date)
 
         # Calculate the total number of incidents
         count_per_year = calculate_yearly_sum_stats_for_months(
             series, list(range(1, 13)), cutoff_year=2024
         )["values"]
-        del count_per_year[history_start_date.year]
-        del count_per_year[forecast_end_date.year]
+        del count_per_year[self.history_start_date.year]
+        del count_per_year[self.forecast_end_date.year]
 
         # Add randomness to the background
         if self.random.random() < 0.5:
-            self.background += f" In other years, the average number of incidents was {np.mean(list(count_per_year.values())):.0f}"
+            self.background += f" In other years, the yearly average number of incidents was {np.mean(list(count_per_year.values())):.0f}"
         else:
             self.background += f" On average, they respond to {np.mean(list(count_per_year.values())):.0f} incidents per year"
 

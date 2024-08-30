@@ -4,7 +4,7 @@ Utility functions for the Montreal fire tasks
 """
 
 
-def calculate_yearly_sum_stats_for_months(df, months, cutoff_year=None):
+def calculate_yearly_sum_stats_for_months(df, months=None, cutoff_year=None):
     """
     Calculates the sum over some months, each year, and then returns the average.
 
@@ -17,6 +17,9 @@ def calculate_yearly_sum_stats_for_months(df, months, cutoff_year=None):
     Returns:
     float: The average yearly sum for the specified months.
     """
+    if months is None:
+        months = list(range(1, 13))
+
     filtered_df = df.loc[
         (df.index.month.isin(months))
         & (df.index.year < (cutoff_year if cutoff_year else 99999))

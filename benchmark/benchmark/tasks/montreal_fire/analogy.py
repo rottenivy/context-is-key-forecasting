@@ -14,7 +14,7 @@ from ...data.montreal_fire.load import (
 class MontrealFireNauticalRescueAnalogyTask(UnivariateCRPSTask):
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_h", "c_i"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: analogy", "retrieval: context"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -114,7 +114,7 @@ class MontrealFireNauticalRescueAnalogyTask(UnivariateCRPSTask):
         count_stats = calculate_yearly_sum_stats_for_months(
             self.all_series[ref], months=stat_months, cutoff_year=stats_cutoff_year
         )
-        context += f"\nFor reference, here are some statistics for two of the city's boroughs.\nThe values are historical incident counts [min, max] between {stats_month_start_str} and {stats_month_end_str} for the past {count_stats['n']} years:\n"
+        context += f"\nFor reference, here are some statistics for two of the city's boroughs.\nThe values are historical yearly incident counts [min, max] between {stats_month_start_str} and {stats_month_end_str} for the past {count_stats['n']} years:\n"
         context += f"* {ref}{desc} (pop.: {boroughs[ref]['pop']}): [{count_stats['min']}, {count_stats['max']}] incidents\n"
         # ... without water
         ref = self.random.choice(
