@@ -165,8 +165,8 @@ class SimilarLocationDaySolarForecastTask(BaseHalfDaySolarForecastTask):
         # The solar_10_minutes dataset is for the whole year of 2006.
         # Select a day for the forecast between 2006-07-01 (182nd day) and 2006-12-31 (365th day).
         day = self.random.randint(low=181, high=365)
-        # Select the start of the forecast period, from 8:30 to 10:30.
-        forecast_time = self.random.randint(low=8 * 6 + 3, high=10 * 6 + 3 + 1)
+        # Select the start of the forecast period, from 6:30 to 8:30.
+        forecast_time = self.random.randint(low=6 * 6 + 3, high=8 * 6 + 3 + 1)
         # Predict rest of the day
         full_history_series = full_series.iloc[: (day * 24 * 6)]
         history_series = full_series.iloc[
