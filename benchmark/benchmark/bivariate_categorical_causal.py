@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from .base import UnivariateCRPSTask
 import pandas as pd
 import numpy as np
@@ -200,7 +201,7 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
             "burn_in": 30,
             "noise_type": "gauss",
             "noise_scale": 0.1,
-            "time_window": 200,
+            "time_window": 160,
             "max_data_gen_trials": 100,
             "num_forecast_vars": 1,  # CODE DOES NOT SUPPORT MULTIPLE FORECAST VARIABLES
         }
@@ -283,7 +284,7 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
 
         historical_covariates, hist_regime_details = self.generate_regimes(
             T=total_length - n_samples + history_length,
-            values=[2, 6, 8],
+            values=[2, 8, 12, 20],
             value_type=hist_value_type,
             double_regimes=False,
             regime_limits=(40, 60),
@@ -291,7 +292,7 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
 
         future_covariates, pred_regime_details = self.generate_regimes(
             T=pred_length,
-            values=[10, 12, 30],
+            values=[10, 12, 30, 40],
             value_type=future_val_type,
             double_regimes=True,
             regime_limits=(10, 20),
@@ -301,11 +302,24 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
         trunc_hist_values, trunc_hist_lengths = truncate_regime(
             hist_regime_values, hist_regime_lengths, max_length=history_length
         )
-        hist_cov_desc = verbalize_variable_values(trunc_hist_values, trunc_hist_lengths)
+
+        hist_start_timestamp = datetime.strptime(self.start_date, "%Y-%m-%d")
+        hist_cov_desc = verbalize_variable_values(
+            trunc_hist_values,
+            trunc_hist_lengths,
+            current_date=hist_start_timestamp,
+            increment="daily",
+        )
+
+        num_hist_days = trunc_hist_lengths.sum().item()
+        pred_start_timestamp = hist_start_timestamp + timedelta(days=num_hist_days)
 
         pred_regime_values, pred_regime_lengths = pred_regime_details
         pred_cov_desc = verbalize_variable_values(
-            pred_regime_values, pred_regime_lengths
+            pred_regime_values,
+            pred_regime_lengths,
+            current_date=pred_start_timestamp,
+            increment="daily",
         )
 
         covariate_values = np.concatenate(
@@ -368,6 +382,11 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
         noise_type = self.causal_config["noise_type"]
         noise_scale = self.causal_config["noise_scale"]
 
+        if not hasattr(self, "start_date"):
+            self.start_date = self.random.choice(
+                pd.date_range("2021-01-01", "2028-01-01").strftime("%Y-%m-%d")
+            )
+
         attempt = 0
         simulate_flag = True
 
@@ -427,7 +446,9 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
         self.future_time = full_time_series_df[history_length:]
 
         # Generate and set arbitrary timestamps
-        ts = generate_timestamps(num_days=len(X_post_burn_in), start_date="2025-06-01")
+        ts = generate_timestamps(
+            num_days=len(X_post_burn_in), start_date=self.start_date
+        )
         self.past_time.index = pd.to_datetime(ts[:history_length])
         self.future_time.index = pd.to_datetime(ts[history_length:])
 
@@ -446,6 +467,9 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
         self.scenario += " " + self.get_causal_context(W, L)
         self.constraints = None
 
+        print(self.background)
+        print(self.scenario)
+
     def get_scenario(self, const_hist_value, history_length, pred_length, cov_desc):
         hist_cov_desc_list, pred_cov_desc_list = cov_desc
         pred_cov_desc = ", ".join(pred_cov_desc_list)
@@ -454,11 +478,11 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
 
         if self.fluctuate_history:
             hist_val = ", ".join(hist_cov_desc_list)
-            line2 = f"For the first {history_length} time steps, the covariate X_0 takes a value of {hist_val}."
+            line2 = f"For the first {history_length} days, the covariate X_0 takes a value of {hist_val}."
         else:
-            line2 = f"For the first {history_length} time steps, the covariate X_0 is constant at {const_hist_value}."
+            line2 = f"For the first {history_length} days, the covariate X_0 is constant at {const_hist_value}."
 
-        line3 = f"For the next {pred_length} time steps, the covariate X_0 takes a value of {pred_cov_desc}."
+        line3 = f"For the next {pred_length} days, the covariate X_0 takes a value of {pred_cov_desc}. Each day can be treated as a timestep for the forecasting task."
 
         scenario = f"{line1}\n{line2}\n{line3}"
         return scenario
@@ -544,7 +568,7 @@ class FullCausalContextImplicitEquationBivarLinSVAR(
     __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
-        self.fluctuate_history = False
+        self.fluctuate_history = True
         self.plot_name = "FullContextImplicitBivarCatLinSVAR"
         super().__init__(fixed_config, seed)
 
@@ -595,7 +619,7 @@ class FullCausalContextExplicitEquationBivarLinSVAR(
     __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
-        self.fluctuate_history = False
+        self.fluctuate_history = True
         self.plot_name = "FullContextExplicitBivarCatLinSVAR"
         super().__init__(fixed_config, seed)
 
@@ -609,6 +633,9 @@ class FullCausalContextExplicitEquationBivarLinSVAR(
 
             graph_desc.append(desc_i)
 
+        graph_desc.append(
+            "\epsilon_{i}^{t} given in the equations corresponds to the noise variable with the given noise scale, for X_i^{t}"
+        )
         textual_causal_desc = "\n".join(graph_desc)
         causal_context = (
             f"The causal parents affect the child variables at different lags.\n"

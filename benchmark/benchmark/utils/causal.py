@@ -47,7 +47,7 @@ def parent_descriptions(W, L, node, desc):
             coeff_parent_vars = []
             for parent in parents:
                 coefficient = W[l, parent, node]
-                coeff_parent_vars.append(f"{coefficient} * X_{parent}")
+                coeff_parent_vars.append(f"{coefficient:.3f} * X_{parent}")
                 parent_vars.append(f"X_{parent}")
 
             expression = " + ".join(coeff_parent_vars)
@@ -57,7 +57,9 @@ def parent_descriptions(W, L, node, desc):
             for parent in parents:
                 coefficient = W[l, parent, node]
                 timestep_indexed_parent = f"X_{parent}" + "^{t-" + str(l) + "}"
-                coeff_parent_vars.append(f"{coefficient} * {timestep_indexed_parent}")
+                coeff_parent_vars.append(
+                    f"{coefficient:.3f} * {timestep_indexed_parent}"
+                )
 
         else:
             NotImplementedError(
@@ -66,10 +68,10 @@ def parent_descriptions(W, L, node, desc):
 
     if desc == "edge_weights_explicit_equation":
         if len(coeff_parent_vars) == 0:
-            res = f"X_{node}^" + "{t} = \epsilon."
+            res = f"X_{node}^" + "{t} = \epsilon_" + f"{node}^" + "{t}"
         else:
             expression = " + ".join(coeff_parent_vars)
-            res = f"X_{node}^" + "{t} = " + expression + " + \epsilon."
+            res = f"X_{node}^" + "{t} = " + expression + f" + \epsilon_{node}^" + "{t}"
 
     return res
 
@@ -99,11 +101,18 @@ def generate_timestamps(num_days, start_date="2025-06-01"):
     return timestamps
 
 
-def verbalize_variable_values(regime_values, regime_lengths):
+def verbalize_variable_values(regime_values, regime_lengths, current_date, increment):
+    assert increment == "daily"
     pred_time_covariate_desc = []
+
     for i in range(len(regime_values)):
-        text = f"{regime_values[i]} for {regime_lengths[i]} timesteps"
+        from_date_str = current_date.strftime("%Y-%m-%d")
+        current_date += timedelta(days=int(regime_lengths[i]) - 1)
+        to_date_str = current_date.strftime("%Y-%m-%d")
+        text = f"{regime_values[i]} from {from_date_str} to {to_date_str}"
         pred_time_covariate_desc.append(text)
+        current_date += timedelta(days=1)
+
     return pred_time_covariate_desc
 
 
