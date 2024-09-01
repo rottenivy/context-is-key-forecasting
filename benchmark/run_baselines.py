@@ -139,7 +139,9 @@ def experiment_llmp(
     LLM Process baselines
 
     """
-    llmp_forecaster = LLMPForecaster(llm_type=llm, use_context=use_context)
+    llmp_forecaster = LLMPForecaster(
+        llm_type=llm, use_context=use_context, dry_run=skip_cache_miss
+    )
     return (
         evaluate_all_tasks(
             llmp_forecaster,
