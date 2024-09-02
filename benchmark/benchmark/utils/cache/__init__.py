@@ -4,13 +4,13 @@ import hashlib
 import logging
 import pandas as pd
 
-from diskcache import Cache
 from pathlib import Path
 
 
-from ..baselines.base import Baseline
-from ..config import DEFAULT_N_SAMPLES, RESULT_CACHE_PATH
-from ..utils import get_all_parent_classes
+from .disk_cache import HDF5DiskCache
+from ...baselines.base import Baseline
+from ...config import DEFAULT_N_SAMPLES, RESULT_CACHE_PATH
+from ...utils import get_all_parent_classes
 
 
 def get_method_cache_name(method_callable):
@@ -126,7 +126,7 @@ class ResultCache:
             if method_name is None
             else method_name
         )
-        self.cache = Cache(self.cache_dir)
+        self.cache = HDF5DiskCache(self.cache_dir)
 
         # Set the cache key calculation method
         self.cache_method = cache_method
@@ -182,9 +182,12 @@ class ResultCache:
     def __call__(self, task_instance, n_samples=DEFAULT_N_SAMPLES):
         self.logger.info("Attempting to load from cache.")
         cache_key = self.get_cache_key(task_instance, n_samples)
-        if cache_key in self.cache:
+
+        # Attempt to get from cache
+        samples = self.cache.get(cache_key, None)
+        if samples is not None:
             self.logger.info("Cache hit.")
-            return self.cache[cache_key]
+            return samples
 
         if self.raise_on_miss:
             raise CacheMissError()
