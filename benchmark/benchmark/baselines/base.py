@@ -7,8 +7,6 @@ import numpy as np
 
 from abc import ABC, abstractmethod
 
-from ..base import BaseTask
-
 
 class Baseline(ABC):
     """
@@ -22,7 +20,7 @@ class Baseline(ABC):
         pass
 
     @abstractmethod
-    def __call__(self, task_instance: BaseTask, n_samples: int) -> np.ndarray:
+    def __call__(self, task_instance, n_samples: int) -> np.ndarray:
         """
         Infer forecast for a task instance using the baseline
 

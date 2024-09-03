@@ -13,3 +13,4 @@ causalchamber==0.1.1
 diskcache
 termcolor
 tenacity
+h5py

@@ -1,11 +1,12 @@
-import logging
-from typing import Optional
-from diskcache import Cache
-from pathlib import Path
 import hashlib
+import logging
+
+from pathlib import Path
+from typing import Optional
 
 from ..config import METRIC_SCALING_CACHE_PATH
 from ..utils import get_all_parent_classes
+from ..utils.cache.disk_cache import HDF5DiskCache
 
 
 # Cannot be imported from the benchmark.utils.cache due to circular imports
@@ -74,7 +75,7 @@ class ScalingCache:
         self.cache_dir = Path(cache_path)
         # Lazy initialization of the cache, to allow loading this Python file where the cache is unavailable
         # ex: when running tests on Github
-        self.cache: Optional[Cache] = None
+        self.cache: Optional[HDF5DiskCache] = None
 
     def get_cache_key(self, task_class, seeds: list[int]):
         """
@@ -97,7 +98,7 @@ class ScalingCache:
     def __call__(self, task_class) -> Optional[float]:
         if self.cache is None:
             self.logger.info("First call, initializing cache")
-            self.cache = Cache(self.cache_dir)
+            self.cache = HDF5DiskCache(self.cache_dir)
 
         self.logger.info("Attempting to load from cache.")
         cache_key = self.get_cache_key(task_class, self.seeds)
