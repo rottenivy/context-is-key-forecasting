@@ -150,7 +150,7 @@ class SimilarLocationDaySolarForecastTask(BaseHalfDaySolarForecastTask):
     Version of the task where the average time at which the daily maximum is reached is mentioned.
     """
 
-    _context_sources = ["c_i", "c_h"]
+    _context_sources = ["c_i"]
     _skills = BaseHalfDaySolarForecastTask._skills + ["reasoning: analogy"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -200,7 +200,7 @@ class ExplicitSimilarLocationDaySolarForecastTask(SimilarLocationDaySolarForecas
     Version of the task where the average time at which the daily maximum is reached is mentioned.
     """
 
-    _context_sources = ["c_i", "c_h"]
+    _context_sources = ["c_i"]
     _skills = SimilarLocationDaySolarForecastTask._skills
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -218,7 +218,7 @@ class SimilarLocationWithReferenceDaySolarForecastTask(
     Version of the task where the average time at which the daily maximum is reached is mentioned.
     """
 
-    _context_sources = ["c_i", "c_h"]
+    _context_sources = ["c_i"]
     _skills = BaseHalfDaySolarForecastTask._skills + [
         "reasoning: deduction",
     ]
