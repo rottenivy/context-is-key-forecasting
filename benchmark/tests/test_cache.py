@@ -104,6 +104,16 @@ def test_set_and_get_item_special_syntax(cache):
     np.testing.assert_array_equal(result, np.array([1, 2, 3]))
 
 
+def test_update_item(cache):
+    """
+    Test that an item can be updated in the cache.
+
+    """
+    cache["key1"] = np.array([1, 2, 3])
+    cache["key1"] = np.array([4, 5, 6])
+    np.testing.assert_array_equal(cache["key1"], np.array([4, 5, 6]))
+
+
 def test_get_nonexistent_key(cache):
     """
     Test that a default value is returned when a nonexistent key is requested.
@@ -189,3 +199,13 @@ def test_clear_stale_locks(temp_dir):
 
     # Clear the lock
     cache.locks[0].release()
+
+
+def test_reading_scalar(cache):
+    """
+    Test that a scalar can be read from the cache and that it
+    is returned as a scalar and not as a numpy array.
+
+    """
+    cache["scalar"] = 5
+    assert cache["scalar"] == 5
