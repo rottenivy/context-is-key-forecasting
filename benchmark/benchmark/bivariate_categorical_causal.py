@@ -467,9 +467,6 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
         self.scenario += " " + self.get_causal_context(W, L)
         self.constraints = None
 
-        print(self.background)
-        print(self.scenario)
-
     def get_scenario(self, const_hist_value, history_length, pred_length, cov_desc):
         hist_cov_desc_list, pred_cov_desc_list = cov_desc
         pred_cov_desc = ", ".join(pred_cov_desc_list)
