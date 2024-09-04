@@ -32,7 +32,7 @@ def plot_forecast_univariate(task, samples, path, return_fig=False):
         Directory in which to save the figure
 
     """
-    samples = samples[:, :, 0]
+    samples = samples[:, :, -1]
 
     future_timesteps = task.future_time.index
     if isinstance(future_timesteps, pd.PeriodIndex):
@@ -46,15 +46,22 @@ def plot_forecast_univariate(task, samples, path, return_fig=False):
         [2, 0.10, (0.25, 0.25, 1), "10%-90%"],
         [3, 0.25, (0, 0, 0.75), "25%-75%"],
     ]:
+        lower_quantile = np.quantile(samples, quant, axis=0).astype(float)
+        upper_quantile = np.quantile(samples, 1 - quant, axis=0).astype(float)
+
         ax.fill_between(
             future_timesteps,
-            np.quantile(samples, quant, axis=0).astype(float),
-            np.quantile(samples, 1 - quant, axis=0).astype(float),
+            lower_quantile,
+            upper_quantile,
             facecolor=color,
             interpolate=True,
             label=label,
             zorder=zorder,
         )
+
+        if quant == 0.05:
+            min_quantile_value = np.min(lower_quantile)
+            max_quantile_value = np.max(upper_quantile)
 
     ax.plot(
         future_timesteps,
@@ -71,14 +78,14 @@ def plot_forecast_univariate(task, samples, path, return_fig=False):
             [
                 np.min(task.past_time[target_name]),
                 np.min(task.future_time[target_name]),
-                np.min(samples),
+                min_quantile_value,
             ]
         ),
         np.max(
             [
                 np.max(task.past_time[target_name]),
                 np.max(task.future_time[target_name]),
-                np.max(samples),
+                max_quantile_value,
             ]
         ),
     )
