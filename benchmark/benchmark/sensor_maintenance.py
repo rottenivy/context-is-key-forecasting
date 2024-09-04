@@ -31,7 +31,7 @@ class SensorPeriodicMaintenanceTask(UnivariateCRPSTask):
 
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_h"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -115,7 +115,7 @@ class SensorTrendAccumulationTask(UnivariateCRPSTask):
 
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_h"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov"]
     _skills = UnivariateCRPSTask._skills + ["instruction following", "reasoning: math"]
     __version__ = "0.0.2"  # Modification will trigger re-caching
 
@@ -220,7 +220,7 @@ class SensorSpikeTask(UnivariateCRPSTask):
     # TODO: Support more spikes: in which case single-timesteps spikes would be trivial; but it is non-trivial to handle multi-length spikes
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_h"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
     __version__ = "0.0.2 "  # Modification will trigger re-caching
 

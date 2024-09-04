@@ -12,7 +12,7 @@ from ...data.montreal_fire.load import (
 
 
 class MontrealFireNauticalRescueAnalogyTask(UnivariateCRPSTask):
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_h", "c_i"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_i"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: analogy", "retrieval: context"]
     __version__ = "0.0.2"  # Modification will trigger re-caching
 
