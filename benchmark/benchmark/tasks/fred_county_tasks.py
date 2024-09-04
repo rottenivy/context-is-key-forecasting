@@ -67,7 +67,7 @@ class BaseFREDCountyUsingStateData(UnivariateCRPSTask):
     _context_sources = ["c_f", "c_cov"]
     # State vs county is not a clear cut analogy, but it is close
     _skills = UnivariateCRPSTask._skills + ["reasoning: analogy"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     # Those must be overriden
     dataset: str = ""
@@ -113,7 +113,14 @@ class BaseFREDCountyUsingStateData(UnivariateCRPSTask):
         forecast_start = pd.Timestamp("2024-02-01")
         forecast_end = pd.Timestamp("2024-07-01")
 
-        county = self.random.choice(counties_df.name.unique())
+        # Many counties share names, we get the list of all (county name, state), and count how often
+        # each county name show up. We then only pick from those who are unique.
+        # This avoid ambiguities where the model could be confused about which county the data is about.
+        names_freq = (
+            counties_df[["name", "state"]].drop_duplicates()["name"].value_counts()
+        )
+        county = self.random.choice(names_freq[names_freq == 1].index)
+
         county_df = counties_df[
             (counties_df.name == county)
             & (counties_df.date >= history_start)
@@ -189,7 +196,7 @@ class UnemploymentCountyUsingExplicitMultipleStateData(BaseFREDCountyUsingStateD
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def get_background(self, county: str, state: str) -> str:
-        return f"This is the {self.dataset_description} for {county}, in {state}. However, the last 6 months of data have not yet been released."
+        return f"This is the {self.dataset_description} for {county}, in {state}."
 
 
 __TASKS__ = [
