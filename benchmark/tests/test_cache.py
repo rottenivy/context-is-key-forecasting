@@ -4,6 +4,7 @@ import pytest
 import shutil
 
 from pathlib import Path
+from time import sleep
 
 from benchmark.utils.cache.lock import DirLock
 from benchmark.utils.cache.disk_cache import HDF5DiskCache
@@ -40,6 +41,7 @@ def test_lock_age(temp_dir):
     """
     lock = DirLock(temp_dir)
     lock.acquire()
+    sleep(2)
     age = lock.age()
     assert age is not None
     assert age >= 0
@@ -174,6 +176,7 @@ def test_clear_stale_locks(temp_dir):
     # Assuming _clear_stale_locks is public or can be called directly
     cache = HDF5DiskCache(temp_dir, lock_timeout=0)
     cache.locks[0].acquire()  # Acquire a lock
+    sleep(2)
 
     # Assert that the lock is acquired
     assert cache.locks[0].lock_dir.exists()
