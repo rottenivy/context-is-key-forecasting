@@ -141,7 +141,10 @@ class {new_name}({base_task.__name__}):
     # Dictionary to capture local variables defined by exec
     local_vars = {f"{base_task.__name__}": base_task}
     exec(new_class, globals(), local_vars)
-    return local_vars[new_name]
+
+    new_class = local_vars[new_name]
+    globals()[new_name] = new_class  # Register at global scope
+    return new_class
 
 
 __TASKS__ = [
