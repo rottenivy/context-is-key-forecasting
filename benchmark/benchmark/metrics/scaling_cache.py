@@ -145,10 +145,10 @@ inverse_mean_forecast_range.__version__ = (
 
 
 # This is the Scaling Cache that is connected to the UnivariateCRPSTask evaluation code
-# Since it does not compute on miss, it needs to be precomputed (see precompute_scaling_cache.py)
+# It currently computes on miss, so it doesn't need to be precomputed (see precompute_scaling_cache.py)
 DefaultScalingCache = ScalingCache(
     scaling_method=inverse_mean_forecast_range,
     seeds=list(range(1001, 1026)),
     raise_on_miss=False,
-    compute_on_miss=False,
+    compute_on_miss=True,
 )
