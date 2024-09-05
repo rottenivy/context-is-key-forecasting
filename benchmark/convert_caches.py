@@ -13,8 +13,8 @@ from benchmark.utils.cache.disk_cache import HDF5DiskCache
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
-    argparser.add_argument("cache_path", type=str, help="Path to the cache")
-    argparser.add_argument("output_path", type=str, help="Path to the output cache")
+    argparser.add_argument("--cache_path", type=str, help="Path to the cache")
+    argparser.add_argument("--output_path", type=str, help="Path to the output cache")
     args = argparser.parse_args()
 
     if not os.path.exists(args.cache_path):
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     output_cache = HDF5DiskCache(args.output_path)
 
     cache_size = len(cache)
-    for i, (key, value) in enumerate(cache.items()):
+    for i, key in enumerate(cache):
         if i % 100 == 0:
             print(f"Transfer in progress {i}/{cache_size}...")
-        output_cache[key] = value
+        output_cache[key] = cache[key]
