@@ -249,6 +249,7 @@ class ImplicitPressureFromSpeedTask(ExplicitPressureFromSpeedTask):
     _skills = WindTunnelTask._skills + [
         "reasoning: causal",
         "reasoning: deduction",
+        "retrieval: memory",
         "reasoning: math",
         "instruction following",
     ]

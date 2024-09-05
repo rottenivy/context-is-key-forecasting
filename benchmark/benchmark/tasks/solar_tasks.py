@@ -151,7 +151,10 @@ class SimilarLocationDaySolarForecastTask(BaseHalfDaySolarForecastTask):
     """
 
     _context_sources = ["c_i"]
-    _skills = BaseHalfDaySolarForecastTask._skills + ["reasoning: analogy"]
+    _skills = BaseHalfDaySolarForecastTask._skills + [
+        "reasoning: analogy",
+        "retrieval: memory",
+    ]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def random_instance(self):
@@ -201,7 +204,7 @@ class ExplicitSimilarLocationDaySolarForecastTask(SimilarLocationDaySolarForecas
     """
 
     _context_sources = ["c_i"]
-    _skills = SimilarLocationDaySolarForecastTask._skills
+    _skills = SimilarLocationDaySolarForecastTask._skills + ["retrieval: memory"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def get_background(
@@ -221,6 +224,7 @@ class SimilarLocationWithReferenceDaySolarForecastTask(
     _context_sources = ["c_i"]
     _skills = BaseHalfDaySolarForecastTask._skills + [
         "reasoning: deduction",
+        "retrieval: memory",
     ]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
