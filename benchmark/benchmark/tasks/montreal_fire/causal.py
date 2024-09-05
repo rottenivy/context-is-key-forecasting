@@ -48,7 +48,7 @@ class MontrealFireCausalConfoundingTask(MontrealFireShortHistoryTask):
         "c_f",
     ]
     _skills = MontrealFireShortHistoryTask._skills + ["reasoning: causal"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -94,7 +94,7 @@ class MontrealFireCausalConfoundingTask(MontrealFireShortHistoryTask):
 
 The Mayor is determined to completely eradicate this kind of incident.
 Fortunately, the city's public safety research group{', a team of highly qualified experts,' if not self.neutral_tone else ''} identified that {target_series}s and {covariate_series}s tend to co-occur.
-When the amount of {target_series}s increases, the amount of {covariate_series}s also tends to increase. The same applies to decreases.
+When the amount of {target_series}s increases, the amount of {covariate_series}s also tends to increase. The same holds when they decrease.
 {'But of course, this association does not imply causation and is likely due to a common cause.' if self.include_causal else ''}
 
 The Mayor has a plan: they will implement {action_desc} starting on {self.forecast_start_date}.
