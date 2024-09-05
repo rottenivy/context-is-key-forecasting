@@ -76,8 +76,6 @@ class MontrealFireNauticalRescueAnalogyTask(UnivariateCRPSTask):
             "Sommet-de-la-Montagne",
         ]
 
-        self.with_water = bool(self.random.randint(0, 2))
-
         # Populations (taken from wikipedia on August 27, 2024)
         boroughs = {
             "Saint-Laurent": {"pop": 98828, "water": False},
