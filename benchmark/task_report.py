@@ -402,7 +402,7 @@ if __name__ == "__main__":
       <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
       <script src="https://unpkg.com/gridjs/dist/gridjs.umd.js"></script>
       <script>
-         Papa.parse("https://raw.githubusercontent.com/aldro61/sc_task_stats/main/results.csv", {{
+         Papa.parse("https://raw.githubusercontent.com/anon-forecast/benchmark_report/main/results.csv", {{
            download: true,
            complete: function(results) {{
              new gridjs.Grid({{
