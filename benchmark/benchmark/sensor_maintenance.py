@@ -148,17 +148,29 @@ class SensorTrendAccumulationTask(UnivariateCRPSTask):
         datasets = ["traffic"]
 
         dataset_name = self.random.choice(datasets)
-
-        full_series = self.get_series(dataset_name=dataset_name)
         prediction_length = self.get_prediction_length(dataset_name=dataset_name)
 
-        # Select a random window
-        window = get_random_window_univar(
-            full_series,
-            prediction_length=prediction_length,
-            history_factor=self.get_history_factor(dataset_name=dataset_name),
-            random=self.random,
-        )
+        max_attempts = 100
+        for _ in range(max_attempts):
+            full_series = self.get_series(dataset_name=dataset_name)
+
+            try:
+                # Select a random window
+                window = get_random_window_univar(
+                    full_series,
+                    prediction_length=prediction_length,
+                    history_factor=self.get_history_factor(dataset_name=dataset_name),
+                    random=self.random,
+                    max_attempts=1,  # Handle the attempts in this method instead
+                )
+                break
+            except ValueError:
+                # This exception is thrown if get_random_window_univar did not select a valid window
+                pass
+        else:
+            raise ValueError(
+                f"Could not find a valid window after {max_attempts} attempts"
+            )
 
         # Extract the history and future series
         history_series = window.iloc[:-prediction_length]
@@ -253,17 +265,29 @@ class SensorSpikeTask(UnivariateCRPSTask):
         datasets = ["traffic"]
 
         dataset_name = self.random.choice(datasets)
-
-        full_series = self.get_series(dataset_name=dataset_name)
         prediction_length = self.get_prediction_length(dataset_name=dataset_name)
 
-        # Select a random window
-        window = get_random_window_univar(
-            full_series,
-            prediction_length=prediction_length,
-            history_factor=self.get_history_factor(dataset_name=dataset_name),
-            random=self.random,
-        )
+        max_attempts = 100
+        for _ in range(max_attempts):
+            full_series = self.get_series(dataset_name=dataset_name)
+
+            try:
+                # Select a random window
+                window = get_random_window_univar(
+                    full_series,
+                    prediction_length=prediction_length,
+                    history_factor=self.get_history_factor(dataset_name=dataset_name),
+                    random=self.random,
+                    max_attempts=1,  # Handle the attempts in this method instead
+                )
+                break
+            except ValueError:
+                # This exception is thrown if get_random_window_univar did not select a valid window
+                pass
+        else:
+            raise ValueError(
+                f"Could not find a valid window after {max_attempts} attempts"
+            )
 
         # Extract the history and future series
         history_series = window.iloc[:-prediction_length]
