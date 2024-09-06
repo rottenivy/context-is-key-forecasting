@@ -117,7 +117,7 @@ class SensorTrendAccumulationTask(UnivariateCRPSTask):
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov"]
     _skills = UnivariateCRPSTask._skills + ["instruction following", "reasoning: math"]
-    __version__ = "0.0.2"  # Modification will trigger re-caching
+    __version__ = "0.0.3"  # Modification will trigger re-caching
 
     def get_series(
         self,
@@ -234,7 +234,7 @@ class SensorSpikeTask(UnivariateCRPSTask):
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.2 "  # Modification will trigger re-caching
+    __version__ = "0.0.3 "  # Modification will trigger re-caching
 
     def get_series(
         self,
