@@ -63,7 +63,7 @@ class BaseIrradianceFromCloudStatus(UnivariateCRPSTask):
     _context_sources = ["c_i", "c_cov"]
     # Part of the task involve understanding the impact of longer cloudy period (denser clouds)
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     # Those must be overriden
     irradiance_column: str = ""
@@ -92,7 +92,11 @@ class BaseIrradianceFromCloudStatus(UnivariateCRPSTask):
                 lambda sdf: pd.Series(
                     [
                         (
-                            (sdf["Cloudy"] & (sdf["Clearsky GHI"] > 0)).iloc[:48].sum()
+                            # Avoid the last window, if incomplete
+                            len(sdf) == 72
+                            and (sdf["Cloudy"] & (sdf["Clearsky GHI"] > 0))
+                            .iloc[:48]
+                            .sum()
                             >= 12
                             and (~sdf["Cloudy"] & (sdf["Clearsky GHI"] > 0))
                             .iloc[:48]
