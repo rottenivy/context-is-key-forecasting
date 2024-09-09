@@ -14,7 +14,7 @@ Window = namedtuple("Window", ["seed", "history_start", "future_start", "time_en
 
 class WindTunnelTask(UnivariateCRPSTask):
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov"]
-    __version__ = "0.0.2"  # Modification will trigger re-caching
+    __version__ = "0.0.3"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -79,6 +79,11 @@ class WindTunnelTask(UnivariateCRPSTask):
             # downsample numerical variates, not averaging to avoid introducing new values
             past_time = past_time.resample(downsample).min()
             future_time = future_time.resample(downsample).min()
+
+            # A hack to avoid overlapping past and future timestamps introduced by the resampling
+            # (this can happen if window.future_start happens in the middle of the new time interval)
+            if past_time.index[-1] == future_time.index[0]:
+                future_time = future_time[1:]
 
         return window, past_time, future_time, text_covariates
 
