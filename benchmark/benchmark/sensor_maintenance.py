@@ -326,10 +326,7 @@ class SensorSpikeTask(UnivariateCRPSTask):
         self.future_time = future_series.to_frame()
         self.background = background
 
-        # ROI metric parameters
-        self.region_of_interest = slice(
-            spike_start_point, spike_start_point + spike_duration
-        )
+        # No region of interest since the only the history is modified
 
 
 class SensorMaintenanceInPredictionTask(UnivariateCRPSTask):
