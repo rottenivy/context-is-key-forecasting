@@ -155,10 +155,12 @@ class SimilarLocationDaySolarForecastTask(BaseHalfDaySolarForecastTask):
         "reasoning: analogy",
         "retrieval: memory",
     ]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def random_instance(self):
-        dataset = get_dataset("solar_10_minutes", regenerate=False)
+        dataset = get_dataset(
+            "solar_10_minutes", regenerate=False, path=DATA_STORAGE_PATH
+        )
 
         # Average over all time series
         dataset_list = list(dataset.test)

@@ -111,7 +111,7 @@ class ATMBuildingClosedTask(CashDepletedinATMScenarioTask):
         return scenario
 
 
-class ATMUnderPeriodicMaintenanceTask(UnivariateCRPSTask):
+class ATMUnderPeriodicMaintenanceTaskWithConclusion(UnivariateCRPSTask):
     """
     This task considers that an ATM is under periodic maintenance in the history repeatedly at certain intervals, which leads to misleading history. The context provides background information about this period.
     This period should be ignored by the forecasting algorithm in its forecasts.
@@ -158,15 +158,15 @@ class ATMUnderPeriodicMaintenanceTask(UnivariateCRPSTask):
         history_series.index = history_series.index.to_timestamp()
 
         drop_duration = self.random.choice(
-            list(range(2, 7))
-        )  # Arbitrarily picked from 2-6 days
+            list(range(4, 8))
+        )  # Arbitrarily picked from 2-8 days
         drop_spacing = self.random.choice(
-            list(range(6, 24))
-        )  # Spacing between each drop would be randomly picked from 6 to 23 days
+            list(range(6, 18))
+        )  # Spacing between each drop would be randomly picked from 6 to 18 days
         drop_start_date = self.random.choice(
             history_series.index[
-                :-24
-            ]  # Starting point is anywhere from start of series to 24 days before the end. This is done so we can get multiple such drops in the series going forward in the history.
+                :-56
+            ]  # Starting point is anywhere from start of series to 56 days before the end. This is done so we can get multiple such drops in the series going forward in the history. (56 since that's the prediction length of this dataset)
         )
         drop_start_point = history_series.index.get_loc(drop_start_date)
         start_point = drop_start_point
@@ -177,14 +177,13 @@ class ATMUnderPeriodicMaintenanceTask(UnivariateCRPSTask):
         # Convert future index to timestamp for consistency
         future_series.index = future_series.index.to_timestamp()
 
-        background = f"This is the number of cash withdrawals from an automated teller machine (ATM) in an arbitrary location in England."  # This is generic background information common to all NN5 tasks
-        background += f" The ATM was under maintenance for {drop_duration} {'day' if drop_duration == 1 else 'days'}, periodically every {drop_spacing} days, starting from {datetime_to_str(drop_start_date)}, resulting in no withdrawals recorded. Assume that the ATM will not be in maintenance in the future."
-
         # Instantiate the class variables
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()
         self.constraints = None
-        self.background = background
+        self.background = self.get_background(
+            drop_duration, drop_spacing, drop_start_date
+        )
         self.scenario = None
 
         # ROI parameters to add focus to the times where there would have been maintenance in the prediction region
@@ -203,6 +202,43 @@ class ATMUnderPeriodicMaintenanceTask(UnivariateCRPSTask):
             )
             pred_start_point += drop_spacing
         self.region_of_interest = maintenance_hours_in_pred
+
+    def get_background(self, drop_duration, drop_spacing, drop_start_date):
+        background = f"This is the number of cash withdrawals from an automated teller machine (ATM) in an arbitrary location in England."  # This is generic background information common to all NN5 tasks
+        background += f" The ATM was under maintenance for {drop_duration} {'day' if drop_duration == 1 else 'days'}, periodically every {drop_spacing} days, starting from {datetime_to_str(drop_start_date)}, resulting in no withdrawals recorded. Assume that the ATM will not be in maintenance in the future."
+        return background
+
+
+class ATMUnderPeriodicMaintenanceTaskWithConclusionLessExplicit(
+    ATMUnderPeriodicMaintenanceTaskWithConclusion
+):
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_cov"]
+    _skills = UnivariateCRPSTask._skills + [
+        "instruction following",
+        "reasoning: deduction",
+    ]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def get_background(self, drop_duration, drop_spacing, drop_start_date):
+        background = f"This is the number of cash withdrawals from an automated teller machine (ATM) in an arbitrary location in England."  # This is generic background information common to all NN5 tasks
+        background += f" The ATM was under maintenance for various periods, resulting in no withdrawals recorded. Assume that the ATM will not be in maintenance in the future."
+        return background
+
+
+class ATMUnderPeriodicMaintenanceTaskWithoutConclusion(
+    ATMUnderPeriodicMaintenanceTaskWithConclusion
+):
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_cov"]
+    _skills = UnivariateCRPSTask._skills + [
+        "instruction following",
+        "reasoning: deduction",
+    ]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def get_background(self, drop_duration, drop_spacing, drop_start_date):
+        background = f"This is the number of cash withdrawals from an automated teller machine (ATM) in an arbitrary location in England."  # This is generic background information common to all NN5 tasks
+        background += f" The ATM was under maintenance for {drop_duration} {'day' if drop_duration == 1 else 'days'}, periodically every {drop_spacing} days, starting from {datetime_to_str(drop_start_date)}. Assume that the ATM will not be in maintenance in the future."
+        return background
 
 
 class ATMUnderPeriodicMaintenanceWithRandomValuesTask(UnivariateCRPSTask):
@@ -380,6 +416,8 @@ class IncreasedWithdrawalScenario(UnivariateCRPSTask):
 __TASKS__ = [
     CashDepletedinATMScenarioTask,
     ATMBuildingClosedTask,
-    ATMUnderPeriodicMaintenanceTask,
+    ATMUnderPeriodicMaintenanceTaskWithConclusion,
+    ATMUnderPeriodicMaintenanceTaskWithConclusionLessExplicit,
+    ATMUnderPeriodicMaintenanceTaskWithoutConclusion,
     IncreasedWithdrawalScenario,
 ]
