@@ -14,7 +14,7 @@ def test_deterministic_instance():
     """
 
     task = SpeedFromLoadTask()
-    assert task._get_number_instances() == 10
+    assert task._get_number_instances() == 9
 
     idx = 0
     window, past_time, future_time, covariates = task._get_instance_by_idx(idx)
