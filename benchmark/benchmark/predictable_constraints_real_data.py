@@ -15,6 +15,12 @@ from .window_selection import (
     is_baseline_prediction_poor,
 )
 
+from benchmark.data.pems import (
+    load_traffic_series,
+    get_traffic_prediction_length,
+    get_traffic_history_factor,
+)
+
 
 get_dataset = partial(get_dataset, path=DATA_STORAGE_PATH)
 
@@ -47,7 +53,7 @@ class OraclePredUnivariateConstraintsTask(UnivariateCRPSTask):
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -70,6 +76,31 @@ class OraclePredUnivariateConstraintsTask(UnivariateCRPSTask):
         self.window_selection = window_selection
 
         super().__init__(seed=seed, fixed_config=fixed_config)
+
+    def get_series(
+        self,
+        dataset_name: str = "traffic",
+        target=None,  #  'Speed (mph)' or 'Occupancy (%)'
+    ):
+        if dataset_name == "traffic":
+            if target is None:
+                target = "Occupancy (%)"
+            series = load_traffic_series(target=target, random=self.random)
+        else:
+            raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
+        return series
+
+    def get_prediction_length(self, dataset_name: str = "traffic"):
+        if dataset_name == "traffic":
+            return get_traffic_prediction_length()
+        else:
+            raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
+
+    def get_history_factor(self, dataset_name: str = "traffic"):
+        if dataset_name == "traffic":
+            return get_traffic_history_factor()
+        else:
+            raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
 
     def random_instance(self):
         """
@@ -97,36 +128,41 @@ class OraclePredUnivariateConstraintsTask(UnivariateCRPSTask):
         The window is selected according to the performance of a baseline model.
         If the baseline model performs poorly, the window is considered interesting.
         """
-        datasets = ["electricity_hourly"]
+        datasets = ["traffic"]
 
-        # Select a random dataset
         dataset_name = self.random.choice(datasets)
-        dataset = get_dataset(dataset_name, regenerate=False)
-
-        assert len(dataset.train) == len(
-            dataset.test
-        ), "Train and test sets must contain the same number of time series"
-
-        # Get the dataset metadata
-        metadata = dataset.metadata
-
-        # Select a random time series
-        ts_index = self.random.choice(len(dataset.train))
-        full_series = to_pandas(list(dataset.test)[ts_index])
+        prediction_length = self.get_prediction_length(dataset_name=dataset_name)
 
         window_is_interesting = False
         while not window_is_interesting:
-            # Select a random window
-            window = get_random_window_univar(
-                full_series,
-                prediction_length=metadata.prediction_length,
-                history_factor=self.random.randint(2, 5),
-                random=self.random,
-            )
+
+            max_attempts = 100
+            for _ in range(max_attempts):
+                full_series = self.get_series(dataset_name=dataset_name)
+
+                try:
+                    # Select a random window
+                    window = get_random_window_univar(
+                        full_series,
+                        prediction_length=prediction_length,
+                        history_factor=self.get_history_factor(
+                            dataset_name=dataset_name
+                        ),
+                        random=self.random,
+                        max_attempts=1,  # Handle the attempts in this method instead
+                    )
+                    break
+                except ValueError:
+                    # This exception is thrown if get_random_window_univar did not select a valid window
+                    pass
+            else:
+                raise ValueError(
+                    f"Could not find a valid window after {max_attempts} attempts"
+                )
 
             # Extract the history and future series
-            history_series = window.iloc[: -metadata.prediction_length]
-            future_series = window.iloc[-metadata.prediction_length :]
+            history_series = window.iloc[:-prediction_length]
+            future_series = window.iloc[-prediction_length:]
             self.past_time = history_series.to_frame()
             self.future_time = future_series.to_frame()
 
@@ -222,7 +258,7 @@ class BoundedPredConstraintsBasedOnPredQuantilesTask(
     This task is dataset-independent.
     """
 
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -245,34 +281,36 @@ class BoundedPredConstraintsBasedOnPredQuantilesTask(
         Calculates appropriate bounds from the window. Applies the bound constraints on just the prediction part, so you would need the context to perform a perfect forecast.
         Instantiates the class variables.
         """
-        datasets = ["electricity_hourly"]
+        datasets = ["traffic"]
 
-        # Select a random dataset
         dataset_name = self.random.choice(datasets)
-        dataset = get_dataset(dataset_name, regenerate=False)
+        prediction_length = self.get_prediction_length(dataset_name=dataset_name)
 
-        assert len(dataset.train) == len(
-            dataset.test
-        ), "Train and test sets must contain the same number of time series"
+        max_attempts = 100
+        for _ in range(max_attempts):
+            full_series = self.get_series(dataset_name=dataset_name)
 
-        # Get the dataset metadata
-        metadata = dataset.metadata
-
-        # Select a random time series
-        ts_index = self.random.choice(len(dataset.train))
-        full_series = to_pandas(list(dataset.test)[ts_index])
-
-        # Select a random window
-        window = get_random_window_univar(
-            full_series,
-            prediction_length=metadata.prediction_length,
-            history_factor=self.random.randint(2, 5),
-            random=self.random,
-        )
+            try:
+                # Select a random window
+                window = get_random_window_univar(
+                    full_series,
+                    prediction_length=prediction_length,
+                    history_factor=self.get_history_factor(dataset_name=dataset_name),
+                    random=self.random,
+                    max_attempts=1,  # Handle the attempts in this method instead
+                )
+                break
+            except ValueError:
+                # This exception is thrown if get_random_window_univar did not select a valid window
+                pass
+        else:
+            raise ValueError(
+                f"Could not find a valid window after {max_attempts} attempts"
+            )
 
         # Extract the history and future series
-        history_series = window.iloc[: -metadata.prediction_length]
-        future_series = window.iloc[-metadata.prediction_length :]
+        history_series = window.iloc[:-prediction_length]
+        future_series = window.iloc[-prediction_length:]
 
         # ROI metrics parameter
         constraints_dict, self.metric_constraint = (

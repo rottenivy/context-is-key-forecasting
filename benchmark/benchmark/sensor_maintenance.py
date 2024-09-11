@@ -33,39 +33,41 @@ class SensorPeriodicMaintenanceTask(UnivariateCRPSTask):
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def random_instance(self):
-        datasets = ["electricity_hourly"]
+        datasets = ["traffic"]
 
         # Select a random dataset
         dataset_name = self.random.choice(datasets)
-        dataset = get_dataset(dataset_name, regenerate=False)
-
-        assert len(dataset.train) == len(
-            dataset.test
-        ), "Train and test sets must contain the same number of time series"
-
-        # Get the dataset metadata
-        metadata = dataset.metadata
-
-        # Select a random time series
-        ts_index = self.random.choice(len(dataset.train))
-        full_series = to_pandas(list(dataset.test)[ts_index])
-
-        # Select a random window
-        window = get_random_window_univar(
-            full_series,
-            prediction_length=metadata.prediction_length,
-            history_factor=self.random.randint(3, 7),
-            random=self.random,
-        )
-
-        # Extract the history and future series
-        history_series = window.iloc[: -metadata.prediction_length]
-        future_series = window.iloc[-metadata.prediction_length :]
 
         if dataset_name == "electricity_hourly":
+
+            dataset = get_dataset(dataset_name, regenerate=False)
+
+            assert len(dataset.train) == len(
+                dataset.test
+            ), "Train and test sets must contain the same number of time series"
+
+            # Get the dataset metadata
+            metadata = dataset.metadata
+
+            # Select a random time series
+            ts_index = self.random.choice(len(dataset.train))
+            full_series = to_pandas(list(dataset.test)[ts_index])
+
+            # Select a random window
+            window = get_random_window_univar(
+                full_series,
+                prediction_length=metadata.prediction_length,
+                history_factor=self.random.randint(3, 7),
+                random=self.random,
+            )
+
+            # Extract the history and future series
+            history_series = window.iloc[: -metadata.prediction_length]
+            future_series = window.iloc[-metadata.prediction_length :]
+
             # Duration: between 2 and 6 hours
             duration = self.random.randint(2, 7)
             start_hour = self.random.randint(
@@ -87,8 +89,60 @@ class SensorPeriodicMaintenanceTask(UnivariateCRPSTask):
             ] = 0
             # Convert history index to timestamp for consistency
             future_series.index = future_series.index.to_timestamp()
+            background = f"This series represents electricity consumption recordings captured by a meter. "
+            background += f"The sensor was offline for maintenance every day between {maintenance_start_hour} and {maintenance_end_hour}, which resulted in zero readings. Assume that the sensor will not be in maintenance in the future."
 
-            background = f"The sensor was offline for maintenance every day between {maintenance_start_hour} and {maintenance_end_hour}, which resulted in zero readings. Assume that the sensor will not be in maintenance in the future."
+        elif dataset_name == "traffic":
+
+            prediction_length = get_traffic_prediction_length()
+
+            max_attempts = 100
+            for _ in range(max_attempts):
+                target = "Occupancy (%)"
+                full_series = load_traffic_series(target=target, random=self.random)
+
+                try:
+                    # Select a random window
+                    window = get_random_window_univar(
+                        full_series,
+                        prediction_length=prediction_length,
+                        history_factor=get_traffic_history_factor(),
+                        random=self.random,
+                        max_attempts=1,  # Handle the attempts in this method instead
+                    )
+                    break
+                except ValueError:
+                    # This exception is thrown if get_random_window_univar did not select a valid window
+                    pass
+            else:
+                raise ValueError(
+                    f"Could not find a valid window after {max_attempts} attempts"
+                )
+
+            # Extract the history and future series
+            history_series = window.iloc[:-prediction_length]
+            future_series = window.iloc[-prediction_length:]
+
+            # Duration: between 2 and 6 hours
+            duration = self.random.randint(2, 7)
+            start_hour = self.random.randint(
+                0, 24 - (duration + 1)
+            )  # +1 so the drop doesn't come at the end of the history window
+            maintenance_start_date = history_series.index[start_hour]
+            maintenance_end_date = history_series.index[start_hour + duration]
+
+            # Make the hour strings
+            maintenance_start_hour = f"{maintenance_start_date.hour:02d}:00"
+            maintenance_end_hour = f"{(maintenance_end_date.hour):02d}:00"
+
+            history_series.loc[
+                history_series.between_time(
+                    maintenance_start_hour, maintenance_end_hour
+                ).index
+            ] = 0
+            background = f"This series represents the occupancy rate (%) captured by a highway sensor. "
+            background += f"The sensor was offline for maintenance every day between {maintenance_start_hour} and {maintenance_end_hour}, which resulted in zero readings. Assume that the sensor will not be in maintenance in the future."
+
         else:
             raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
 
@@ -207,7 +261,8 @@ class SensorTrendAccumulationTask(UnivariateCRPSTask):
             # Convert future index to timestamp for consistency
             future_series.index = pd.to_datetime(future_series.index)
 
-            background = (
+            background = f"This series represents the occupancy rate (%) captured by a highway sensor. "
+            background += (
                 f"The sensor had a calibration problem starting from {datetime_to_str(start_point)} "
                 + f"which resulted in an additive trend in the series that increases by {trend[1] - trend[0]:.4f} at every hour. "
                 + f"At timestep {future_series.index[0]}, the sensor was repaired and this additive trend will disappear."
@@ -315,8 +370,8 @@ class SensorSpikeTask(UnivariateCRPSTask):
 
             # Convert future index to timestamp for consistency
             future_series.index = pd.to_datetime(future_series.index)
-
-            background = f"The sensor experienced an unexpected glitch resulting in a spike starting from {datetime_to_str(spike_start_date)} for {spike_duration} {'hour' if spike_duration == 1 else 'hours'}. Assume that the sensor will not have this glitch in the future."
+            background = f"This series represents the occupancy rate (%) captured by a highway sensor."
+            background += f" The sensor experienced an unexpected glitch resulting in a spike starting from {datetime_to_str(spike_start_date)} for {spike_duration} {'hour' if spike_duration == 1 else 'hours'}. Assume that the sensor will not have this glitch in the future."
 
         else:
             raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
@@ -337,43 +392,43 @@ class SensorMaintenanceInPredictionTask(UnivariateCRPSTask):
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.2"  # Modification will trigger re-caching
+    __version__ = "0.0.3"  # Modification will trigger re-caching
 
     def random_instance(self):
         # TODO: This task can use all datasets where the notion of a "sensor" is meaningful
-        datasets = ["electricity_hourly"]
+        datasets = ["traffic"]
 
-        # Select a random dataset
         dataset_name = self.random.choice(datasets)
-        dataset = get_dataset(dataset_name, regenerate=False)
-
-        assert len(dataset.train) == len(
-            dataset.test
-        ), "Train and test sets must contain the same number of time series"
-
-        # Get the dataset metadata
-        metadata = dataset.metadata
-
-        # Select a random time series
-        ts_index = self.random.choice(len(dataset.train))
-        full_series = to_pandas(list(dataset.test)[ts_index])
-
-        # Select a random window
-        window = get_random_window_univar(
-            full_series,
-            prediction_length=metadata.prediction_length,
-            history_factor=self.random.randint(3, 7),
-            random=self.random,
-        )
-
-        # Extract the history and future series
-        history_series = window.iloc[: -metadata.prediction_length]
-        future_series = window.iloc[-metadata.prediction_length :]
 
         if dataset_name == "electricity_hourly":
+            # Select a random dataset
+            dataset = get_dataset(dataset_name, regenerate=False)
+
+            assert len(dataset.train) == len(
+                dataset.test
+            ), "Train and test sets must contain the same number of time series"
+
+            prediction_length = dataset.metadata.prediction_length
+
+            # Select a random time series
+            ts_index = self.random.choice(len(dataset.train))
+            full_series = to_pandas(list(dataset.test)[ts_index])
+
+            # Select a random window
+            window = get_random_window_univar(
+                full_series,
+                prediction_length=prediction_length,
+                history_factor=self.random.randint(3, 7),
+                random=self.random,
+            )
+
+            # Extract the history and future series
+            history_series = window.iloc[:-prediction_length]
+            future_series = window.iloc[-prediction_length:]
+
             # Duration: between 2 and 6 hours
             duration = self.random.randint(2, 7)
-            start_hour = self.random.randint(0, metadata.prediction_length - duration)
+            start_hour = self.random.randint(0, prediction_length - duration)
             maintenance_start_date = future_series.index[start_hour]
             maintenance_end_date = future_series.index[start_hour + duration]
 
@@ -386,6 +441,50 @@ class SensorMaintenanceInPredictionTask(UnivariateCRPSTask):
 
             background = f"This series represents electricity consumption recordings captured by a meter."
             scenario = f"Consider that the meter will be offline for maintenance between {datetime_to_str(maintenance_start_date)} and {datetime_to_str(maintenance_end_date)}, which results in zero readings."
+
+        elif dataset_name == "traffic":
+
+            prediction_length = get_traffic_prediction_length()
+
+            max_attempts = 100
+            for _ in range(max_attempts):
+                target = "Occupancy (%)"
+                full_series = load_traffic_series(target=target, random=self.random)
+
+                try:
+                    # Select a random window
+                    window = get_random_window_univar(
+                        full_series,
+                        prediction_length=prediction_length,
+                        history_factor=get_traffic_history_factor(),
+                        random=self.random,
+                        max_attempts=1,  # Handle the attempts in this method instead
+                    )
+                    break
+                except ValueError:
+                    # This exception is thrown if get_random_window_univar did not select a valid window
+                    pass
+            else:
+                raise ValueError(
+                    f"Could not find a valid window after {max_attempts} attempts"
+                )
+
+            # Extract the history and future series
+            history_series = window.iloc[:-prediction_length]
+            future_series = window.iloc[-prediction_length:]
+
+            # Duration: between 2 and 6 hours
+            duration = self.random.randint(2, 7)
+            start_hour = self.random.randint(0, prediction_length - duration)
+            maintenance_start_date = future_series.index[start_hour]
+            maintenance_end_date = future_series.index[start_hour + duration]
+
+            # Add the maintenance period to the prediction window
+            future_series.iloc[start_hour : start_hour + duration] = 0
+
+            background = f"This series represents the occupancy rate (%) captured by a highway sensor."
+            scenario = f"Consider that the meter will be offline for maintenance between {datetime_to_str(maintenance_start_date)} and {datetime_to_str(maintenance_end_date)}, which results in zero readings."
+
         else:
             raise NotImplementedError(f"Dataset {dataset_name} is not supported.")
 

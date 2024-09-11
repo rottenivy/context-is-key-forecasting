@@ -67,6 +67,13 @@ def load_traffic_series(
 
     series = dataset[target]
 
+    if not series.index.is_monotonic_increasing:
+        # check if all values are unique
+        if series.index.is_unique:
+            series = series.sort_index()
+        else:
+            raise ValueError("Index is not unique, something is wrong with the data.")
+
     return series
 
 
