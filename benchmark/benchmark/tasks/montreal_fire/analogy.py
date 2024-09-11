@@ -22,7 +22,7 @@ class MontrealFireNauticalRescueAnalogyTask(UnivariateCRPSTask):
         fixed_config=None,
         explicit_location=True,
         include_reference_location=True,
-        with_water=True,
+        with_water=None,
     ):
         """
         Montreal Nautical Rescue Prediction Task. This tests analogical reasoning and retrieval.
@@ -37,8 +37,9 @@ class MontrealFireNauticalRescueAnalogyTask(UnivariateCRPSTask):
             Whether to explicitly mention the location (near water or not) of the target borough in the context
         include_reference_location: bool
             Whether to specify the reference borough locations (near water or not) in the context
-        with_water: bool (default: True)
-            Whether the target borough should be near water (True) or not (False)
+        with_water: bool (default: None)
+            If set, whether the target borough should be near water (True) or not (False).
+            Otherwise, it will be picked at random.
 
         """
         # Task configuration
@@ -85,18 +86,23 @@ class MontrealFireNauticalRescueAnalogyTask(UnivariateCRPSTask):
             "Verdun": {"pop": 69229, "water": True},
         }
 
+        if self.with_water is None:
+            with_water = self.random.choice([False, True])
+        else:
+            with_water = self.with_water
+
         # Target borough
         # ... give it a name that suggest's if it's near water or not
-        fake_name = self.random.choice(fake_water if self.with_water else fake_nowater)
+        fake_name = self.random.choice(fake_water if with_water else fake_nowater)
         # ... select a borough with the desired water property to serve as target series
         target = self.random.choice(
-            [k for k, v in boroughs.items() if v["water"] == self.with_water]
+            [k for k, v in boroughs.items() if v["water"] == with_water]
         )
 
         # Context: create the story
         context = f"{self.history_length} month{'s' if self.history_length > 1 else ''} ago, the city of Montreal inaugurated a new borough called {fake_name} (pop.: {boroughs[target]['pop']}). "
         if self.explicit_location:
-            if self.with_water:
+            if with_water:
                 context += "This borough is adjacent to the Saint-Lawrence River. "
             else:
                 context += "This borough is landlocked in the heart of the city. "
@@ -183,6 +189,21 @@ class MontrealFireNauticalRescueAnalogyFullLocalizationWaterTask(
         )
 
 
+class MontrealFireNauticalRescueAnalogyFullLocalizationMaybeWaterTask(
+    MontrealFireNauticalRescueAnalogyTask
+):
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def __init__(self, seed=None, fixed_config=None):
+        super().__init__(
+            seed=seed,
+            fixed_config=fixed_config,
+            explicit_location=True,
+            include_reference_location=True,
+            with_water=None,
+        )
+
+
 class MontrealFireNauticalRescueAnalogyTargetLocalizationNoWaterTask(
     MontrealFireNauticalRescueAnalogyTask
 ):
@@ -214,6 +235,23 @@ class MontrealFireNauticalRescueAnalogyTargetLocalizationWaterTask(
             explicit_location=True,
             include_reference_location=False,
             with_water=True,
+        )
+
+
+class MontrealFireNauticalRescueAnalogyTargetLocalizationMaybeWaterTask(
+    MontrealFireNauticalRescueAnalogyTask
+):
+
+    _skills = MontrealFireNauticalRescueAnalogyTask._skills + ["retrieval: memory"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def __init__(self, seed=None, fixed_config=None):
+        super().__init__(
+            seed=seed,
+            fixed_config=fixed_config,
+            explicit_location=True,
+            include_reference_location=False,
+            with_water=None,
         )
 
 
@@ -250,10 +288,14 @@ class MontrealFireNauticalRescueAnalogyTargetLocalizationWaterTask(
 
 
 __TASKS__ = [
-    MontrealFireNauticalRescueAnalogyFullLocalizationNoWaterTask,
-    MontrealFireNauticalRescueAnalogyTargetLocalizationNoWaterTask,
-    MontrealFireNauticalRescueAnalogyFullLocalizationWaterTask,
-    MontrealFireNauticalRescueAnalogyTargetLocalizationWaterTask,
+    # Skip these since, taken by themselves, the NoWater tasks have nearly zero ground-truth forecast.
+    # This leads to a very aggressive normalization of their CRPS scores, heavily penalizing any error.
+    # MontrealFireNauticalRescueAnalogyFullLocalizationNoWaterTask,
+    # MontrealFireNauticalRescueAnalogyTargetLocalizationNoWaterTask,
+    # MontrealFireNauticalRescueAnalogyFullLocalizationWaterTask,
+    # MontrealFireNauticalRescueAnalogyTargetLocalizationWaterTask,
+    MontrealFireNauticalRescueAnalogyFullLocalizationMaybeWaterTask,
+    MontrealFireNauticalRescueAnalogyTargetLocalizationMaybeWaterTask,
     # XXX: see above comment for reason of leaving out
     # MontrealFireNauticalRescueAnalogyReferenceLocalizationTask,
     # MontrealFireNauticalRescueAnalogyNoLocalizationTask,
