@@ -97,6 +97,8 @@ class CrazyCast(Baseline):
         in the forecast. Otherwise, print a warning and skip the sample.
     n_retries: int, default=3
         The number of retries to use in rejection sampling
+    max_batch_size: int, default=None
+        If not None, the maximum batch size on the attemps (before the retries)
     batch_size_on_retry: int, default=5
         The batch size to use on retries
     token_cost: dict, default=None
@@ -113,6 +115,7 @@ class CrazyCast(Baseline):
         use_context=True,
         fail_on_invalid=True,
         n_retries=3,
+        max_batch_size=None,
         batch_size_on_retry=5,
         token_cost: dict = None,
     ) -> None:
@@ -121,6 +124,7 @@ class CrazyCast(Baseline):
         self.use_context = use_context
         self.fail_on_invalid = fail_on_invalid
         self.n_retries = n_retries
+        self.max_batch_size = max_batch_size
         self.batch_size_on_retry = batch_size_on_retry
         self.token_cost = token_cost
         self.total_cost = 0  # Accumulator for monetary value of queries
@@ -251,10 +255,16 @@ Example:
 
         # Get forecast samples via rejection sampling until we have the desired number of samples
         # or until we run out of retries
-        batch_size = n_samples
         total_tokens = {"input": 0, "output": 0}
         valid_forecasts = []
-        n_retries = self.n_retries
+
+        if self.max_batch_size is not None:
+            batch_size = min(n_samples, self.max_batch_size)
+            n_retries = self.n_retries + n_samples // batch_size
+        else:
+            batch_size = n_samples
+            n_retries = self.n_retries
+
         while len(valid_forecasts) < n_samples and n_retries > 0:
             logger.info(f"Requesting forecast of {batch_size} samples from the model.")
             chat_completion = self.client(
@@ -296,7 +306,13 @@ Example:
                     logger.debug(f"Choice: {choice.message.content}")
 
             n_retries -= 1
-            batch_size = self.batch_size_on_retry
+            if self.max_batch_size is not None:
+                # Do not go down to self.batch_size_on_retry until we are almost done
+                remaining_samples = n_samples - len(valid_forecasts)
+                batch_size = max(remaining_samples, self.batch_size_on_retry)
+                batch_size = min(batch_size, self.max_batch_size)
+            else:
+                batch_size = self.batch_size_on_retry
 
             valid_forecasts = valid_forecasts[:n_samples]
             logger.info(f"Got {len(valid_forecasts)}/{n_samples} valid forecasts.")
