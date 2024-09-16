@@ -88,11 +88,17 @@ def threshold_weighted_crps(
             target=target[~roi_mask], samples=forecast[:, ~roi_mask]
         )
         crps_value = roi_weight * roi_crps + (1 - roi_weight) * non_roi_crps
+        standard_crps = mean_crps(target=target, samples=forecast)
+        num_roi_timesteps = roi_mask.sum()
+        num_non_roi_timesteps = (~roi_mask).sum()
     else:
         crps_value = mean_crps(target=target, samples=forecast)
         # Those will only be used in the reporting
         roi_crps = crps_value
         non_roi_crps = crps_value
+        standard_crps = crps_value
+        num_roi_timesteps = len(target)
+        num_non_roi_timesteps = 0
 
     if constraint:
         violation_amount = constraint.violation(samples=forecast, scaling=scaling)
@@ -123,6 +129,9 @@ def threshold_weighted_crps(
         "crps": scaling * crps_value,
         "roi_crps": scaling * roi_crps,
         "non_roi_crps": scaling * non_roi_crps,
+        "standard_crps": scaling * standard_crps,
+        "num_roi_timesteps": num_roi_timesteps,
+        "num_non_roi_timesteps": num_non_roi_timesteps,
         "violation_mean": violation_amount.mean(),
         "violation_crps": violation_crps,
     }
