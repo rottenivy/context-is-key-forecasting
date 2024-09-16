@@ -26,6 +26,9 @@ from benchmark.config import RESULT_CACHE_PATH
 
 logging.basicConfig(level=logging.INFO)
 
+pd.set_option("display.max_columns", None)
+pd.set_option("display.max_rows", None)
+
 
 def experiment_naive(
     n_samples, output_folder, max_parallel=None, skip_cache_miss=False
@@ -288,13 +291,14 @@ def main():
         exit()
 
     # Run all experiments
-    results = {}
+    all_results = {}
     extra_infos = {}
     # ... load specifications
     with open(args.exp_spec, "r") as f:
         exp_spec = json.load(f)
     # ... run each experiment
     for exp in exp_spec:
+        current_results = {}
         print(f"Running experiment: {exp['label']}")
         exp_label = exp["label"]
         # ... extract configuration
@@ -308,32 +312,50 @@ def main():
         # ... process results
         res, extra_info = function(**config)
         if isinstance(res, list):
-            results.update({f"{exp_label}_{k}": v for k, v in res})
+            all_results.update({f"{exp_label}_{k}": v for k, v in res})
+            current_results.update({f"{exp_label}_{k}": v for k, v in res})
         else:
-            results[exp_label] = res
+            all_results[exp_label] = res
+            current_results[exp_label] = res
         extra_infos[exp_label] = extra_info
 
-    # Compile results
-    results, missing, errors = compile_results(results)
-    print(results)
-    print("Number of missing results:", {k: len(v) for k, v in missing.items()})
-    print("Number of errors:", {k: len(v) for k, v in errors.items()})
+        # Compile results
+        current_results, missing, errors = compile_results(current_results)
+        print(current_results)
+        print("Number of missing results:", {k: len(v) for k, v in missing.items()})
+        print("Number of errors:", {k: len(v) for k, v in errors.items()})
 
-    # Save results to CSV
-    print(f"Saving results to {output_folder}/results.csv")
-    results.to_csv(output_folder / "results.csv")
-    print(f"Saving missing results to {output_folder}/missing.json")
-    with open(output_folder / "missing.json", "w") as f:
-        json.dump(missing, f)
-    print(f"Saving errors to {output_folder}/errors.json")
-    with open(output_folder / "errors.json", "w") as f:
-        json.dump(errors, f)
+        # Save results to CSV. Note: Saved in output_folder / exp_label, not output_folder as it is exp-specific result
+        print(f"Saving results to {output_folder/exp_label}/results.csv")
+        current_results.to_csv(output_folder / exp_label / "results.csv")
+        print(f"Saving missing results to {output_folder/exp_label}/missing.json")
+        with open(output_folder / exp_label / "missing.json", "w") as f:
+            json.dump(missing, f)
+        print(f"Saving errors to {output_folder/exp_label}/errors.json")
+        with open(output_folder / exp_label / "errors.json", "w") as f:
+            json.dump(errors, f)
 
-    # Upload results to server
+    # Compile and upload results to server
     if args.upload_results:
-        print("Uploading results to server...")
-        upload_results(output_folder / "results.csv")
-        print("Results uploaded!")
+        print("Compiling all results and uploading them...")
+        # Compile results
+        all_results, missing, errors = compile_results(all_results)
+        print(all_results)
+        print("Number of missing results:", {k: len(v) for k, v in missing.items()})
+        print("Number of errors:", {k: len(v) for k, v in errors.items()})
+
+        # Save results to CSV
+        print(f"Saving results to {output_folder}/results.csv")
+        all_results.to_csv(output_folder / "results.csv")
+        print(f"Saving missing results to {output_folder}/missing.json")
+        with open(output_folder / "missing.json", "w") as f:
+            json.dump(missing, f)
+        print(f"Saving errors to {output_folder}/errors.json")
+        with open(output_folder / "errors.json", "w") as f:
+            json.dump(errors, f)
+            print("Uploading results to server...")
+            upload_results(output_folder / "results.csv")
+            print("Results uploaded!")
 
 
 if __name__ == "__main__":

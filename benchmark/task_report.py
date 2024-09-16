@@ -344,12 +344,11 @@ if __name__ == "__main__":
    <body>
       <div class="container">
          <div class="section">
-            <h1 class="text-center text-primary">Benchmark Task Overview</h1>
-            <p class="text-center">Generated on {generation_time}</p>
+            <h1 class="text-center text-primary">Context is Key: A Benchmark for Forecasting with Essential Textual Information</h1>
          </div>
          <div class="section">
             <h2 class="text-primary" data-bs-toggle="collapse" data-bs-target="#visualizations-section">Visualizations</h2>
-            <div class="collapse show" id="visualizations-section">
+            <div class="collapse" id="visualizations-section">
                <!-- Context Type Plots -->
                <div class="subsection">
                   <h3 class="text-secondary">Tasks by Context Type</h3>
@@ -388,12 +387,6 @@ if __name__ == "__main__":
                   There is a total of {len(task_skill_info)} tasks in the benchmark.
                </div>
                {task_by_skill_list}
-            </div>
-         </div>
-         <div class="section">
-            <h2 class="text-primary" data-bs-toggle="collapse" data-bs-target="#results-section">Results</h2>
-            <div class="collapse show" id="results-section">
-               <div id="result-table"></div>
             </div>
          </div>
       </div>

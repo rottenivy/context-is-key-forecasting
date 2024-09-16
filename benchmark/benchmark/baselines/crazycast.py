@@ -68,6 +68,7 @@ def llama_3_1_405b_instruct_client(
         "temperature": temperature,
         "n": n,
     }
+    print(payload)
 
     response = requests.post(
         "https://snow-research-tapes-vllm_llama405b.job.toolkit-sp.yul201.service-now.com/v1/chat/completions",

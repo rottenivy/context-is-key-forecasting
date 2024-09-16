@@ -182,6 +182,7 @@ def evaluate_task(
 
     except Exception as e:
         logger.error(f"Error evaluating task {task_cls.__name__} - Seed {seed}: {e}")
+        logger.error(traceback.format_exc())
         if output_folder:
             with open(seed_folder / "error", "w") as f:
                 f.write(str(e))
