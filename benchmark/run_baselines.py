@@ -15,6 +15,7 @@ from pathlib import Path
 
 from benchmark.baselines.crazycast import CrazyCast
 from benchmark.baselines.lag_llama import lag_llama
+from benchmark.baselines.chronos import ChronosForecaster
 from benchmark.baselines.llm_processes import LLMPForecaster
 from benchmark.baselines.naive import oracle_baseline, random_baseline
 from benchmark.baselines.statsmodels import (
@@ -76,6 +77,21 @@ def experiment_lag_llama(
         lag_llama,
         n_samples=n_samples,
         output_folder=f"{output_folder}/lag_llama/",
+        max_parallel=max_parallel,
+        skip_cache_miss=skip_cache_miss,
+    )
+    return results, {}
+
+
+def experiment_chronos(n_samples, output_folder, max_parallel=1, skip_cache_miss=False):
+    """
+    Chronos baselines
+
+    """
+    results = evaluate_all_tasks(
+        ChronosForecaster(),
+        n_samples=n_samples,
+        output_folder=f"{output_folder}/chronos/",
         max_parallel=max_parallel,
         skip_cache_miss=skip_cache_miss,
     )
