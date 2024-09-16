@@ -16,6 +16,7 @@ from pathlib import Path
 from benchmark.baselines.crazycast import CrazyCast
 from benchmark.baselines.lag_llama import lag_llama
 from benchmark.baselines.chronos import ChronosForecaster
+from benchmark.baselines.moirai import MoiraiForecaster
 from benchmark.baselines.llm_processes import LLMPForecaster
 from benchmark.baselines.naive import oracle_baseline, random_baseline
 from benchmark.baselines.statsmodels import (
@@ -94,6 +95,23 @@ def experiment_chronos(
         ChronosForecaster(model_size=model_size),
         n_samples=n_samples,
         output_folder=f"{output_folder}/chronos/",
+        max_parallel=max_parallel,
+        skip_cache_miss=skip_cache_miss,
+    )
+    return results, {}
+
+
+def experiment_moirai(
+    model_size, n_samples, output_folder, max_parallel=1, skip_cache_miss=False
+):
+    """
+    Moirai baselines
+
+    """
+    results = evaluate_all_tasks(
+        MoiraiForecaster(model_size=model_size),
+        n_samples=n_samples,
+        output_folder=f"{output_folder}/moirai/",
         max_parallel=max_parallel,
         skip_cache_miss=skip_cache_miss,
     )
