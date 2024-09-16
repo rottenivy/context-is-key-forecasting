@@ -13,11 +13,7 @@ class ChronosForecaster(Baseline):
 
     __version__ = "0.0.4"  # Modification will trigger re-caching
 
-    def __init__(
-        self,
-        model_size,
-        seed=42
-    ):
+    def __init__(self, model_size, seed=42):
         """
         Get predictions from a Chronos model.
 
@@ -26,7 +22,7 @@ class ChronosForecaster(Baseline):
         This model requires a seasonal periodicity, which it currently gets from a
         hard coded association from the data index frequency (hourly -> 24 hours periods).
         """
-        self.seed=seed
+        self.seed = seed
         self.model_size = model_size
         super().__init__()
 
@@ -54,7 +50,9 @@ class ChronosForecaster(Baseline):
             torch_dtype=torch.bfloat16,
         )
 
-        hist_values = torch.tensor(task_instance.past_time.values, dtype=torch.bfloat16).flatten()
+        hist_values = torch.tensor(
+            task_instance.past_time.values, dtype=torch.bfloat16
+        ).flatten()
 
         # num_series, num_samples, num_timesteps
         model_preds = pipeline.predict(
@@ -71,4 +69,3 @@ class ChronosForecaster(Baseline):
     @property
     def cache_name(self) -> str:
         return f"{self.__class__.__name__}_{self.model_size}"
-
