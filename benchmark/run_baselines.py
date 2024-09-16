@@ -84,13 +84,9 @@ def experiment_lag_llama(
     return results, {}
 
 
-<<<<<<< Updated upstream
 def experiment_chronos(
     model_size, n_samples, output_folder, max_parallel=1, skip_cache_miss=False
 ):
-=======
-def experiment_chronos(model_size, n_samples, output_folder, max_parallel=1, skip_cache_miss=False):
->>>>>>> Stashed changes
     """
     Chronos baselines
 
