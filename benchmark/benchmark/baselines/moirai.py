@@ -15,7 +15,7 @@ from transformers import set_seed
 
 class MoiraiForecaster(Baseline):
 
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -79,17 +79,10 @@ class MoiraiForecaster(Baseline):
 
         with torch.no_grad():
 
-            df_hist = pd.DataFrame(
-                {
-                    "timestamp": past_time.index,
-                    "target": past_time,
-                }
-            )
-
             # create a sample for the hourly data, using one week data as context window and predicting the next two days.
             inp = {
-                "target": df_hist["target"].to_numpy(),  # 168 = 24 * 7
-                "start": df_hist.index[0].to_period(freq="D"),
+                "target": past_time.to_numpy().flatten(),  # 168 = 24 * 7
+                "start": past_time.index[0].to_period(freq="D"),
             }
 
             # Time series values. Shape: (batch, time, variate)
