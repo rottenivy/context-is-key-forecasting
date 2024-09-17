@@ -112,26 +112,26 @@ class MoiraiForecaster(Baseline):
         return f"{self.__class__.__name__}_{self.model_size}"
 
 
-if __name__ == "__main__":
-    # Dummy example to run the model
-    class DummyTask:
-        def __init__(self):
-            self.past_time = pd.Series(
-                np.random.randn(100), index=pd.date_range("20210101", periods=100)
-            )
-            self.future_time = pd.Series(
-                np.random.randn(10), index=pd.date_range("20210501", periods=10)
-            )
+# if __name__ == "__main__":
+#     # Dummy example to run the model
+#     class DummyTask:
+#         def __init__(self):
+#             self.past_time = pd.Series(
+#                 np.random.randn(100), index=pd.date_range("20210101", periods=100)
+#             )
+#             self.future_time = pd.Series(
+#                 np.random.randn(10), index=pd.date_range("20210501", periods=10)
+#             )
 
-    task_instance = DummyTask()
-    forecaster = MoiraiForecaster(
-        model_size="small",
-        context_length=100,
-        prediction_length=len(task_instance.future_time),
-        patch_size=16,
-        batch_size=32,
-        num_parallel_samples=100,
-        bagging_size=10,
-    )
-    predictions = forecaster(task_instance, n_samples=50)
-    print(predictions)
+#     task_instance = DummyTask()
+#     forecaster = MoiraiForecaster(
+#         model_size="small",
+#         context_length=100,
+#         prediction_length=len(task_instance.future_time),
+#         patch_size=16,
+#         batch_size=32,
+#         num_parallel_samples=100,
+#         bagging_size=10,
+#     )
+#     predictions = forecaster(task_instance, n_samples=50)
+#     print(predictions)
