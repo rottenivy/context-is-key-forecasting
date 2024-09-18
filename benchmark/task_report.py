@@ -183,6 +183,10 @@ def create_task_summary_page(tasks):
             <p class="text-center"><strong>Background:</strong> {task.background}</p>
             <p class="text-center"><strong>Constraints:</strong> {task.constraints}</p>
             <p class="text-center"><strong>Scenario:</strong> {task.scenario}</p>
+            <br>
+            <p class="text-center"><strong>Context sources:</strong> {task._context_sources}</p>
+            <p class="text-center"><strong>Skills:</strong> {task._skills}</p>
+            <br>
             <p class="text-center">
                 {_figure_to_html(task.plot())}
             </p>
@@ -395,7 +399,7 @@ if __name__ == "__main__":
       <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
       <script src="https://unpkg.com/gridjs/dist/gridjs.umd.js"></script>
       <script>
-         Papa.parse("https://raw.githubusercontent.com/anon-forecast/benchmark_report/main/results.csv", {{
+         Papa.parse("https://raw.githubusercontent.com/anon-forecast/benchmark_report_dev/main/results.csv", {{
            download: true,
            complete: function(results) {{
              new gridjs.Grid({{

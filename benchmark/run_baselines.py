@@ -241,7 +241,7 @@ def upload_results(results_path):
 
     # Clone report repository
     os.system(
-        f"git clone https://anon-forecast:{access_token}@github.com/anon-forecast/benchmark_report.git {tmp_dir}/repo"
+        f"git clone https://anon-forecast:{access_token}@github.com/anon-forecast/benchmark_report_dev.git {tmp_dir}/repo"
     )
 
     # Copy results to temporary directory
