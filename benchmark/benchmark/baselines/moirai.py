@@ -79,15 +79,11 @@ class MoiraiForecaster(Baseline):
 
         with torch.no_grad():
 
-            # create a sample for the hourly data, using one week data as context window and predicting the next two days.
-            inp = {
-                "target": past_time.to_numpy().flatten(),  # 168 = 24 * 7
-                "start": past_time.index[0].to_period(freq="D"),
-            }
+            target = past_time.to_numpy().flatten()
 
             # Time series values. Shape: (batch, time, variate)
             past_target = rearrange(
-                torch.as_tensor(inp["target"], dtype=torch.float32), "t -> 1 t 1"
+                torch.as_tensor(target, dtype=torch.float32), "t -> 1 t 1"
             )
             # 1s if the value is observed, 0s otherwise. Shape: (batch, time, variate)
             past_observed_target = torch.ones_like(past_target, dtype=torch.bool)
