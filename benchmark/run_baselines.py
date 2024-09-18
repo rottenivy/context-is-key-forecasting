@@ -155,18 +155,9 @@ def experiment_crazycast(
     if llm not in openai_costs:
         raise ValueError(f"Invalid model: {llm} -- Not in cost dictionary")
 
-    if llm == "llama-3.1-405b-instruct":
-        # Too big batch_size can lead to the llama-3.1-405b server to crash from lack of memory
-        cc_forecaster = CrazyCast(
-            model=llm,
-            use_context=use_context,
-            token_cost=openai_costs[llm],
-            max_batch_size=5,
-        )
-    else:
-        cc_forecaster = CrazyCast(
-            model=llm, use_context=use_context, token_cost=openai_costs[llm]
-        )
+    cc_forecaster = CrazyCast(
+        model=llm, use_context=use_context, token_cost=openai_costs[llm]
+    )
     results = evaluate_all_tasks(
         cc_forecaster,
         n_samples=n_samples,

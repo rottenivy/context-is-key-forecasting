@@ -162,6 +162,14 @@ class BaseTask(ABC):
         """
         return plot_task(self)
 
+    @property
+    def max_crazycast_batch_size(self) -> Optional[int]:
+        """
+        If set, only request that many samples at once when using a method using Direct Prompting.
+        Mainly used to avoid crashing the Llama3-405b server.
+        """
+        return None
+
 
 class UnivariateCRPSTask(BaseTask):
     """

@@ -90,6 +90,14 @@ class BaseHalfDayNSRDBSolarForecastTask(UnivariateCRPSTask):
         # Not enough history for a single period
         return -1
 
+    @property
+    def max_crazycast_batch_size(self) -> int:
+        """
+        If set, only request that many samples at once when using a method using Direct Prompting.
+        Mainly used to avoid crashing the Llama3-405b server.
+        """
+        return 5
+
 
 class MinimalInfoHalfDaySolarForecastTask(BaseHalfDayNSRDBSolarForecastTask):
     """
@@ -209,6 +217,14 @@ class BaseHalfDaySolarForecastTask(UnivariateCRPSTask):
         self.scenario = None
 
         # No RoI need to be defined as the full prediction window is important
+
+    @property
+    def max_crazycast_batch_size(self) -> int:
+        """
+        If set, only request that many samples at once when using a method using Direct Prompting.
+        Mainly used to avoid crashing the Llama3-405b server.
+        """
+        return 5
 
 
 class SimilarLocationDaySolarForecastTask(BaseHalfDaySolarForecastTask):

@@ -68,7 +68,6 @@ def llama_3_1_405b_instruct_client(
         "temperature": temperature,
         "n": n,
     }
-    print(payload)
 
     response = requests.post(
         "https://snow-research-tapes-vllm_llama405b.job.toolkit-sp.yul201.service-now.com/v1/chat/completions",
@@ -115,7 +114,6 @@ class CrazyCast(Baseline):
         use_context=True,
         fail_on_invalid=True,
         n_retries=3,
-        max_batch_size=None,
         batch_size_on_retry=5,
         token_cost: dict = None,
     ) -> None:
@@ -124,7 +122,6 @@ class CrazyCast(Baseline):
         self.use_context = use_context
         self.fail_on_invalid = fail_on_invalid
         self.n_retries = n_retries
-        self.max_batch_size = max_batch_size
         self.batch_size_on_retry = batch_size_on_retry
         self.token_cost = token_cost
         self.total_cost = 0  # Accumulator for monetary value of queries
@@ -258,8 +255,9 @@ Example:
         total_tokens = {"input": 0, "output": 0}
         valid_forecasts = []
 
-        if self.max_batch_size is not None:
-            batch_size = min(n_samples, self.max_batch_size)
+        max_batch_size = task_instance.max_crazycast_batch_size
+        if max_batch_size is not None:
+            batch_size = min(n_samples, max_batch_size)
             n_retries = self.n_retries + n_samples // batch_size
         else:
             batch_size = n_samples
@@ -306,11 +304,11 @@ Example:
                     logger.debug(f"Choice: {choice.message.content}")
 
             n_retries -= 1
-            if self.max_batch_size is not None:
+            if max_batch_size is not None:
                 # Do not go down to self.batch_size_on_retry until we are almost done
                 remaining_samples = n_samples - len(valid_forecasts)
                 batch_size = max(remaining_samples, self.batch_size_on_retry)
-                batch_size = min(batch_size, self.max_batch_size)
+                batch_size = min(batch_size, max_batch_size)
             else:
                 batch_size = self.batch_size_on_retry
 
