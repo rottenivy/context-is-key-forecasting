@@ -27,7 +27,7 @@ class TrafficForecastTaskwithHolidaysInPredictionWindow(UnivariateCRPSTask):
     Forecasting task based on the Monash traffic dataset or PEMS data after 01/01/2024 if fresh_data==True, with frequency hourly, where the history is 7 days (168 hours/timesteps) and prediction is 2 days (48 hours/timesteps), and windows are chosen such that there is a holiday at the beginning of the prediction window.
     """
 
-    __version__ = "0.0.3"  # Modification will trigger re-caching
+    __version__ = "0.0.4"  # Modification will trigger re-caching
 
     def __init__(
         self, seed: int = None, fixed_config: Optional[dict] = None, fresh_data=True
@@ -133,7 +133,7 @@ class TrafficForecastTaskwithHolidaysInPredictionWindow(UnivariateCRPSTask):
 
             # Here I implement the case where the prediction window starts with the holiday
             history_series = full_series.iloc[holiday_index - (24 * 7) : holiday_index]
-            future_series = full_series.iloc[holiday_index : holiday_index + (24 * 2)]
+            future_series = full_series.iloc[holiday_index : holiday_index + (24 * 3)]
             holiday_series = full_series.iloc[holiday_index : holiday_index + 24]
             if holiday_series.mean() <= 0.7 * history_series.mean():
                 window_is_interesting = True
