@@ -33,7 +33,7 @@ class CausalUnivariateCRPSTask(UnivariateCRPSTask):
 
     """
 
-    __version__ = "0.0.2"  # Modification will trigger re-caching
+    __version__ = "0.0.3"  # Modification will trigger re-caching
 
     # To be used only for the instantaneous graph
     def generate_dag(self, num_nodes, degree):
@@ -173,7 +173,7 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
     [hist.. | pred...]
     """
 
-    __version__ = "0.0.2"  # Modification will trigger re-caching
+    __version__ = "0.0.3"  # Modification will trigger re-caching
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
         """
@@ -442,6 +442,11 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
 
         # Split X_post_burn_in into history and future
         full_time_series_df = pd.DataFrame(X_post_burn_in)
+        data_range = full_time_series_df[1].max() - full_time_series_df[1].min()
+        full_time_series_df[
+            1
+        ] /= data_range  # normalize by data range for only the forecast variable.
+
         self.past_time = full_time_series_df[:history_length]
         self.future_time = full_time_series_df[history_length:]
 
@@ -511,7 +516,7 @@ class MinimalCausalContextBivarLinSVAR(BivariateCategoricalLinSVARBaseTask):
         "reasoning: causal",
         "retrieval: memory",
     ]
-    __version__ = "0.0.2"  # Modification will trigger re-caching
+    __version__ = "0.0.3"  # Modification will trigger re-caching
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
         self.fluctuate_history = True
@@ -561,7 +566,7 @@ class FullCausalContextImplicitEquationBivarLinSVAR(
         "reasoning: causal",
         "retrieval: memory",
     ]
-    __version__ = "0.0.2"  # Modification will trigger re-caching
+    __version__ = "0.0.3"  # Modification will trigger re-caching
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
         self.fluctuate_history = True
@@ -611,7 +616,7 @@ class FullCausalContextExplicitEquationBivarLinSVAR(
         "reasoning: math",
         "reasoning: causal",
     ]
-    __version__ = "0.0.2"  # Modification will trigger re-caching
+    __version__ = "0.0.3"  # Modification will trigger re-caching
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
         self.fluctuate_history = True
