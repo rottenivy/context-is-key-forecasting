@@ -119,7 +119,7 @@ class ATMUnderPeriodicMaintenanceTaskWithConclusion(UnivariateCRPSTask):
 
     # XXX: No c_h since the context doesn't say what happened due to maintenance
     _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_cov"]
-    _skills = UnivariateCRPSTask._skills + ["instruction following"]
+    _skills = UnivariateCRPSTask._skills + ["instruction following", "reasoning: math"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def random_instance(self):

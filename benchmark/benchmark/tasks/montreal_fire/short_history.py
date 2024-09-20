@@ -35,7 +35,11 @@ class MontrealFireShortHistoryTask(UnivariateCRPSTask):
     """
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_h"]
-    _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
+    _skills = UnivariateCRPSTask._skills + [
+        "reasoning: math",
+        "retrieval: memory",
+        "reasoning: deduction",
+    ]
     __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(

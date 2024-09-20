@@ -66,7 +66,7 @@ class BaseFREDCountyUsingStateData(UnivariateCRPSTask):
 
     _context_sources = ["c_f", "c_cov"]
     # State vs county is not a clear cut analogy, but it is close
-    _skills = UnivariateCRPSTask._skills + ["reasoning: analogy"]
+    _skills = UnivariateCRPSTask._skills + ["retrieval: memory"]
     __version__ = "0.0.2"  # Modification will trigger re-caching
 
     # Those must be overriden
@@ -180,7 +180,7 @@ class UnemploymentCountyUsingMultipleStateData(BaseFREDCountyUsingStateData):
     # It tests whether the model has memorized in which state is the county in
     _skills = BaseFREDCountyUsingStateData._skills + [
         "retrieval: context",
-        "retrieval: memory",
+        "reasoning: analogy",
     ]
     dataset: str = "unemployment"
     dataset_description: str = "Unemployment Rate"
@@ -189,7 +189,10 @@ class UnemploymentCountyUsingMultipleStateData(BaseFREDCountyUsingStateData):
 
 
 class UnemploymentCountyUsingExplicitMultipleStateData(BaseFREDCountyUsingStateData):
-    _skills = BaseFREDCountyUsingStateData._skills + ["retrieval: context"]
+    _skills = BaseFREDCountyUsingStateData._skills + [
+        "retrieval: context",
+        "reasoning: analogy",
+    ]
     dataset: str = "unemployment"
     dataset_description: str = "Unemployment Rate"
     number_of_other_states: int = 2

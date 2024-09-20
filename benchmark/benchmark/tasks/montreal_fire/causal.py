@@ -47,7 +47,10 @@ class MontrealFireCausalConfoundingTask(MontrealFireShortHistoryTask):
         "c_cov",
         "c_f",
     ]
-    _skills = MontrealFireShortHistoryTask._skills + ["reasoning: causal"]
+    _skills = MontrealFireShortHistoryTask._skills + [
+        "reasoning: causal",
+        "retrieval: context",
+    ]
     __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(

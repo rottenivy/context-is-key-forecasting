@@ -157,7 +157,7 @@ class ImplicitTrafficForecastTaskwithHolidaysInPredictionWindow(
     """
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_i"]
-    _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
+    _skills = UnivariateCRPSTask._skills + ["retrieval: memory", "reasoning: deduction"]
     __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def get_background(self, future_series, holiday_date, holiday_name):

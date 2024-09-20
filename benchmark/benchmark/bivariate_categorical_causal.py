@@ -509,7 +509,7 @@ class MinimalCausalContextBivarLinSVAR(BivariateCategoricalLinSVARBaseTask):
     _skills = BivariateCategoricalLinSVARBaseTask._skills + [
         "reasoning: math",
         "reasoning: causal",
-        "reasoning: deduction",
+        "retrieval: memory",
     ]
     __version__ = "0.0.2"  # Modification will trigger re-caching
 
@@ -559,8 +559,7 @@ class FullCausalContextImplicitEquationBivarLinSVAR(
     _skills = BivariateCategoricalLinSVARBaseTask._skills + [
         "reasoning: math",
         "reasoning: causal",
-        "reasoning: deduction",
-        "instruction following",
+        "retrieval: memory",
     ]
     __version__ = "0.0.2"  # Modification will trigger re-caching
 
@@ -611,7 +610,6 @@ class FullCausalContextExplicitEquationBivarLinSVAR(
     _skills = BivariateCategoricalLinSVARBaseTask._skills + [
         "reasoning: math",
         "reasoning: causal",
-        "instruction following",
     ]
     __version__ = "0.0.2"  # Modification will trigger re-caching
 
