@@ -463,7 +463,7 @@ class BivariateCategoricalLinSVARBaseTask(CausalUnivariateCRPSTask):
         # Set scenario, constraints and background
         ""
         background = f"Given are variables X_0 and X_1, where X_0 is a covariate and X_1 is the variable to forecast."
-        background += f" Variables are generated from a linear Structural Vector Autoregressive (SVAR) model with additive {noise_type} noise and a noise scale of {noise_scale}, with lag = {L}."
+        background += f" Variables are generated from a linear Structural Vector Autoregressive (SVAR) model with additive {noise_type} noise and a noise scale of {noise_scale / data_range:.3e}, with lag = {L}."
         self.background = background
 
         self.scenario = self.get_scenario(
