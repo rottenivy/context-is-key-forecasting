@@ -132,6 +132,14 @@ def save_evaluation(evaluation, path):
         pprint(evaluation, f)
 
 
+def save_extra_info(extra_info, path):
+    """
+    Save the content of the model extra information content to a file for future reference.
+    """
+    with open(path / "extra_info", "w") as f:
+        pprint(extra_info, f)
+
+
 def evaluate_task(
     task_cls,
     seed,
@@ -150,6 +158,10 @@ def evaluate_task(
 
         logger.info(f"Method {method_callable} - Task {task.name} - Seed {seed}")
         samples = method_callable(task_instance=task, n_samples=n_samples)
+        if isinstance(samples, tuple):
+            samples, extra_info = samples
+        else:
+            extra_info = {}
         evaluation = task.evaluate(samples)
         result = {
             "seed": seed,
@@ -167,6 +179,9 @@ def evaluate_task(
 
             # Save metric content
             save_evaluation(evaluation=evaluation, path=seed_folder)
+
+            # Save extra_info content
+            save_extra_info(extra_info=extra_info, path=seed_folder)
 
         return (task_cls.__name__, result)
 

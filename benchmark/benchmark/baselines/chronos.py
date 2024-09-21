@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import time
 from .base import Baseline
 from ..base import BaseTask
 
@@ -11,7 +12,7 @@ from transformers import set_seed
 
 class ChronosForecaster(Baseline):
 
-    __version__ = "0.0.4"  # Modification will trigger re-caching
+    __version__ = "0.0.5"  # Modification will trigger re-caching
 
     def __init__(self, model_size, seed=42):
         """
@@ -27,10 +28,14 @@ class ChronosForecaster(Baseline):
         super().__init__()
 
     def __call__(self, task_instance: BaseTask, n_samples: int) -> np.ndarray:
-        return self.forecast(
+        starting_time = time.time()
+        samples, extra_info = self.forecast(
             task_instance,
             n_samples=n_samples,
         )
+        extra_info["total_time"] = time.time() - starting_time
+
+        return samples, extra_info
 
     def forecast(
         self,
@@ -54,17 +59,21 @@ class ChronosForecaster(Baseline):
             task_instance.past_time.values, dtype=torch.bfloat16
         ).flatten()
 
+        start_inference = time.time()
         # num_series, num_samples, num_timesteps
         model_preds = pipeline.predict(
             context=hist_values,
             prediction_length=len(task_instance.future_time),
             num_samples=n_samples,
         )
+        end_inference = time.time()
 
         # (1, num_samples, num_timesteps, num_series)
         model_preds = model_preds.permute(1, 2, 0)
 
-        return model_preds.cpu().numpy()
+        return model_preds.cpu().numpy(), {
+            "inference_time": end_inference - start_inference
+        }
 
     @property
     def cache_name(self) -> str:

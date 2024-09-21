@@ -105,11 +105,20 @@ class HDF5DiskCache:
                 raise KeyError(f"Key '{key}' not found in cache.")
             with h5py.File(bin_path, "r") as f:
                 if key in f:
-                    value = f[key][()]
-                    logger.debug(
-                        f"Successfully retrieved key: {key} from bin_id: {bin_id}"
-                    )
-                    return value
+                    ds = f[key]
+                    value = ds[()]
+                    attributes = {}
+                    attributes.update(ds.attrs)
+                    if len(attributes) > 0:
+                        logger.debug(
+                            f"Successfully retrieved key: {key} from bin_id: {bin_id}, with attributes"
+                        )
+                        return value, attributes
+                    else:
+                        logger.debug(
+                            f"Successfully retrieved key: {key} from bin_id: {bin_id}"
+                        )
+                        return value
                 else:
                     logger.debug(f"Key '{key}' not found in bin_id: {bin_id}")
                     raise KeyError(f"Key '{key}' not found in cache.")
@@ -120,13 +129,20 @@ class HDF5DiskCache:
         bin_path = self._get_bin_path(bin_id)
         lock = self.locks[bin_id]
 
+        if isinstance(value, tuple):
+            value, attributes = value
+            logger.debug("Attempting to save value together with attributes")
+        else:
+            attributes = {}
+
         logger.debug(f"Attempting to set key: {key} in bin_id: {bin_id}")
         with lock:  # Acquire lock before writing
             with h5py.File(bin_path, "a") as f:
                 if key in f:
                     del f[key]  # Delete existing dataset if it exists
                     logger.debug(f"Deleted existing key: {key} in bin_id: {bin_id}")
-                f.create_dataset(key, data=np.array(value))
+                ds = f.create_dataset(key, data=np.array(value))
+                ds.attrs.update(attributes)
                 logger.debug(f"Successfully set key: {key} in bin_id: {bin_id}")
 
     def __delitem__(self, key):

@@ -3,6 +3,7 @@ import numpy as np
 import os
 import pandas as pd
 import torch
+import time
 
 from gluonts.dataset.pandas import PandasDataset
 from gluonts.evaluation import make_evaluation_predictions
@@ -49,6 +50,7 @@ def get_lag_llama_predictions(
     tuple: A tuple containing:
         - forecasts (list): A list of forecast objects. Each forecast is of shape (num_samples, prediction_length).
         - tss (list): A list of time series objects with the ground truth corresponding to the forecasts. Each time series is of shape (prediction length,).
+        - extra_info (dict): A dictionary containing timing information.
 
     """
     logging.info("Generating forecasts using Lag-Llama...")
@@ -89,13 +91,15 @@ def get_lag_llama_predictions(
     transformation = estimator.create_transformation()
     predictor = estimator.create_predictor(transformation, lightning_module)
 
+    start_inference = time.time()
     forecast_it, ts_it = make_evaluation_predictions(
         dataset=dataset, predictor=predictor, num_samples=num_samples
     )
     forecasts = list(forecast_it)
     tss = list(ts_it)
+    end_inference = time.time()
 
-    return forecasts, tss
+    return forecasts, tss, {"inference_time": end_inference - start_inference}
 
 
 def prepare_dataset(history, forecast):
@@ -151,6 +155,8 @@ def lag_llama(task_instance, n_samples, batch_size=1, device=None):
     if device is None:
         device = torch_default_device()
 
+    starting_time = time.time()
+
     # Package the dataset in the format expected by the Lag-Llama model
     dataset = prepare_dataset(
         task_instance.past_time[[task_instance.past_time.columns[-1]]],
@@ -158,7 +164,7 @@ def lag_llama(task_instance, n_samples, batch_size=1, device=None):
     )
 
     # Generate forecasts using the Lag-Llama model
-    forecasts, _ = get_lag_llama_predictions(
+    forecasts, _, extra_info = get_lag_llama_predictions(
         dataset=dataset,
         prediction_length=task_instance.future_time.shape[0],
         device=device,
@@ -166,10 +172,13 @@ def lag_llama(task_instance, n_samples, batch_size=1, device=None):
         batch_size=batch_size,
     )
     dtype = task_instance.past_time.dtypes.iloc[0]
-    return format_llama_predictions(forecasts, dtype)
+    samples = format_llama_predictions(forecasts, dtype)
+    extra_info["total_time"] = time.time() - starting_time
+
+    return samples, extra_info
 
 
-lag_llama.__version__ = "0.0.1"  # Modification will trigger re-caching
+lag_llama.__version__ = "0.0.2"  # Modification will trigger re-caching
 
 
 def format_llama_predictions(forecasts, dtype):

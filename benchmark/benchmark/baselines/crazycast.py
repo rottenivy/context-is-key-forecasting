@@ -7,6 +7,7 @@ import logging
 import numpy as np
 import os
 import requests
+import time
 
 from types import SimpleNamespace
 
@@ -106,7 +107,7 @@ class CrazyCast(Baseline):
 
     """
 
-    __version__ = "0.0.2"  # Modification will trigger re-caching
+    __version__ = "0.0.3"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -239,8 +240,12 @@ Example:
         --------
         samples: np.ndarray, shape [n_samples, time dimension, number of variables]
             The forecast samples. Note: only univariate is supported at the moment (number of variables = 1)
-
+        extra_info: dict
+            A dictionary containing informations pertaining to the cost of running this model
         """
+        starting_time = time.time()
+        total_client_time = 0.0
+
         prompt = self.make_prompt(task_instance)
         messages = [
             {
@@ -265,9 +270,11 @@ Example:
 
         while len(valid_forecasts) < n_samples and n_retries > 0:
             logger.info(f"Requesting forecast of {batch_size} samples from the model.")
+            client_start_time = time.time()
             chat_completion = self.client(
                 model=self.model, n=batch_size, messages=messages
             )
+            total_client_time += time.time() - client_start_time
             total_tokens["input"] += chat_completion.usage.prompt_tokens
             total_tokens["output"] += chat_completion.usage.completion_tokens
 
@@ -323,6 +330,11 @@ Example:
                 f"Failed to get {n_samples} valid forecasts. Got {len(valid_forecasts)} instead."
             )
 
+        extra_info = {
+            "total_input_tokens": total_tokens["input"],
+            "total_output_tokens": total_tokens["output"],
+        }
+
         # Estimate cost of API calls
         logger.info(f"Total tokens used: {total_tokens}")
         if self.token_cost is not None:
@@ -332,10 +344,17 @@ Example:
             logger.info(f"Forecast cost: {current_cost}$")
             self.total_cost += current_cost
 
+            extra_info["input_token_cost"] = self.token_cost["input"]
+            extra_info["output_token_cost"] = self.token_cost["output"]
+            extra_info["total_token_cost"] = current_cost
+
         # Convert the list of valid forecasts to a numpy array
         samples = np.array(valid_forecasts)[:, :, None]
 
-        return samples
+        extra_info["total_time"] = time.time() - starting_time
+        extra_info["total_client_time"] = total_client_time
+
+        return samples, extra_info
 
     @property
     def cache_name(self):

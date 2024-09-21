@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import time
 from .base import Baseline
 from ..base import BaseTask
 
@@ -15,7 +16,7 @@ from transformers import set_seed
 
 class MoiraiForecaster(Baseline):
 
-    __version__ = "0.0.2"  # Modification will trigger re-caching
+    __version__ = "0.0.3"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -43,10 +44,14 @@ class MoiraiForecaster(Baseline):
         super().__init__()
 
     def __call__(self, task_instance, n_samples: int) -> np.ndarray:
-        return self.forecast(
+        starting_time = time.time()
+        samples, extra_info = self.forecast(
             task_instance,
             n_samples=n_samples,
         )
+        extra_info["total_time"] = time.time() - starting_time
+
+        return samples, extra_info
 
     def forecast(
         self,
@@ -90,18 +95,22 @@ class MoiraiForecaster(Baseline):
             # 1s if the value is padding, 0s otherwise. Shape: (batch, time)
             past_is_pad = torch.zeros_like(past_target, dtype=torch.bool).squeeze(-1)
 
+            start_inference = time.time()
             forecast = model(
                 past_target=past_target.to(model.device),
                 past_observed_target=past_observed_target.to(model.device),
                 past_is_pad=past_is_pad.to(model.device),
                 num_samples=n_samples,
             )  # batch_size x num_samples x prediction_length
+            end_inference = time.time()
 
             forecast = forecast.permute(
                 1, 2, 0
             )  # num_samples x prediction_length x n_dim (1)
 
-        return forecast.cpu().numpy()
+        return forecast.cpu().numpy(), {
+            "inference_time": end_inference - start_inference
+        }
 
     @property
     def cache_name(self) -> str:

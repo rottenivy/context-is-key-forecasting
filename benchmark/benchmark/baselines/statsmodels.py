@@ -4,6 +4,7 @@ import statsmodels
 import statsmodels.tsa.holtwinters
 import statsmodels.tsa.exponential_smoothing.ets
 from typing import Literal
+import time
 
 from .base import Baseline
 from ..base import BaseTask
@@ -11,7 +12,7 @@ from ..base import BaseTask
 
 class ExponentialSmoothingForecaster(Baseline):
 
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -41,12 +42,17 @@ class ExponentialSmoothingForecaster(Baseline):
         self.seasonal = seasonal
 
     def __call__(self, task_instance: BaseTask, n_samples: int) -> np.ndarray:
-        return self.forecast(
+        starting_time = time.time()
+        samples = self.forecast(
             past_time=task_instance.past_time,
             future_time=task_instance.future_time,
             seasonal_periods=task_instance.seasonal_period,
             n_samples=n_samples,
         )
+        extra_info = {
+            "total_time": time.time() - starting_time,
+        }
+        return samples, extra_info
 
     def forecast(
         self,
@@ -87,7 +93,7 @@ class ExponentialSmoothingForecaster(Baseline):
 
 class ETSModelForecaster(Baseline):
 
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -122,12 +128,17 @@ class ETSModelForecaster(Baseline):
         self.error = error
 
     def __call__(self, task_instance: BaseTask, n_samples: int) -> np.ndarray:
-        return self.forecast(
+        starting_time = time.time()
+        samples = self.forecast(
             past_time=task_instance.past_time,
             future_time=task_instance.future_time,
             seasonal_periods=task_instance.seasonal_period,
             n_samples=n_samples,
         )
+        extra_info = {
+            "total_time": time.time() - starting_time,
+        }
+        return samples, extra_info
 
     def forecast(
         self,

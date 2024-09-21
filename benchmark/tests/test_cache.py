@@ -212,3 +212,25 @@ def test_reading_scalar(cache):
     """
     cache["scalar"] = 5
     assert cache["scalar"] == 5
+
+
+def test_extra_info(cache):
+    """
+    Test that we can save and retrieve the extra information dictionary together with the array.
+    """
+    cache["key1"] = (np.array([1, 2, 3]), {"int": 5, "float": 0.5, "str": "five"})
+    _, extra_info = cache["key1"]
+    assert extra_info == {"int": 5, "float": 0.5, "str": "five"}
+
+
+def test_update_extra_info(cache):
+    """
+    Test that the extra info gets correctly updated
+    """
+    cache["key1"] = (np.array([1, 2, 3]), {"int": 5, "float": 0.5, "str": "five"})
+    cache["key1"] = (
+        np.array([1, 2, 3]),
+        {"newint": 6, "newfloat": 0.6, "newstr": "six"},
+    )
+    _, extra_info = cache["key1"]
+    assert extra_info == {"newint": 6, "newfloat": 0.6, "newstr": "six"}

@@ -5,6 +5,7 @@ import os
 import pickle
 import tempfile
 import torch
+import time
 
 from datetime import datetime
 
@@ -16,7 +17,7 @@ from .base import Baseline
 
 
 class LLMPForecaster(Baseline):
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(self, llm_type, use_context=True, dry_run=False):
         f"""
@@ -150,6 +151,7 @@ Constraints:
             Samples drawn from the model
 
         """
+        starting_time = time.time()
         logging.info("Forecasting with LLMP...")
         self._prepare_data(task_instance)
 
@@ -168,13 +170,18 @@ Constraints:
         llmp_args = parse_command_line(
             [item for pair in self.llmp_args.items() for item in pair]
         )
+        start_inference = time.time()
         run_llm_process(args=llmp_args, model=self.model, tokenizer=self.tokenizer)
+        end_inference = time.time()
 
         # Get results
         samples = self._load_results()
-        return samples[
-            :, :, None
-        ]  # XXX: Would need to be adapted when we expand to multivariate
+        extra_info = {
+            "inference_time": end_inference - start_inference,
+            "total_time": time.time() - starting_time,
+        }
+        # XXX: Would need to be adapted when we expand to multivariate
+        return samples[:, :, None], extra_info
 
     # def __del__(self):
     #     """
