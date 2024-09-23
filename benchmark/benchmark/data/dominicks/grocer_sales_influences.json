@@ -3,29 +3,29 @@
         "positive": {
             "small": {
                 "influence": "Upcoming forecasted warm weather during traditionally colder months in {time_in_days} days, expected to boost casual gatherings by {impact}.",
-                "impact": "5-10%"
+                "impact": "30-50%"
             },
             "medium": {
                 "influence": "Nationwide music festivals with beer sponsorship in {time_in_days} days, expected to attract {impact} larger crowds.",
-                "impact": "20-40%"
+                "impact": "40-70%"
             },
             "large": {
                 "influence": "Relaxation of alcohol delivery restrictions expected in {time_in_days} days, anticipated to drive {impact} market growth.",
-                "impact": "45-90%"
+                "impact": "60-90%"
             }
         },
         "negative": {
             "small": {
                 "influence": "Government plans to impose new alcohol tax in {time_in_days} days, likely resulting in a {impact} drop in sales.",
-                "impact": "5-10%"
+                "impact": "30-50%"
             },
             "medium": {
                 "influence": "Potential major beer contamination issue in {time_in_days} days, anticipated to cause {impact} market disruption.",
-                "impact": "20-40%"
+                "impact": "40-70%"
             },
             "large": {
                 "influence": "Rapidly increasing popularity of non-alcoholic and wellness beverages in {time_in_days} days, expected to shift consumer preferences by {impact}.",
-                "impact": "45-90%"
+                "impact": "60-90%"
             }
         }
     },
@@ -33,29 +33,29 @@
         "positive": {
             "small": {
                 "influence": "New diet trend emphasizing high-protein, meat-based meals expected in {time_in_days} days, likely to modestly increase demand by {impact}.",
-                "impact": "5-10%"
+                "impact": "30-50%"
             },
             "medium": {
                 "influence": "Government subsidies for meat producers to be implemented in {time_in_days} days, expected to boost consumption by {impact}.",
-                "impact": "20-40%"
+                "impact": "40-70%"
             },
             "large": {
                 "influence": "Large-scale marketing campaign promoting the benefits of meat consumption planned in {time_in_days} days, potentially shifting consumer preferences upward by {impact}.",
-                "impact": "45-90%"
+                "impact": "60-90%"
             }
         },
         "negative": {
             "small": {
                 "influence": "Widespread outbreak of a disease linked to meat consumption predicted in {time_in_days} days, likely to reduce demand by {impact}.",
-                "impact": "5-10%"
+                "impact": "30-50%"
             },
             "medium": {
                 "influence": "Global push towards vegetarianism due to environmental concerns in {time_in_days} days, expected to reduce meat sales by {impact}.",
-                "impact": "20-40%"
+                "impact": "40-70%"
             },
             "large": {
                 "influence": "Significant price increase due to expected supply chain disruptions in {time_in_days} days, potentially drastically reducing consumption by {impact}.",
-                "impact": "45-90%"
+                "impact": "60-90%"
             }
         }
     },
@@ -63,29 +63,29 @@
         "positive": {
             "small": {
                 "influence": "Government stimulus checks expected to be issued in {time_in_days} days, likely to boost grocery spending by {impact}.",
-                "impact": "5-10%"
+                "impact": "30-50%"
             },
             "medium": {
                 "influence": "Upcoming nationwide campaign promoting home cooking and meal prep in {time_in_days} days, expected to increase grocery purchases by {impact}.",
-                "impact": "20-40%"
+                "impact": "40-70%"
             },
             "large": {
                 "influence": "Discovery of a major health benefit associated with a staple grocery item in {time_in_days} days, potentially revolutionizing consumer behavior and increasing spending by {impact}.",
-                "impact": "45-90%"
+                "impact": "60-90%"
             }
         },
         "negative": {
             "small": {
                 "influence": "Economic dip predicted in {time_in_days} days, likely to reduce grocery spending by {impact}.",
-                "impact": "5-10%"
+                "impact": "30-50%"
             },
             "medium": {
                 "influence": "Major disruption in supply chain due to upcoming geopolitical events in {time_in_days} days, expected to limit product availability by {impact}.",
-                "impact": "20-40%"
+                "impact": "40-70%"
             },
             "large": {
                 "influence": "Surge in popularity of meal delivery services expected in {time_in_days} days, potentially diverting spending away from traditional grocery stores by {impact}.",
-                "impact": "45-90%"
+                "impact": "60-90%"
             }
         }
     }
