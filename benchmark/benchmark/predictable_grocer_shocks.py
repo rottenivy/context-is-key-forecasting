@@ -93,6 +93,8 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         else:
             raise ValueError("Could not find a valid window.")
 
+        window = self.mitigate_memorization(window)
+
         # extract the history and future series
         history_series = window.iloc[: -self.prediction_length]
         future_series = window.iloc[-self.prediction_length :]
@@ -126,7 +128,21 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         self.background = None
         self.scenario = self.get_scenario_context(shock_delay_in_days, influence_info)
 
-        self.region_of_interest = slice(shock_delay_in_days, self.prediction_length)
+    def mitigate_memorization(self, window):
+        """
+        Mitigate memorization by adding a random noise to the series
+        Parameters:
+        -----------
+        window: pd.Series
+            The series to mitigate memorization
+        Returns:
+        --------
+        window: pd.Series
+            The series with mitigated memorization
+        """
+        window = window.copy()
+        window *= 2
+        return window
 
     def get_shock_description(self, shock_delay_in_days, influence_info):
         return influence_info["influence"].replace(
