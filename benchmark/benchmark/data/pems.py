@@ -12,6 +12,7 @@ from importlib import resources
 import huggingface_hub
 import datasets
 
+import zipfile
 
 from benchmark.config import DATA_STORAGE_PATH
 
@@ -28,6 +29,32 @@ TRAFFIC_METADATA_PATH = os.path.join(TRAFFIC_STORAGE_PATH, TRAFFIC_METADATA_FILE
 
 TRAFFIC_SPLIT_PATH = os.path.join(TRAFFIC_STORAGE_PATH, "traffic_split_sensor_data")
 
+CLOSURE_TASKS_STORAGE_PATH = os.path.join(TRAFFIC_STORAGE_PATH, "closure_tasks")
+
+LANE_CLOSURE_SPLIT_ZIPFILE = os.path.join(
+    CLOSURE_TASKS_STORAGE_PATH, "lane_closure_associated_sensors.zip"
+)
+LANE_CLOSURE_SENSOR_ZIPFILE = os.path.join(
+    CLOSURE_TASKS_STORAGE_PATH, "lane_closure_traffic_split_sensor_data.zip"
+)
+
+LANE_CLOSURE_SPLIT_PATH = os.path.join(
+    CLOSURE_TASKS_STORAGE_PATH, "lane_closure_associated_sensors"
+)
+
+LANE_CLOSURE_SENSOR_PATH = os.path.join(
+    CLOSURE_TASKS_STORAGE_PATH, "lane_closure_traffic_split_sensor_data"
+)
+
+SLOW_FWYS_FILEPATH = os.path.join(CLOSURE_TASKS_STORAGE_PATH, "slow_fwys.txt")
+
+UNINTERESTING_FILES_PATH = os.path.join(
+    CLOSURE_TASKS_STORAGE_PATH, "uninteresting_files.txt"
+)
+
+INSTANCES_DIR = os.path.join(TRAFFIC_STORAGE_PATH, "instances")
+
+INSTANCES_ZIP = os.path.join(TRAFFIC_STORAGE_PATH, "instances.zip")
 # avoid issues where toolkit does not report memory correctly
 datasets.builder.has_sufficient_disk_space = lambda needed_bytes, directory=".": True
 
@@ -144,5 +171,109 @@ def download_traffic_files():
     split_and_save_wide_dataframes()
 
 
+def download_lane_closure_files():
+    download_lane_closure_data()
+    download_lane_closure_sensor_data()
+    download_slow_freeway_data()
+    download_uninteresting_files_list()
+
+
+def download_lane_closure_data():
+    if not os.path.exists(CLOSURE_TASKS_STORAGE_PATH):
+        os.makedirs(CLOSURE_TASKS_STORAGE_PATH, exist_ok=True)
+
+    if not os.path.exists(LANE_CLOSURE_SPLIT_ZIPFILE):
+        huggingface_hub.hf_hub_download(
+            repo_id="yatsbm/TrafficFresh",
+            filename="lane_closure_associated_sensors.zip",
+            repo_type="dataset",
+            cache_dir=HF_CACHE_DIR,
+            local_dir=CLOSURE_TASKS_STORAGE_PATH,
+        )
+
+    if not os.path.exists(LANE_CLOSURE_SPLIT_PATH):
+        # Create a directory with the same name (without .zip)
+        os.makedirs(LANE_CLOSURE_SPLIT_PATH, exist_ok=True)
+
+        # Unzip the file
+        with zipfile.ZipFile(LANE_CLOSURE_SPLIT_ZIPFILE, "r") as zip_ref:
+            zip_ref.extractall(LANE_CLOSURE_SPLIT_PATH)
+
+
+def download_lane_closure_sensor_data():
+    if not os.path.exists(CLOSURE_TASKS_STORAGE_PATH):
+        os.makedirs(CLOSURE_TASKS_STORAGE_PATH, exist_ok=True)
+
+    if not os.path.exists(LANE_CLOSURE_SENSOR_ZIPFILE):
+
+        huggingface_hub.hf_hub_download(
+            repo_id="yatsbm/TrafficFresh",
+            filename="lane_closure_traffic_split_sensor_data.zip",
+            repo_type="dataset",
+            cache_dir=HF_CACHE_DIR,
+            local_dir=CLOSURE_TASKS_STORAGE_PATH,
+        )
+
+    if not os.path.exists(LANE_CLOSURE_SENSOR_PATH):
+        # Create a directory with the same name (without .zip)
+        os.makedirs(LANE_CLOSURE_SENSOR_PATH, exist_ok=True)
+
+        # Unzip the file
+        with zipfile.ZipFile(LANE_CLOSURE_SENSOR_ZIPFILE, "r") as zip_ref:
+            zip_ref.extractall(LANE_CLOSURE_SENSOR_PATH)
+
+
+def download_slow_freeway_data():
+    if not os.path.exists(CLOSURE_TASKS_STORAGE_PATH):
+        os.makedirs(CLOSURE_TASKS_STORAGE_PATH, exist_ok=True)
+
+    if not os.path.exists(SLOW_FWYS_FILEPATH):
+        huggingface_hub.hf_hub_download(
+            repo_id="yatsbm/TrafficFresh",
+            filename="slow_fwys.txt",
+            repo_type="dataset",
+            cache_dir=HF_CACHE_DIR,
+            local_dir=CLOSURE_TASKS_STORAGE_PATH,
+        )
+
+
+def download_uninteresting_files_list():
+    if not os.path.exists(CLOSURE_TASKS_STORAGE_PATH):
+        os.makedirs(CLOSURE_TASKS_STORAGE_PATH, exist_ok=True)
+
+    if not os.path.exists(UNINTERESTING_FILES_PATH):
+        huggingface_hub.hf_hub_download(
+            repo_id="yatsbm/TrafficFresh",
+            filename="uninteresting_files.txt",
+            repo_type="dataset",
+            cache_dir=HF_CACHE_DIR,
+            local_dir=CLOSURE_TASKS_STORAGE_PATH,
+        )
+
+
+def download_instances():
+
+    if not os.path.exists(TRAFFIC_STORAGE_PATH):
+        os.makedirs(TRAFFIC_STORAGE_PATH, exist_ok=True)
+
+    if not os.path.exists(INSTANCES_ZIP):
+        huggingface_hub.hf_hub_download(
+            repo_id="yatsbm/TrafficFresh",
+            filename="instances.zip",
+            repo_type="dataset",
+            cache_dir=HF_CACHE_DIR,
+            local_dir=TRAFFIC_STORAGE_PATH,
+        )
+
+    if not os.path.exists(INSTANCES_DIR):
+        # Create a directory with the same name (without .zip)
+        os.makedirs(INSTANCES_DIR, exist_ok=True)
+
+        # Unzip the file
+        with zipfile.ZipFile(INSTANCES_ZIP, "r") as zip_ref:
+            zip_ref.extractall(INSTANCES_DIR)
+
+
 if __name__ == "__main__":
     download_traffic_files()
+    download_lane_closure_files()
