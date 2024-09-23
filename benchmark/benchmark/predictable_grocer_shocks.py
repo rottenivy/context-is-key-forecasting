@@ -102,6 +102,9 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
 
         # choose an influence and a relative impact from the influence
         shock_delay_in_days = self.random.randint(2, self.prediction_length)
+        shock_duration = self.random.randint(
+            1, self.prediction_length - shock_delay_in_days
+        )
         direction = self.random.choice(["positive", "negative"])
         size = self.random.choice(["small", "medium", "large"])
         influence_info = self.influences[sales_category][direction][size]
@@ -112,8 +115,12 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         impact_magnitude = self.random.randint(self.min_magnitude, self.max_magnitude)
 
         # apply the influence to the future series
-        future_series[shock_delay_in_days:] = self.apply_influence_to_series(
-            future_series[shock_delay_in_days:], impact_magnitude, direction
+        future_series[shock_delay_in_days:shock_duration] = (
+            self.apply_influence_to_series(
+                future_series[shock_delay_in_days:shock_duration],
+                impact_magnitude,
+                direction,
+            )
         )
 
         self.min_magnitude = self.min_magnitude
@@ -127,6 +134,10 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         self.constraints = None
         self.background = None
         self.scenario = self.get_scenario_context(shock_delay_in_days, influence_info)
+
+        self.region_of_interest = slice(
+            shock_delay_in_days, shock_delay_in_days + shock_duration
+        )
 
     def mitigate_memorization(self, window):
         """
