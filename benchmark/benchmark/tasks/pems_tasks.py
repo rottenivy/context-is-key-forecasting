@@ -7,50 +7,9 @@ import os
 from benchmark.base import UnivariateCRPSTask
 
 from benchmark.data.pems import (
-    # download_lane_closure_files,
-    # LANE_CLOSURE_SPLIT_PATH,
-    # LANE_CLOSURE_SENSOR_PATH,
-    # SLOW_FWYS_FILEPATH,
-    # UNINTERESTING_FILES_PATH,
     download_instances,
     INSTANCES_DIR,
 )
-
-# from ..window_selection import (
-#     # difference_in_means_is_large,
-#     intersection_over_union_is_low,
-#     quartile_intersection_over_union_is_low,
-#     median_absolute_deviation_intersection_is_low,
-# )
-
-
-def has_structural_break(before_data, during_data, after_data, threshold=0.2):
-    """
-    Checks for structural breaks by comparing the EMA of Lane 1 Speed (mph) before, during, and after the interval.
-    Returns True if there's a significant difference, indicating a structural break.
-    """
-    # Ensure there's enough data to compute the EMA
-    if len(before_data) < 2 or len(during_data) < 2 or len(after_data) < 2:
-        return False
-
-    min_before = before_data.min()
-    min_during = during_data.min()
-    min_after = after_data.min()
-
-    ema_before = before_data.ewm(span=12, adjust=False).mean().iloc[-1]
-    ema_during = during_data.ewm(span=12, adjust=False).mean().iloc[-1]
-    ema_after = after_data.ewm(span=12, adjust=False).mean().iloc[-1]
-
-    # Check if the EMA difference exceeds the threshold
-    conditions = [
-        # ema_before - ema_during > threshold * ema_during,
-        # ema_after - ema_during > threshold * ema_during,
-        (1 - threshold) * min_before > min_during,
-        (1 - threshold) * min_after > min_during,
-    ]
-    if all(conditions):
-        return True
-    return False
 
 
 class DefaultLaneClosureTrafficTask(UnivariateCRPSTask):
@@ -89,11 +48,9 @@ class DefaultLaneClosureTrafficTask(UnivariateCRPSTask):
 
         # Set the start and end of lane closure (round to the start of the day)
         self.lane_closure_start = pd.to_datetime(lane_closure["Start Date"]).normalize()
-        lane_closure_duration = pd.to_timedelta(
-            lane_closure["Reported Duration"], unit="m"
-        )
         self.lane_closure_end = (
-            self.lane_closure_start + lane_closure_duration
+            self.lane_closure_start
+            + pd.to_timedelta(lane_closure["Reported Duration"], unit="m")
         ).normalize()
 
         # Calculate extended end of closure day (+2 days)
@@ -130,9 +87,7 @@ class DefaultLaneClosureTrafficTask(UnivariateCRPSTask):
 
     def get_prediction_length(self, window):
         # Calculate the number of hours between the end of the window and the start of the lane closure day
-        lane_closure_start = self.lane_closure_start
         lane_closure_end = self.lane_closure_end
-        start_of_closure_day = pd.to_datetime(lane_closure_start).normalize()
         end_of_closure_day = pd.to_datetime(lane_closure_end).normalize()
 
         end_of_closure_day_extended = pd.to_datetime(
@@ -172,38 +127,6 @@ class DefaultLaneClosureTrafficTask(UnivariateCRPSTask):
         sensor_data.set_index("date", inplace=True)
 
         return lane_closure.iloc[0], sensor_data
-
-    def is_interesting_window(self, window, lane_closure):
-        """
-        Check if the window is interesting for the task.
-        """
-        lane_closure_start = pd.to_datetime(lane_closure["Start Date"])
-        lane_closure_end = pd.to_datetime(lane_closure["End Date"])
-        window_target = window[self.target]
-
-        if window_target.empty:
-            return False
-
-        # Extract the lane closure series
-        lane_closure_series = window_target[
-            (window_target.index >= lane_closure_start)
-            & (window_target.index <= lane_closure_end)
-        ]
-
-        before_lane_closure_series = window_target[
-            window_target.index < lane_closure_start
-        ]
-
-        after_lane_closure_series = window_target[
-            window_target.index > lane_closure_end
-        ]
-
-        if has_structural_break(
-            before_lane_closure_series, lane_closure_series, after_lane_closure_series
-        ):
-            return True
-
-        return False
 
     def get_context(self, sensor_data, lane_closure):
         """
