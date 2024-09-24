@@ -103,10 +103,9 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         ground_truth = future_series.copy()
 
         # choose an influence and a relative impact from the influence
-        shock_delay_in_days = self.random.randint(2, self.prediction_length)
-        shock_duration = self.random.randint(
-            1, self.prediction_length - shock_delay_in_days
-        )
+        shock_delay_in_days = self.random.randint(0, self.prediction_length - 1)
+        shock_duration = self.prediction_length - shock_delay_in_days + 1
+
         direction = self.random.choice(["positive", "negative"])
         size = self.random.choice(["small", "medium", "large"])
         influence_info = self.influences[sales_category][direction][size]
@@ -117,9 +116,11 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         impact_magnitude = self.random.randint(self.min_magnitude, self.max_magnitude)
 
         # apply the influence to the future series
-        future_series[shock_delay_in_days:shock_duration] = (
+        future_series[shock_delay_in_days : shock_delay_in_days + shock_duration] = (
             self.apply_influence_to_series(
-                future_series[shock_delay_in_days:shock_duration],
+                future_series[
+                    shock_delay_in_days : shock_delay_in_days + shock_duration
+                ],
                 impact_magnitude,
                 direction,
             )
