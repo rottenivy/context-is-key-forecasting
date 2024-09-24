@@ -216,8 +216,6 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
 
         """
         relative_impact = self.impact_magnitude
-        if self.direction == "negative":
-            relative_impact = self.impact_magnitude * -1
 
         shock_description = influence_info["influence"].replace(
             "{time_in_days}", str(shock_delay_in_days)
