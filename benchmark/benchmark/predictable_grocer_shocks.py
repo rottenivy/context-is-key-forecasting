@@ -135,7 +135,7 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()
         self.constraints = None
-        self.background = None
+        self.background = self.get_background_context(sales_category, store)
         self.scenario = self.get_scenario_context(shock_delay_in_days, influence_info)
 
         self.region_of_interest = slice(
@@ -194,6 +194,17 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
             series -= series * (relative_impact / 100)
 
         return series
+
+    def get_background_context(self, sales_category, store):
+        """
+        Get the background context of the event.
+        Returns:
+        --------
+        context: str
+            The background context of the event, including the sales category and the store.
+
+        """
+        return f"The following series contains {sales_category.capitalize()} sales in dollars of a grocery store."
 
     def get_scenario_context(self, shock_delay_in_days, influence_info):
         """
