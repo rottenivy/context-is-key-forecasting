@@ -721,7 +721,7 @@ class PredictableGrocerPersistentShockCovariateDairyTask(
     ):
 
         self.sales_categories = ["dairy"]
-        self.chosen_covariate = "daircoup"
+        self.chosen_covariate = "custcoun"
         super().__init__(seed=seed, fixed_config=fixed_config)
 
 
@@ -906,7 +906,7 @@ class PredictableGrocerTemporaryShockCovariateDairyTask(
     ):
 
         self.sales_categories = ["dairy"]
-        self.chosen_covariate = "daircoup"
+        self.chosen_covariate = "custcoun"
         super().__init__(seed=seed, fixed_config=fixed_config)
 
 
