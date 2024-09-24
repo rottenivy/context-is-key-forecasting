@@ -154,6 +154,8 @@ class DefaultLaneClosureTrafficTask(UnivariateCRPSTask):
 
         # sort the abs_pms
         abs_pms = sorted(abs_pms)
+        if self.seed is None:
+            self.seed = self.random.randint(0, len(abs_pms))
         selected_abs_pm = abs_pms[self.seed % len(abs_pms)]
 
         # Load the lane closure data
