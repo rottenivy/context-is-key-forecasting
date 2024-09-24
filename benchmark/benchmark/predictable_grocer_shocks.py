@@ -34,7 +34,7 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
             Filtered for a subset of products for which we generated influences.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + [ "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -48,6 +48,9 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         self.grocer_sales_influences_path = DOMINICK_JSON_PATH
         with open(self.grocer_sales_influences_path, "r") as file:
             self.influences = json.load(file)
+
+        if not hasattr(self, "sales_categories"):  # hack for debugging
+            self.sales_categories = list(self.influences.keys())
 
         super().__init__(seed=seed, fixed_config=fixed_config)
 
@@ -94,6 +97,7 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         else:
             raise ValueError("Could not find a valid window.")
 
+        covariates = self.get_covariates(dataset, store, sales_category, window)
         window = self.mitigate_memorization(window)
 
         # extract the history and future series
@@ -124,6 +128,20 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
                 direction,
             )
         )
+        if covariates is not None:
+            covariates = self.mitigate_memorization(covariates)
+            history_covariates = covariates.iloc[: -self.prediction_length]
+            future_covariates = covariates.iloc[-self.prediction_length :]
+            future_covariates[
+                shock_delay_in_days : shock_delay_in_days + shock_duration
+            ] = self.apply_influence_to_series(
+                future_covariates[
+                    shock_delay_in_days : shock_delay_in_days + shock_duration
+                ],
+                impact_magnitude,
+                direction,
+            )
+            covariates = pd.concat([history_covariates, future_covariates])
 
         self.min_magnitude = self.min_magnitude
         self.max_magnitude = self.max_magnitude
@@ -135,7 +153,9 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         self.future_time = future_series.to_frame()
         self.constraints = None
         self.background = self.get_background_context(sales_category, store)
-        self.scenario = self.get_scenario_context(shock_delay_in_days, influence_info)
+        self.scenario = self.get_scenario_context(
+            shock_delay_in_days, influence_info, covariates
+        )
 
         self.region_of_interest = slice(
             shock_delay_in_days, shock_delay_in_days + shock_duration
@@ -189,7 +209,14 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         """
         return f"The following series contains {sales_category.capitalize()} sales in dollars of a grocery store."
 
-    def get_scenario_context(self, shock_delay_in_days, influence_info):
+    def get_covariates(self, dataset, store, sales_category, window):
+        """
+        Get the covariates of the event.
+
+        """
+        return None
+
+    def get_scenario_context(self, shock_delay_in_days, influence_info, covariates):
         """
         Get the context of the event.
 
@@ -216,7 +243,7 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
 class PredictableGrocerTemporaryShockUnivariateTask(
     PredictableGrocerPersistentShockUnivariateTask
 ):
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + [ "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -231,7 +258,7 @@ class PredictableGrocerPersistentShockUnivariateBeerTask(
     PredictableGrocerPersistentShockUnivariateTask
 ):
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + [ "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -249,7 +276,7 @@ class PredictableGrocerPersistentShockUnivariateMeatTask(
     PredictableGrocerPersistentShockUnivariateTask
 ):
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + [ "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -267,7 +294,7 @@ class PredictableGrocerPersistentShockUnivariateGroceryTask(
     PredictableGrocerPersistentShockUnivariateTask
 ):
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + [ "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -285,7 +312,7 @@ class PredictableGrocerPersistentShockUnivariateDairyTask(
     PredictableGrocerPersistentShockUnivariateTask
 ):
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + [ "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -303,7 +330,7 @@ class PredictableGrocerPersistentShockUnivariateProduceTask(
     PredictableGrocerPersistentShockUnivariateTask
 ):
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + [ "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -321,7 +348,7 @@ class PredictableGrocerPersistentShockUnivariateFrozenTask(
     PredictableGrocerPersistentShockUnivariateTask
 ):
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + [ "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -339,7 +366,7 @@ class PredictableGrocerPersistentShockUnivariatePharmacyTask(
     PredictableGrocerPersistentShockUnivariateTask
 ):
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + [ "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -357,7 +384,7 @@ class PredictableGrocerPersistentShockUnivariateBakeryTask(
     PredictableGrocerPersistentShockUnivariateTask
 ):
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + [ "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -375,7 +402,7 @@ class PredictableGrocerPersistentShockUnivariateGmTask(
     PredictableGrocerPersistentShockUnivariateTask
 ):
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + [ "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -393,7 +420,7 @@ class PredictableGrocerPersistentShockUnivariateFishTask(
     PredictableGrocerPersistentShockUnivariateTask
 ):
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + [ "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -411,7 +438,7 @@ class PredictableGrocerTemporaryShockUnivariateBeerTask(
     PredictableGrocerTemporaryShockUnivariateTask
 ):
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + [ "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -429,7 +456,7 @@ class PredictableGrocerTemporaryShockUnivariateMeatTask(
     PredictableGrocerTemporaryShockUnivariateTask
 ):
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + [ "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -447,7 +474,7 @@ class PredictableGrocerTemporaryShockUnivariateGroceryTask(
     PredictableGrocerTemporaryShockUnivariateTask
 ):
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + [ "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -465,7 +492,7 @@ class PredictableGrocerTemporaryShockUnivariateDairyTask(
     PredictableGrocerTemporaryShockUnivariateTask
 ):
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + [ "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -483,7 +510,7 @@ class PredictableGrocerTemporaryShockUnivariateProduceTask(
     PredictableGrocerTemporaryShockUnivariateTask
 ):
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + [ "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -501,7 +528,7 @@ class PredictableGrocerTemporaryShockUnivariateFrozenTask(
     PredictableGrocerTemporaryShockUnivariateTask
 ):
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + [ "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -519,7 +546,7 @@ class PredictableGrocerTemporaryShockUnivariatePharmacyTask(
     PredictableGrocerTemporaryShockUnivariateTask
 ):
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + [ "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -537,7 +564,7 @@ class PredictableGrocerTemporaryShockUnivariateBakeryTask(
     PredictableGrocerTemporaryShockUnivariateTask
 ):
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + [ "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -555,7 +582,7 @@ class PredictableGrocerTemporaryShockUnivariateGmTask(
     PredictableGrocerTemporaryShockUnivariateTask
 ):
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + [ "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -573,7 +600,7 @@ class PredictableGrocerTemporaryShockUnivariateFishTask(
     PredictableGrocerTemporaryShockUnivariateTask
 ):
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + [ "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -584,6 +611,412 @@ class PredictableGrocerTemporaryShockUnivariateFishTask(
     ):
 
         self.sales_categories = ["fish"]
+        super().__init__(seed=seed, fixed_config=fixed_config)
+
+
+class PredictableGrocerPersistentShockCovariateTask(
+    PredictableGrocerPersistentShockUnivariateTask
+):
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def get_covariates(self, dataset, store, sales_category, window):
+        """
+        Get the covariates of the event.
+
+        """
+        cov_series = dataset[dataset["store"] == store][self.chosen_covariate]
+        cov_series = cov_series.loc[window.index]
+        return cov_series
+
+    def get_scenario_context(self, shock_delay_in_days, influence_info, covariates):
+        """
+        Get the context of the event.
+
+        """
+        possible_covariates = {
+            "custcoun": "the number of customers in the store",
+        }
+
+        shock_description = influence_info["influence"].replace(
+            "{time_in_days}", str(shock_delay_in_days)
+        )
+        shock_description = shock_description.replace(
+            "{impact}", str(self.impact_magnitude) + "%"
+        )
+        shock_description += f" This impact is expected to last for at least {self.prediction_length - shock_delay_in_days} days."
+
+        shock_description += f" The following series contains {possible_covariates[self.chosen_covariate]} in the store: \n{covariates.to_string(index=True)}"
+
+        return shock_description
+
+
+class PredictableGrocerPersistentShockCovariateBeerTask(
+    PredictableGrocerPersistentShockCovariateTask
+):
+
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def __init__(
+        self,
+        fixed_config: dict = None,
+        seed: int = None,
+    ):
+
+        self.sales_categories = ["beer"]
+        self.chosen_covariate = "custcoun"
+        super().__init__(seed=seed, fixed_config=fixed_config)
+
+
+class PredictableGrocerPersistentShockCovariateMeatTask(
+    PredictableGrocerPersistentShockCovariateTask
+):
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def __init__(
+        self,
+        fixed_config: dict = None,
+        seed: int = None,
+    ):
+
+        self.sales_categories = ["meat"]
+        self.chosen_covariate = "custcoun"
+        super().__init__(seed=seed, fixed_config=fixed_config)
+
+
+class PredictableGrocerPersistentShockCovariateGroceryTask(
+    PredictableGrocerPersistentShockCovariateTask
+):
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def __init__(
+        self,
+        fixed_config: dict = None,
+        seed: int = None,
+    ):
+
+        self.sales_categories = ["grocery"]
+        self.chosen_covariate = "custcoun"
+        super().__init__(seed=seed, fixed_config=fixed_config)
+
+
+class PredictableGrocerPersistentShockCovariateDairyTask(
+    PredictableGrocerPersistentShockCovariateTask
+):
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def __init__(
+        self,
+        fixed_config: dict = None,
+        seed: int = None,
+    ):
+
+        self.sales_categories = ["dairy"]
+        self.chosen_covariate = "daircoup"
+        super().__init__(seed=seed, fixed_config=fixed_config)
+
+
+class PredictableGrocerPersistentShockCovariateProduceTask(
+    PredictableGrocerPersistentShockCovariateTask
+):
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def __init__(
+        self,
+        fixed_config: dict = None,
+        seed: int = None,
+    ):
+
+        self.sales_categories = ["produce"]
+        self.chosen_covariate = "custcoun"
+        super().__init__(seed=seed, fixed_config=fixed_config)
+
+
+class PredictableGrocerPersistentShockCovariateFrozenTask(
+    PredictableGrocerPersistentShockCovariateTask
+):
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def __init__(
+        self,
+        fixed_config: dict = None,
+        seed: int = None,
+    ):
+
+        self.sales_categories = ["frozen"]
+        self.chosen_covariate = "custcoun"
+        super().__init__(seed=seed, fixed_config=fixed_config)
+
+
+class PredictableGrocerPersistentShockCovariatePharmacyTask(
+    PredictableGrocerPersistentShockCovariateTask
+):
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def __init__(
+        self,
+        fixed_config: dict = None,
+        seed: int = None,
+    ):
+
+        self.sales_categories = ["pharmacy"]
+        self.chosen_covariate = "custcoun"
+        super().__init__(seed=seed, fixed_config=fixed_config)
+
+
+class PredictableGrocerPersistentShockCovariateBakeryTask(
+    PredictableGrocerPersistentShockCovariateTask
+):
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def __init__(
+        self,
+        fixed_config: dict = None,
+        seed: int = None,
+    ):
+
+        self.sales_categories = ["bakery"]
+        self.chosen_covariate = "custcoun"
+        super().__init__(seed=seed, fixed_config=fixed_config)
+
+
+class PredictableGrocerPersistentShockCovariateGmTask(
+    PredictableGrocerPersistentShockCovariateTask
+):
+
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def __init__(
+        self,
+        fixed_config: dict = None,
+        seed: int = None,
+    ):
+
+        self.sales_categories = ["gm"]
+        self.chosen_covariate = "custcoun"
+        super().__init__(seed=seed, fixed_config=fixed_config)
+
+
+class PredictableGrocerPersistentShockCovariateFishTask(
+    PredictableGrocerPersistentShockCovariateTask
+):
+
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def __init__(
+        self,
+        fixed_config: dict = None,
+        seed: int = None,
+    ):
+
+        self.sales_categories = ["fish"]
+        self.chosen_covariate = "custcoun"
+        super().__init__(seed=seed, fixed_config=fixed_config)
+
+
+class PredictableGrocerTemporaryShockCovariateBeerTask(
+    PredictableGrocerPersistentShockCovariateTask
+):
+
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def __init__(
+        self,
+        fixed_config: dict = None,
+        seed: int = None,
+    ):
+
+        self.sales_categories = ["beer"]
+        self.chosen_covariate = "custcoun"
+        super().__init__(seed=seed, fixed_config=fixed_config)
+
+
+class PredictableGrocerTemporaryShockCovariateMeatTask(
+    PredictableGrocerPersistentShockCovariateTask
+):
+
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def __init__(
+        self,
+        fixed_config: dict = None,
+        seed: int = None,
+    ):
+
+        self.sales_categories = ["meat"]
+        self.chosen_covariate = "custcoun"
+        super().__init__(seed=seed, fixed_config=fixed_config)
+
+
+class PredictableGrocerTemporaryShockCovariateGroceryTask(
+    PredictableGrocerPersistentShockCovariateTask
+):
+
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def __init__(
+        self,
+        fixed_config: dict = None,
+        seed: int = None,
+    ):
+
+        self.sales_categories = ["grocery"]
+        self.chosen_covariate = "custcoun"
+        super().__init__(seed=seed, fixed_config=fixed_config)
+
+
+class PredictableGrocerTemporaryShockCovariateDairyTask(
+    PredictableGrocerPersistentShockCovariateTask
+):
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def __init__(
+        self,
+        fixed_config: dict = None,
+        seed: int = None,
+    ):
+
+        self.sales_categories = ["dairy"]
+        self.chosen_covariate = "daircoup"
+        super().__init__(seed=seed, fixed_config=fixed_config)
+
+
+class PredictableGrocerTemporaryShockCovariateProduceTask(
+    PredictableGrocerPersistentShockCovariateTask
+):
+
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def __init__(
+        self,
+        fixed_config: dict = None,
+        seed: int = None,
+    ):
+
+        self.sales_categories = ["produce"]
+        self.chosen_covariate = "custcoun"
+        super().__init__(seed=seed, fixed_config=fixed_config)
+
+
+class PredictableGrocerTemporaryShockCovariateFrozenTask(
+    PredictableGrocerPersistentShockCovariateTask
+):
+
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def __init__(
+        self,
+        fixed_config: dict = None,
+        seed: int = None,
+    ):
+
+        self.sales_categories = ["frozen"]
+        self.chosen_covariate = "custcoun"
+        super().__init__(seed=seed, fixed_config=fixed_config)
+
+
+class PredictableGrocerTemporaryShockCovariatePharmacyTask(
+    PredictableGrocerPersistentShockCovariateTask
+):
+
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def __init__(
+        self,
+        fixed_config: dict = None,
+        seed: int = None,
+    ):
+
+        self.sales_categories = ["pharmacy"]
+        self.chosen_covariate = "custcoun"
+        super().__init__(seed=seed, fixed_config=fixed_config)
+
+
+class PredictableGrocerTemporaryShockCovariateBakeryTask(
+    PredictableGrocerPersistentShockCovariateTask
+):
+
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def __init__(
+        self,
+        fixed_config: dict = None,
+        seed: int = None,
+    ):
+
+        self.sales_categories = ["bakery"]
+        self.chosen_covariate = "custcoun"
+        super().__init__(seed=seed, fixed_config=fixed_config)
+
+
+class PredictableGrocerTemporaryShockCovariateGmTask(
+    PredictableGrocerPersistentShockCovariateTask
+):
+
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def __init__(
+        self,
+        fixed_config: dict = None,
+        seed: int = None,
+    ):
+
+        self.sales_categories = ["gm"]
+        self.chosen_covariate = "custcoun"
+        super().__init__(seed=seed, fixed_config=fixed_config)
+
+
+class PredictableGrocerTemporaryShockCovariateFishTask(
+    PredictableGrocerPersistentShockCovariateTask
+):
+
+    def __init__(
+        self,
+        fixed_config: dict = None,
+        seed: int = None,
+    ):
+
+        self.sales_categories = ["fish"]
+        self.chosen_covariate = "custcoun"
         super().__init__(seed=seed, fixed_config=fixed_config)
 
 
@@ -608,4 +1041,24 @@ __TASKS__ = [
     PredictableGrocerTemporaryShockUnivariateBakeryTask,
     PredictableGrocerTemporaryShockUnivariateGmTask,
     PredictableGrocerTemporaryShockUnivariateFishTask,
+    PredictableGrocerPersistentShockCovariateBeerTask,
+    PredictableGrocerPersistentShockCovariateMeatTask,
+    PredictableGrocerPersistentShockCovariateGroceryTask,
+    PredictableGrocerPersistentShockCovariateDairyTask,
+    PredictableGrocerPersistentShockCovariateProduceTask,
+    PredictableGrocerPersistentShockCovariateFrozenTask,
+    PredictableGrocerPersistentShockCovariatePharmacyTask,
+    PredictableGrocerPersistentShockCovariateBakeryTask,
+    PredictableGrocerPersistentShockCovariateGmTask,
+    PredictableGrocerPersistentShockCovariateFishTask,
+    PredictableGrocerTemporaryShockCovariateBeerTask,
+    PredictableGrocerTemporaryShockCovariateMeatTask,
+    PredictableGrocerTemporaryShockCovariateGroceryTask,
+    PredictableGrocerTemporaryShockCovariateDairyTask,
+    PredictableGrocerTemporaryShockCovariateProduceTask,
+    PredictableGrocerTemporaryShockCovariateFrozenTask,
+    PredictableGrocerTemporaryShockCovariatePharmacyTask,
+    PredictableGrocerTemporaryShockCovariateBakeryTask,
+    PredictableGrocerTemporaryShockCovariateGmTask,
+    PredictableGrocerTemporaryShockCovariateFishTask
 ]
