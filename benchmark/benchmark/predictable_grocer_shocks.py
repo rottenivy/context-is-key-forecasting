@@ -247,6 +247,13 @@ class PredictableGrocerTemporaryShockUnivariateTask(
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
+    def __init__(
+        self,
+        fixed_config: dict = None,
+        seed: int = None,
+    ):
+        super().__init__(seed=seed, fixed_config=fixed_config)
+
     def get_shock_duration(self, shock_delay_in_days):
         """
         Shock is temporary for a random duration between 1 and 7 days.
@@ -620,6 +627,13 @@ class PredictableGrocerPersistentShockCovariateTask(
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    def __init__(
+        self,
+        fixed_config: dict = None,
+        seed: int = None,
+    ):
+        super().__init__(seed=seed, fixed_config=fixed_config)
 
     def get_covariates(self, dataset, store, sales_category, window):
         """
@@ -1008,6 +1022,10 @@ class PredictableGrocerTemporaryShockCovariateGmTask(
 class PredictableGrocerTemporaryShockCovariateFishTask(
     PredictableGrocerPersistentShockCovariateTask
 ):
+
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
+    _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
 
     def __init__(
         self,
