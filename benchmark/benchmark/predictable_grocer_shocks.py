@@ -156,6 +156,15 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         """
         window = window.copy()
         window *= 2
+
+        # update the year of the timesteps to map the lowest year of the window to 2024, and increment accordingly
+        min_year = window.index.min().year
+
+        def map_year(year):
+            return 2024 + (year - min_year)
+
+        window.index = window.index.map(lambda x: x.replace(year=map_year(x.year)))
+
         return window
 
     def get_shock_description(self, shock_delay_in_days, influence_info):
