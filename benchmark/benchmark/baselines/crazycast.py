@@ -6,7 +6,9 @@ Open AI based LLM Process
 import logging
 import numpy as np
 import os
+import torch
 import requests
+from functools import partial
 import time
 
 from types import SimpleNamespace
@@ -20,6 +22,7 @@ from ..config import (
 )
 from .utils import extract_html_tags
 
+from .hf_utils.cc_hf_api import LLM_MAP, get_model_and_tokenizer, hf_generate
 
 logger = logging.getLogger("CrazyCast")
 
@@ -38,8 +41,53 @@ def dict_to_obj(data):
         return data
 
 
+@torch.inference_mode()
+def huggingface_model_client(
+    llm, tokenizer, model, messages, n=1, max_tokens=10000, temperature=1.0, **kwargs
+):
+    # Process messages into a prompt
+    prompt = ""
+    for message in messages:
+        role = message["role"]
+        content = message["content"]
+        if role == "system":
+            prompt += f"{content}\n"
+        elif role == "user":
+            prompt += f"{content}\n"
+
+    responses = hf_generate(
+        llm,
+        tokenizer,
+        prompt,
+        batch_size=n,
+        temp=temperature,
+        top_p=0.9,
+        max_new_tokens=max_tokens,
+    )
+
+    # Now extract the assistant's reply
+    choices = []
+    for response_text in responses:
+        # Create a message object
+        message = SimpleNamespace(content=response_text)
+        # Create a choice object
+        choice = SimpleNamespace(message=message)
+        choices.append(choice)
+
+    # Create a usage object (we can estimate tokens)
+    usage = SimpleNamespace(
+        prompt_tokens=0,  # batch['input_ids'].shape[-1],
+        completion_tokens=0,  # output.shape[-1] - batch['input_ids'].shape[-1],
+    )
+
+    # Create a response object
+    response = SimpleNamespace(choices=choices, usage=usage)
+
+    return response
+
+
 def llama_3_1_405b_instruct_client(
-    model, messages, n=1, max_tokens=10000, temperature=0.7
+    model, messages, n=1, max_tokens=10000, temperature=1.0
 ):
     """
     Request completions from the Llama 3.1 405B Instruct model hosted on Toolkit
@@ -107,7 +155,7 @@ class CrazyCast(Baseline):
 
     """
 
-    __version__ = "0.0.3"  # Modification will trigger re-caching
+    __version__ = "0.0.5"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -116,16 +164,30 @@ class CrazyCast(Baseline):
         fail_on_invalid=True,
         n_retries=3,
         batch_size_on_retry=5,
+        batch_size=None,
         token_cost: dict = None,
+        temperature: float = 1.0,
+        dry_run: bool = False,
     ) -> None:
+
         self.model = model
-        self.client = self.get_client()
         self.use_context = use_context
         self.fail_on_invalid = fail_on_invalid
         self.n_retries = n_retries
+        self.batch_size = batch_size
         self.batch_size_on_retry = batch_size_on_retry
         self.token_cost = token_cost
         self.total_cost = 0  # Accumulator for monetary value of queries
+        self.temperature = temperature
+        self.dry_run = dry_run
+
+        if not dry_run and self.model in LLM_MAP.keys():
+            self.llm, self.tokenizer = get_model_and_tokenizer(
+                llm_path=None, llm_type=self.model
+            )
+        else:
+            self.llm, self.tokenizer = None, None
+        self.client = self.get_client()
 
     def get_client(self):
         """
@@ -149,7 +211,15 @@ class CrazyCast(Baseline):
                 client = OpenAI(api_key=OPENAI_API_KEY).chat.completions.create
 
         elif self.model == "llama-3.1-405b-instruct":
-            return llama_3_1_405b_instruct_client
+            return partial(llama_3_1_405b_instruct_client, temperature=self.temperature)
+
+        elif self.model in LLM_MAP.keys():
+            return partial(
+                huggingface_model_client,
+                llm=self.llm,
+                tokenizer=self.tokenizer,
+                temperature=self.temperature,
+            )
 
         else:
             raise NotImplementedError(f"Model {self.model} not supported.")
@@ -243,6 +313,14 @@ Example:
         extra_info: dict
             A dictionary containing informations pertaining to the cost of running this model
         """
+
+        assert (
+            self.batch_size * self.n_retries >= n_samples
+        ), f"Not enough iterations to cover {n_samples} samples"
+        assert (
+            self.batch_size_on_retry <= default_batch_size
+        ), f"Batch size on retry should be equal to or less than {default_batch_size}"
+
         starting_time = time.time()
         total_client_time = 0.0
 
@@ -257,16 +335,20 @@ Example:
 
         # Get forecast samples via rejection sampling until we have the desired number of samples
         # or until we run out of retries
+
         total_tokens = {"input": 0, "output": 0}
         valid_forecasts = []
 
+        default_batch_size = n_samples if not self.batch_size else self.batch_size
         max_batch_size = task_instance.max_crazycast_batch_size
         if max_batch_size is not None:
-            batch_size = min(n_samples, max_batch_size)
-            n_retries = self.n_retries + n_samples // batch_size
+            batch_size = min(default_batch_size, max_batch_size)
+            n_retries = self.n_retries + default_batch_size // batch_size
         else:
-            batch_size = n_samples
+            batch_size = default_batch_size
             n_retries = self.n_retries
+
+        llm_outputs = []
 
         while len(valid_forecasts) < n_samples and n_retries > 0:
             logger.info(f"Requesting forecast of {batch_size} samples from the model.")
@@ -280,6 +362,7 @@ Example:
 
             logger.info("Parsing forecasts from completion.")
             for choice in chat_completion.choices:
+                llm_outputs.append(choice.message.content)
                 try:
                     # Extract forecast from completion
                     forecast = extract_html_tags(choice.message.content, ["forecast"])[
@@ -333,6 +416,7 @@ Example:
         extra_info = {
             "total_input_tokens": total_tokens["input"],
             "total_output_tokens": total_tokens["output"],
+            "llm_outputs": llm_outputs,
         }
 
         # Estimate cost of API calls
@@ -358,7 +442,14 @@ Example:
 
     @property
     def cache_name(self):
-        args_to_include = ["model", "use_context", "fail_on_invalid", "n_retries"]
+        args_to_include = [
+            "model",
+            "use_context",
+            "fail_on_invalid",
+            "n_retries",
+        ]
+        if not self.model.startswith("gpt"):
+            args_to_include.append("temperature")
         return f"{self.__class__.__name__}_" + "_".join(
             [f"{k}={getattr(self, k)}" for k in args_to_include]
         )

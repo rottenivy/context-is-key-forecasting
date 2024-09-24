@@ -138,7 +138,16 @@ def experiment_statsmodels(
 
 
 def experiment_crazycast(
-    llm, use_context, n_samples, output_folder, max_parallel=1, skip_cache_miss=False
+    llm,
+    use_context,
+    n_samples,
+    output_folder,
+    max_parallel=1,
+    skip_cache_miss=False,
+    batch_size=None,
+    batch_size_on_retry=5,
+    n_retries=3,
+    temperature=1.0,
 ):
     """
     CrazyCast baselines
@@ -151,12 +160,32 @@ def experiment_crazycast(
         "gpt-3.5-turbo": {"input": 0.003, "output": 0.006},  # OpenAI API
         "gpt-4o-mini": {"input": 0.00015, "output": 0.0006},  # OpenAI API
         "llama-3.1-405b-instruct": {"input": 0.0, "output": 0.0},  # Toolkit
+        "llama-2-7B": {"input": 0.0, "output": 0.0},  # Toolkit
+        "llama-2-70B": {"input": 0.0, "output": 0.0},  # Toolkit
+        "llama-3-8B": {"input": 0.0, "output": 0.0},  # Toolkit
+        "llama-3-8B-instruct": {"input": 0.0, "output": 0.0},  # Toolkit
+        "llama-3-70B": {"input": 0.0, "output": 0.0},  # Toolkit
+        "llama-3-70B-instruct": {"input": 0.0, "output": 0.0},  # Toolkit
+        "mixtral-8x7B": {"input": 0.0, "output": 0.0},  # Toolkit
+        "mixtral-8x7B-instruct": {"input": 0.0, "output": 0.0},  # Toolkit
+        "phi-3-mini-128k-instruct": {"input": 0.0, "output": 0.0},  # Toolkit
+        "gemma-2-9B": {"input": 0.0, "output": 0.0},  # Toolkit
+        "gemma-2-9B-instruct": {"input": 0.0, "output": 0.0},  # Toolkit
+        "gemma-2-27B": {"input": 0.0, "output": 0.0},  # Toolkit
+        "gemma-2-27B-instruct": {"input": 0.0, "output": 0.0},  # Toolkit
     }
     if llm not in openai_costs:
         raise ValueError(f"Invalid model: {llm} -- Not in cost dictionary")
 
     cc_forecaster = CrazyCast(
-        model=llm, use_context=use_context, token_cost=openai_costs[llm]
+        model=llm,
+        use_context=use_context,
+        token_cost=openai_costs[llm],
+        batch_size=batch_size,
+        batch_size_on_retry=batch_size_on_retry,
+        n_retries=n_retries,
+        temperature=temperature,
+        dry_run=skip_cache_miss,
     )
     results = evaluate_all_tasks(
         cc_forecaster,

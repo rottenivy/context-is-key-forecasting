@@ -12,7 +12,7 @@ from transformers import set_seed
 
 class ChronosForecaster(Baseline):
 
-    __version__ = "0.0.5"  # Modification will trigger re-caching
+    __version__ = "0.1.0"  # Modification will trigger re-caching
 
     def __init__(self, model_size, seed=42):
         """

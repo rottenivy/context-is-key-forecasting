@@ -219,6 +219,15 @@ class BaseHalfDaySolarForecastTask(UnivariateCRPSTask):
         # No RoI need to be defined as the full prediction window is important
 
     @property
+    def seasonal_period(self) -> int:
+        """
+        This returns the period which should be used by statistical models for this task.
+        If negative, this means that the data either has no period, or the history is shorter than the period.
+        """
+        # Not enough history for a single period
+        return -1
+
+    @property
     def max_crazycast_batch_size(self) -> int:
         """
         If set, only request that many samples at once when using a method using Direct Prompting.

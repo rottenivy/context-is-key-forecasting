@@ -16,7 +16,7 @@ from transformers import set_seed
 
 class MoiraiForecaster(Baseline):
 
-    __version__ = "0.0.3"  # Modification will trigger re-caching
+    __version__ = "0.1.0"  # Modification will trigger re-caching
 
     def __init__(
         self,
