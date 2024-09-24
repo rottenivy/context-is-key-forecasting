@@ -48,20 +48,20 @@ def download_dominicks(dominicks_url=dominicks_url):
     df["datetime"] = pd.to_datetime(df["date"], format="%y%m%d", errors="coerce")
     df.set_index("datetime", inplace=True)
 
-    desired_columns = [
-        "store",
-        "grocery",
-        "beer",
-        "meat",
-        "dairy",
-        "produce",
-        "frozen",
-        "pharmacy",
-        "bakery",
-        "gm",
-        "fish",
-    ]  # can be expanded
-    df = df[desired_columns].dropna()
+    # desired_columns = [
+    #     "store",
+    #     "grocery",
+    #     "beer",
+    #     "meat",
+    #     "dairy",
+    #     "produce",
+    #     "frozen",
+    #     "pharmacy",
+    #     "bakery",
+    #     "gm",
+    #     "fish",
+    # ]  # can be expanded
+    # df = df[desired_columns].dropna()
     df.dropna().to_csv(DOMINICK_CSV_PATH)
 
 
