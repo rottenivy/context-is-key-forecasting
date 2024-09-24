@@ -49,6 +49,8 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         with open(self.grocer_sales_influences_path, "r") as file:
             self.influences = json.load(file)
 
+        self.sales_categories = list(self.influences.keys())
+
         super().__init__(seed=seed, fixed_config=fixed_config)
 
     def init_data(self):
@@ -66,14 +68,13 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         dataset["date"] = pd.to_datetime(dataset["datetime"])
         dataset = dataset.set_index("date")
 
-        sales_categories = ["grocery", "beer", "meat"]
         stores = dataset["store"].unique()
 
         self.prediction_length = self.random.randint(7, 30)
 
         for counter in range(100000):
             # pick a random sales category and store
-            sales_category = self.random.choice(sales_categories)
+            sales_category = self.random.choice(self.sales_categories)
             store = self.random.choice(stores)
 
             # select a random series
@@ -144,7 +145,7 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
 
     def mitigate_memorization(self, window):
         """
-        Mitigate memorization by adding a random noise to the series
+        Mitigate memorization by doubling the values of the series and updating the year of the timesteps.
         Parameters:
         -----------
         window: pd.Series
@@ -175,18 +176,6 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
     def apply_influence_to_series(self, series, relative_impact, direction):
         """
         Apply a relative impact to a series
-        Parameters:
-        -----------
-        series: pd.Series
-            The series to apply the impact to.
-        relative_impact: int
-            The relative impact to apply
-        direction: str
-            The direction of the impact
-        Returns:
-        --------
-        series: pd.Series
-            The series with the applied impact
         """
         if direction == "positive":
             series += series * (relative_impact / 100)
@@ -198,10 +187,6 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
     def get_background_context(self, sales_category, store):
         """
         Get the background context of the event.
-        Returns:
-        --------
-        context: str
-            The background context of the event, including the sales category and the store.
 
         """
         return f"The following series contains {sales_category.capitalize()} sales in dollars of a grocery store."
@@ -209,10 +194,6 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
     def get_scenario_context(self, shock_delay_in_days, influence_info):
         """
         Get the context of the event.
-        Returns:
-        --------
-        context: str
-            The context of the event, including the influence and the relative impact.
 
         """
 
