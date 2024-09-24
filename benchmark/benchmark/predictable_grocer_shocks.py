@@ -215,13 +215,12 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
             The context of the event, including the influence and the relative impact.
 
         """
-        relative_impact = self.impact_magnitude
 
         shock_description = influence_info["influence"].replace(
             "{time_in_days}", str(shock_delay_in_days)
         )
         shock_description = shock_description.replace(
-            "{impact}", str(relative_impact) + "%"
+            "{impact}", str(self.impact_magnitude) + "%"
         )
         shock_description += f" This impact is expected to last for at least {self.prediction_length - shock_delay_in_days} days."
         return shock_description
