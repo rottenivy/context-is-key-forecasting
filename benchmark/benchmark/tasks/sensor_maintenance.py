@@ -8,9 +8,9 @@ from functools import partial
 from gluonts.dataset.util import to_pandas
 from tactis.gluon.dataset import get_dataset
 
-from .base import UnivariateCRPSTask
-from .config import DATA_STORAGE_PATH
-from .utils import get_random_window_univar, datetime_to_str
+from ..base import UnivariateCRPSTask
+from ..config import DATA_STORAGE_PATH
+from ..utils import get_random_window_univar, datetime_to_str
 
 
 get_dataset = partial(get_dataset, path=DATA_STORAGE_PATH)

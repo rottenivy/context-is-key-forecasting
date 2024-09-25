@@ -2,15 +2,18 @@ __version__ = "0.0.1"
 
 from .tasks.electricity_tasks import __TASKS__ as ELECTRICITY_TASKS
 from .tasks.nn5_tasks import __TASKS__ as NN5_TASKS
-from .pred_change_tasks import __TASKS__ as PRED_CHANGE_TASKS
-from .predictable_constraints_real_data import __TASKS__ as PREDICTABLE_CONSTRAINT_TASKS
+from .tasks.pred_change_tasks import __TASKS__ as PRED_CHANGE_TASKS
+from .tasks.predictable_constraints_real_data import (
+    __TASKS__ as PREDICTABLE_CONSTRAINT_TASKS,
+)
 from .predictable_grocer_shocks import __TASKS__ as PREDICTABLE_GROCER_SHOCKS_TASKS
-from .predictable_spikes_in_pred import __TASKS__ as PREDICTABLE_SPIKES_IN_PRED_TASKS
-from .predictable_stl_shocks import __TASKS__ as PREDICTABLE_STL_SHOCKS_TASKS
-from .sensor_maintenance import __TASKS__ as SENSOR_MAINTENANCE_TASKS
+from .tasks.predictable_spikes_in_pred import (
+    __TASKS__ as PREDICTABLE_SPIKES_IN_PRED_TASKS,
+)
+from .tasks.predictable_stl_shocks import __TASKS__ as PREDICTABLE_STL_SHOCKS_TASKS
+from .tasks.sensor_maintenance import __TASKS__ as SENSOR_MAINTENANCE_TASKS
 from .tasks.causal_chambers import __TASKS__ as CAUSAL_CHAMBERS_TASKS
-from .dummy_traffic import __TASKS__ as DUMMY_TRAFFIC_TASKS
-from .bivariate_categorical_causal import __TASKS__ as CATEGORICAL_CAUSAL_TASKS
+from .tasks.bivariate_categorical_causal import __TASKS__ as CATEGORICAL_CAUSAL_TASKS
 from .tasks.solar_tasks import __TASKS__ as SOLAR_TASKS
 from .tasks.traffic_tasks import __TASKS__ as TRAFFIC_TASKS
 from .tasks.nsrdb_tasks import __TASKS__ as NSRDB_TASKS
@@ -29,7 +32,6 @@ ALL_TASKS = (
     # + PREDICTABLE_STL_SHOCKS_TASKS
     + SENSOR_MAINTENANCE_TASKS
     + CAUSAL_CHAMBERS_TASKS
-    # + DUMMY_TRAFFIC_TASKS
     + CATEGORICAL_CAUSAL_TASKS
     + SOLAR_TASKS
     + TRAFFIC_TASKS

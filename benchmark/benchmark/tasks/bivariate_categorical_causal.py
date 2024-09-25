@@ -1,12 +1,12 @@
 from datetime import datetime, timedelta
-from .base import UnivariateCRPSTask
+from ..base import UnivariateCRPSTask
 import pandas as pd
 import numpy as np
 from scipy.sparse import csr_matrix
 import networkx as nx
 from termcolor import colored
 from abc import abstractmethod
-from .utils.causal import (
+from ..utils.causal import (
     check_dagness,
     parent_descriptions,
     get_historical_parents,
@@ -18,9 +18,9 @@ from .utils.causal import (
 """
     Usage:
     task = MinimalCausalContextBivarLinSVAR(seed=1)
-    or 
+    or
     task = FullCausalContextImplicitEquationBivarLinSVAR(seed=1)
-    or 
+    or
     task = FullCausalContextExplicitEquationBivarLinSVAR(seed=1)
 
     plot_forecast_with_covariates(task, f"{task.plot_name}.png")
@@ -544,12 +544,12 @@ class MinimalCausalContextBivarLinSVAR(BivariateCategoricalLinSVARBaseTask):
 """
     Causal Context Level 2
     ----------------------
-    
+
     Parents of the forecast variable are given along with the exact edge weights.
 
     Causal context example:
-    Parents for X_1 at lag 1: X_0 affect the forecast variable as 0.5 * X_0 + 0.5 * X_1. 
-    Parents for X_1 at lag 2: X_0 affect the forecast variable as 0.73 * X_0 + 0.52 * X_1. 
+    Parents for X_1 at lag 1: X_0 affect the forecast variable as 0.5 * X_0 + 0.5 * X_1.
+    Parents for X_1 at lag 2: X_0 affect the forecast variable as 0.73 * X_0 + 0.52 * X_1.
 
     In the expression, the timesteps of X_0 and X_1 have to be inferred from the text description (which mentions `at lag <l>`).
     Thus, the model must implictly reason that X_0^{t} = 0.5 * X_0^{t-1} + 0.5 * X_1^{t-1} + 0.73 * X_0^{t-2} + 0.52 * X_1^{t-2} + \epsilon
@@ -596,7 +596,7 @@ class FullCausalContextImplicitEquationBivarLinSVAR(
 """
     Causal Context Level 3
     ----------------------
-    
+
     Parents of the forecast variable are given along with the exact edge weights.
 
     Causal context example:
