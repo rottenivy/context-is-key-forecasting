@@ -35,6 +35,10 @@ class AbstractLaneClosureTask(UnivariateCRPSTask):
     Abstract traffic task, randomly sampled lane closure with all windows available.
     """
 
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
+    _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
+    __version__ = "0.0.1"  # Modification will trigger re-caching
+
     def __init__(
         self,
         fixed_config: dict = None,
@@ -232,7 +236,7 @@ class LaneClosureBeforeShortBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -250,7 +254,7 @@ class LaneClosureBeforeMediumBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -268,7 +272,7 @@ class LaneClosureBeforeLongBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -286,7 +290,7 @@ class LaneClosureDuringShortBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -304,7 +308,7 @@ class LaneClosureDuringMediumBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -322,7 +326,7 @@ class LaneClosureDuringLongBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -340,7 +344,7 @@ class LaneClosureAfterShortBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -358,7 +362,7 @@ class LaneClosureAfterMediumBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -376,7 +380,7 @@ class LaneClosureAfterLongBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -394,7 +398,7 @@ class LaneClosureBeforeShortHistoryShortBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -412,7 +416,7 @@ class LaneClosureBeforeShortHistoryMediumBackgroundTask(AbstractLaneClosureTask)
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -430,7 +434,7 @@ class LaneClosureBeforeShortHistoryLongBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -448,7 +452,7 @@ class LaneClosureDuringShortHistoryShortBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -466,7 +470,7 @@ class LaneClosureDuringShortHistoryMediumBackgroundTask(AbstractLaneClosureTask)
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -484,7 +488,7 @@ class LaneClosureDuringShortHistoryLongBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -502,7 +506,7 @@ class LaneClosureAfterShortHistoryShortBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -520,7 +524,7 @@ class LaneClosureAfterShortHistoryMediumBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -538,7 +542,7 @@ class LaneClosureAfterShortHistoryLongBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
