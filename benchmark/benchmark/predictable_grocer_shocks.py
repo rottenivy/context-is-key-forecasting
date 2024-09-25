@@ -171,6 +171,8 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         if week_of_month == 4:
             week_of_month = 0
             month += 1
+            if month > 12:
+                month = 1
 
         # Determine the corresponding date in 2024
         first_of_month_2024 = pd.Timestamp(2024, month, 1)
