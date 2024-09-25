@@ -12,7 +12,7 @@ from ..base import BaseTask
 
 class ExponentialSmoothingForecaster(Baseline):
 
-    __version__ = "0.0.2"  # Modification will trigger re-caching
+    __version__ = "0.0.3"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -67,10 +67,13 @@ class ExponentialSmoothingForecaster(Baseline):
 
         Note: If seasonal_periods is <= 0, then the seasonal component is skipped.
         """
+        # With the trend, we will have 4 parameters to be fitted, so disable it if we don't have any points to fit with
+        # Note: this still requires an absolute minimum of 3 values in past_time
+        disable_trend = len(past_time) < 5
         # If there is no period, then disable the seasonal component of the model (seasonal_periods will be ignored)
         model = statsmodels.tsa.holtwinters.ExponentialSmoothing(
             endog=past_time[past_time.columns[-1]],
-            trend=self.trend,
+            trend=self.trend if not disable_trend else None,
             seasonal=self.seasonal if seasonal_periods >= 1 else None,
             seasonal_periods=seasonal_periods,
         )

@@ -32,6 +32,16 @@ def test_time_data_is_dataframe(task):
 
 
 @pytest.mark.parametrize("task", ALL_TASKS)
+def test_past_time_is_long_enough(task):
+    """
+    Test that the historical data is long enough for the ExponentialSmoothingForecaster minimum requirement
+
+    """
+    task_instance = task()
+    assert len(task_instance.past_time) >= 3
+
+
+@pytest.mark.parametrize("task", ALL_TASKS)
 def test_some_context_exists(task):
     """
     Test that at least part of the context is non-empty
