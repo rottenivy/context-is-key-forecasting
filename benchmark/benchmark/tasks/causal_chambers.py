@@ -77,8 +77,8 @@ class WindTunnelTask(UnivariateCRPSTask):
 
         if downsample is not None:
             # downsample numerical variates, not averaging to avoid introducing new values
-            past_time = past_time.resample(downsample).min()
-            future_time = future_time.resample(downsample).min()
+            past_time = past_time.resample(downsample).min().ffill()
+            future_time = future_time.resample(downsample).min().ffill()
 
             # A hack to avoid overlapping past and future timestamps introduced by the resampling
             # (this can happen if window.future_start happens in the middle of the new time interval)
@@ -177,7 +177,7 @@ class SpeedFromLoadTask(WindTunnelTask):
             Window(4, 0, 952, 1100),
             Window(7, 0, 613, 1000),
             Window(3, 300, 807, 1420),
-            # Window(4, 0, 1886, 2000),  # Contains a NaN in the data
+            Window(4, 0, 1886, 2000),  # Contains a NaN in the data
             Window(5, 0, 502, 600),
             Window(6, 0, 686, 880),
             Window(2, 0, 440, 700),
