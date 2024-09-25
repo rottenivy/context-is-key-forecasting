@@ -138,7 +138,7 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()
         self.constraints = None
-        self.background = self.get_background_context(sales_category, store)
+        self.background = self.get_background_context(sales_category)
         self.scenario = self.get_scenario_context(
             shock_delay_in_days, influence_info, covariates
         )
@@ -200,7 +200,7 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
 
         return series
 
-    def get_background_context(self, sales_category, store):
+    def get_background_context(self, sales_category):
         """
         Get the background context of the event.
 
@@ -420,6 +420,13 @@ class PredictableGrocerPersistentShockUnivariateGmTask(
         self.sales_categories = ["gm"]
         super().__init__(seed=seed, fixed_config=fixed_config)
 
+    def get_background_context(self, sales_category):
+        """
+        Get the background context of the event.
+
+        """
+        return "The following series contains general merchandise sales in dollars of a grocery store."
+
 
 class PredictableGrocerPersistentShockUnivariateFishTask(
     PredictableGrocerPersistentShockUnivariateTask
@@ -599,6 +606,13 @@ class PredictableGrocerTemporaryShockUnivariateGmTask(
 
         self.sales_categories = ["gm"]
         super().__init__(seed=seed, fixed_config=fixed_config)
+
+    def get_background_context(self, sales_category):
+        """
+        Get the background context of the event.
+
+        """
+        return "The following series contains general merchandise sales in dollars of a grocery store."
 
 
 class PredictableGrocerTemporaryShockUnivariateFishTask(
@@ -827,6 +841,13 @@ class PredictableGrocerPersistentShockCovariateGmTask(
         self.chosen_covariate = "custcoun"
         super().__init__(seed=seed, fixed_config=fixed_config)
 
+    def get_background_context(self, sales_category):
+        """
+        Get the background context of the event.
+
+        """
+        return "The following series contains general merchandise sales in dollars of a grocery store."
+
 
 class PredictableGrocerPersistentShockCovariateFishTask(
     PredictableGrocerPersistentShockCovariateTask
@@ -1015,6 +1036,13 @@ class PredictableGrocerTemporaryShockCovariateGmTask(
         self.sales_categories = ["gm"]
         self.chosen_covariate = "custcoun"
         super().__init__(seed=seed, fixed_config=fixed_config)
+
+    def get_background_context(self, sales_category):
+        """
+        Get the background context of the event.
+
+        """
+        return "The following series contains general merchandise sales in dollars of a grocery store."
 
 
 class PredictableGrocerTemporaryShockCovariateFishTask(
