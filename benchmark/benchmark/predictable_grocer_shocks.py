@@ -174,12 +174,12 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
             if month > 12:
                 month = 1
 
-        # Determine the corresponding date in 2024
-        first_of_month_2024 = pd.Timestamp(2024, month, 1)
-        target_start_date = (
-            first_of_month_2024
-            - pd.DateOffset(days=1)
-            + WeekOfMonth(week=week_of_month, weekday=day_of_week)
+        # Pandas occasionally moves the date over to the next month, so we go back one day
+        first_of_month_2024_minus_1 = pd.Timestamp(2024, month, 1) - pd.DateOffset(
+            days=1
+        )
+        target_start_date = first_of_month_2024_minus_1 + WeekOfMonth(
+            week=week_of_month, weekday=day_of_week
         )
 
         # Generate new index starting from target_start_date
