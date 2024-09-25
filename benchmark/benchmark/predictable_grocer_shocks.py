@@ -1,6 +1,7 @@
 import json
 import os
 import pandas as pd
+from pandas.tseries.offsets import WeekOfMonth
 
 from .base import UnivariateCRPSTask
 from .data.dominicks import (
@@ -159,15 +160,27 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         window = window.copy()
         window *= 2
 
-        # update the year of the timesteps to map the lowest year of the window to 2024, and increment accordingly
-        min_year = window.index.min().year
+        # Get the start month, week, and day of the week from the original window
+        start_date = window.index[0]
+        month = start_date.month
+        day_of_week = start_date.weekday()  # Monday=0, Sunday=6
 
-        def map_year(year):
-            return 2024 + (year - min_year)
+        # Find the nth occurrence of the weekday within the month
+        week_of_month = (start_date.day - 1) // 7  # Get the week number (0-based)
 
-        # drop feb 29
-        window = window[~((window.index.month == 2) & (window.index.day == 29))]
-        window.index = window.index.map(lambda x: x.replace(year=map_year(x.year)))
+        # Determine the corresponding date in 2024
+        first_of_month_2024 = pd.Timestamp(2024, month, 1)
+        target_start_date = first_of_month_2024 + WeekOfMonth(
+            week=week_of_month, weekday=day_of_week
+        )
+
+        # Generate new index starting from target_start_date
+        new_index = pd.date_range(
+            start=target_start_date, periods=len(window), freq="D"
+        )
+
+        # Assign the newly generated index to the window
+        window.index = new_index
 
         return window
 
