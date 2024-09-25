@@ -1,6 +1,3 @@
-import numpy as np
-import ast
-
 import pandas as pd
 import os
 
@@ -59,7 +56,9 @@ class DefaultLaneClosureTrafficTask(UnivariateCRPSTask):
         )
 
         # Define the start of the history window (7 days before the closure start day)
-        history_start_day = self.lane_closure_start - pd.DateOffset(days=7)
+        history_start_day = self.lane_closure_start - pd.DateOffset(
+            days=self.get_history_factor()
+        )
 
         # Convert window index to datetime for filtering
         window_index = pd.to_datetime(window.index)
@@ -158,7 +157,7 @@ class DefaultLaneClosureTrafficTask(UnivariateCRPSTask):
         This returns the period which should be used by statistical models for this task.
         If negative, this means that the data either has no period, or the history is shorter than the period.
         """
-        return 7
+        return 24
 
 
 __TASKS__ = [DefaultLaneClosureTrafficTask]
