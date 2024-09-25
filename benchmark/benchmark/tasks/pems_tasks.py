@@ -19,7 +19,7 @@ def ordinal(n: int):
 
 
 SHORT_BACKGROUND = "This data is from the {freeway_dir} freeway, in California."
-MEDIUM_BACKGROUND = "This data is from the {freeway_dir} freeway, in {county} county, California. It is in the {ordinal(district)} congressional district."
+MEDIUM_BACKGROUND = "This data is from the {freeway_dir} freeway, in {county} county, California. It is in the {district} congressional district."
 LONG_BACKGROUND = "This data is from the {freeway_dir} freeway at its absolute postmile marker {abs_pm}. This is in {county} county, California, in the {ordinal(district)} congressional district."
 
 
@@ -182,7 +182,7 @@ class AbstractLaneClosureTask(UnivariateCRPSTask):
             return SHORT_BACKGROUND.format(freeway_dir=freeway_dir)
         elif self.background_length == "medium":
             return MEDIUM_BACKGROUND.format(
-                freeway_dir=freeway_dir, district=district, county=county
+                freeway_dir=freeway_dir, district=ordinal(district), county=county
             )
         elif self.background_length == "long":
             return LONG_BACKGROUND.format(
