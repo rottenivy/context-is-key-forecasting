@@ -20,7 +20,7 @@ def ordinal(n: int):
 
 SHORT_BACKGROUND = "This data is from the {freeway_dir} freeway, in California."
 MEDIUM_BACKGROUND = "This data is from the {freeway_dir} freeway, in {county} county, California. It is in the {district} congressional district."
-LONG_BACKGROUND = "This data is from the {freeway_dir} freeway at its absolute postmile marker {abs_pm}. This is in {county} county, California, in the {ordinal(district)} congressional district."
+LONG_BACKGROUND = "This data is from the {freeway_dir} freeway at its absolute postmile marker {abs_pm}. This is in {county} county, California, in the {district} congressional district."
 
 
 LANE_CLOSURE_PLACEMENTS = ["before", "during", "after"]
@@ -186,7 +186,10 @@ class AbstractLaneClosureTask(UnivariateCRPSTask):
             )
         elif self.background_length == "long":
             return LONG_BACKGROUND.format(
-                freeway_dir=freeway_dir, district=district, county=county, abs_pm=abs_pm
+                freeway_dir=freeway_dir,
+                district=ordinal(district),
+                county=county,
+                abs_pm=abs_pm,
             )
 
     def get_scenario(self, lane_closure):
