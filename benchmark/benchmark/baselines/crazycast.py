@@ -314,9 +314,11 @@ Example:
             A dictionary containing informations pertaining to the cost of running this model
         """
 
-        assert (
-            self.batch_size * self.n_retries >= n_samples
-        ), f"Not enough iterations to cover {n_samples} samples"
+        default_batch_size = n_samples if not self.batch_size else self.batch_size
+        if self.batch_size:
+            assert (
+                self.batch_size * self.n_retries >= n_samples
+            ), f"Not enough iterations to cover {n_samples} samples"
         assert (
             self.batch_size_on_retry <= default_batch_size
         ), f"Batch size on retry should be equal to or less than {default_batch_size}"
@@ -339,7 +341,6 @@ Example:
         total_tokens = {"input": 0, "output": 0}
         valid_forecasts = []
 
-        default_batch_size = n_samples if not self.batch_size else self.batch_size
         max_batch_size = task_instance.max_crazycast_batch_size
         if max_batch_size is not None:
             batch_size = min(default_batch_size, max_batch_size)
