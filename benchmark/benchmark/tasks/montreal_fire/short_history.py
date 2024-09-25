@@ -40,7 +40,7 @@ class MontrealFireShortHistoryTask(UnivariateCRPSTask):
         "retrieval: memory",
         "reasoning: deduction",
     ]
-    __version__ = "0.0.2"  # Modification will trigger re-caching
+    __version__ = "0.0.3"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -114,9 +114,15 @@ class MontrealFireShortHistoryTask(UnivariateCRPSTask):
 
         # Add randomness to the background
         if self.random.random() < 0.5:
-            self.background += f"This series contains the number of {self.series.lower()} incidents responded to by the Montreal Fire Department in the {borough} borough."
+            self.background += f"This series contains the number of {self.series.lower()} incidents responded to by the Montreal Fire Department"
         else:
-            self.background += f"This is the number of {self.series.lower()} incidents responded to by Montreal firefighters in the {borough} borough."
+            self.background += f"This is the number of {self.series.lower()} incidents responded to by Montreal firefighters"
+
+        # Add borough information
+        if borough.lower() == "total":
+            self.background += "."
+        else:
+            self.background += f" in the borough of {borough}."
 
         # Get the other windows to calculate stats
         other = list(valid_start_dates)
