@@ -9,22 +9,25 @@ from benchmark.data.pems import (
 )
 
 
-freeway_dir_context = "The freeway is {freeway_dir}."
-district_context = "The district is {district}."
-county_context = "The county is {county}."
-abs_pm_context = "The absolute postmile marker is {abs_pm}."
+# https://stackoverflow.com/questions/9647202/ordinal-numbers-replacement
+def ordinal(n: int):
+    if 11 <= (n % 100) <= 13:
+        suffix = "th"
+    else:
+        suffix = ["th", "st", "nd", "rd", "th"][min(n % 10, 4)]
+    return str(n) + suffix
 
-short_background = freeway_dir_context
-medium_background = f"{freeway_dir_context} {district_context} {county_context}"
-long_background = (
-    f"{freeway_dir_context} {district_context} {county_context} {abs_pm_context}"
-)
 
-lane_closure_placements = ["before", "during", "after"]
+SHORT_BACKGROUND = "This data is from the {freeway_dir} freeway, in California."
+MEDIUM_BACKGROUND = "This data is from the {freeway_dir} freeway, in {county} county, California. It is in the {ordinal(district)} congressional district."
+LONG_BACKGROUND = "This data is from the {freeway_dir} freeway at its absolute postmile marker {abs_pm}. This is in {county} county, California, in the {ordinal(district)} congressional district."
+
+
+LANE_CLOSURE_PLACEMENTS = ["before", "during", "after"]
 
 # targets = ["Speed (mph)", "Occupancy (%)"]
 
-history_factors = {
+HISTORY_FACTORS = {
     "short": 1,
     "default": 7,
 }
@@ -35,9 +38,13 @@ class AbstractLaneClosureTask(UnivariateCRPSTask):
     Abstract traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    lane_closure_placement = ""
+    history_length = ""
+    background_length = ""
 
     def __init__(
         self,
@@ -109,16 +116,16 @@ class AbstractLaneClosureTask(UnivariateCRPSTask):
 
     def get_history_factor(self):
         # if owning object class name has short, return 1, else return 7
-        if "ShortHistory" in self.__class__.__name__:
-            return history_factors["short"]
-        return history_factors["default"]
+        if self.history_length == "short":
+            return HISTORY_FACTORS["short"]
+        return HISTORY_FACTORS["default"]
 
     def get_history_future(self, lane_closure, window):
 
         lane_closure_start_day = self.lane_closure_start.normalize()
         lane_closure_end_day = self.lane_closure_end.normalize()
 
-        if "LaneClosureBefore" in self.__class__.__name__:
+        if self.lane_closure_placement == "before":
             history_end_day = lane_closure_end_day + pd.DateOffset(days=1)
             history_start_day = lane_closure_start_day.normalize() - pd.DateOffset(
                 days=self.get_history_factor()
@@ -130,7 +137,7 @@ class AbstractLaneClosureTask(UnivariateCRPSTask):
                 (window.index >= history_end_day)
                 & (window.index < history_end_day + pd.DateOffset(days=7))
             ]
-        elif "LaneClosureDuring" in self.__class__.__name__:
+        elif self.lane_closure_placement == "during":
             # get midpoint between start and end of lane closure
             midpoint_duration = (self.lane_closure_end - self.lane_closure_start) / 2
             lane_closure_midpoint = self.lane_closure_start + midpoint_duration
@@ -147,7 +154,7 @@ class AbstractLaneClosureTask(UnivariateCRPSTask):
                 (window.index >= history_end_day)
                 & (window.index < (history_end_day + pd.DateOffset(days=7)).normalize())
             ]
-        elif "LaneClosureAfter" in self.__class__.__name__:
+        elif self.lane_closure_placement == "after":
             history_end_day = lane_closure_start_day - pd.DateOffset(days=1)
             history_start_day = history_end_day - pd.DateOffset(
                 days=self.get_history_factor()
@@ -165,28 +172,20 @@ class AbstractLaneClosureTask(UnivariateCRPSTask):
 
         return history_series, future_series
 
-    # def get_context(self, sensor_data, lane_closure):
-    #     """
-    #     Get the context of the task.
-    #     """
-    #     background = self.get_background(sensor_data)
-    #     scenario = self.get_scenario(lane_closure)
-    #     return f"{background} {scenario}"
-
     def get_background(self, sensor_data):
         freeway_dir = sensor_data["Fwy"].iloc[0]
         district = sensor_data["District"].iloc[0]
         county = sensor_data["County"].iloc[0]
         abs_pm = sensor_data["Abs PM"].iloc[0]
 
-        if "ShortBackground" in self.__class__.__name__:
-            return short_background.format(freeway_dir=freeway_dir)
-        elif "MediumBackground" in self.__class__.__name__:
-            return medium_background.format(
+        if self.background_length == "short":
+            return SHORT_BACKGROUND.format(freeway_dir=freeway_dir)
+        elif self.background_length == "medium":
+            return MEDIUM_BACKGROUND.format(
                 freeway_dir=freeway_dir, district=district, county=county
             )
-        elif "LongBackground" in self.__class__.__name__:
-            return long_background.format(
+        elif self.background_length == "long":
+            return LONG_BACKGROUND.format(
                 freeway_dir=freeway_dir, district=district, county=county, abs_pm=abs_pm
             )
 
@@ -236,9 +235,13 @@ class LaneClosureBeforeShortBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    lane_closure_placement = "before"
+    history_length = "default"
+    background_length = "short"
 
     def __init__(
         self,
@@ -254,9 +257,13 @@ class LaneClosureBeforeMediumBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    lane_closure_placement = "before"
+    history_length = "default"
+    background_length = "medium"
 
     def __init__(
         self,
@@ -272,9 +279,13 @@ class LaneClosureBeforeLongBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    lane_closure_placement = "before"
+    history_length = "default"
+    background_length = "long"
 
     def __init__(
         self,
@@ -290,9 +301,13 @@ class LaneClosureDuringShortBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    lane_closure_placement = "during"
+    history_length = "default"
+    background_length = "short"
 
     def __init__(
         self,
@@ -308,9 +323,13 @@ class LaneClosureDuringMediumBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    lane_closure_placement = "during"
+    history_length = "default"
+    background_length = "medium"
 
     def __init__(
         self,
@@ -326,9 +345,13 @@ class LaneClosureDuringLongBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    lane_closure_placement = "during"
+    history_length = "default"
+    background_length = "long"
 
     def __init__(
         self,
@@ -344,9 +367,13 @@ class LaneClosureAfterShortBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    lane_closure_placement = "after"
+    history_length = "default"
+    background_length = "short"
 
     def __init__(
         self,
@@ -362,9 +389,13 @@ class LaneClosureAfterMediumBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    lane_closure_placement = "after"
+    history_length = "default"
+    background_length = "medium"
 
     def __init__(
         self,
@@ -380,9 +411,13 @@ class LaneClosureAfterLongBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    lane_closure_placement = "after"
+    history_length = "default"
+    background_length = "long"
 
     def __init__(
         self,
@@ -398,9 +433,13 @@ class LaneClosureBeforeShortHistoryShortBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    lane_closure_placement = "before"
+    history_length = "short"
+    background_length = "short"
 
     def __init__(
         self,
@@ -416,9 +455,13 @@ class LaneClosureBeforeShortHistoryMediumBackgroundTask(AbstractLaneClosureTask)
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    lane_closure_placement = "before"
+    history_length = "short"
+    background_length = "medium"
 
     def __init__(
         self,
@@ -434,9 +477,13 @@ class LaneClosureBeforeShortHistoryLongBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    lane_closure_placement = "before"
+    history_length = "short"
+    background_length = "long"
 
     def __init__(
         self,
@@ -452,9 +499,13 @@ class LaneClosureDuringShortHistoryShortBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    lane_closure_placement = "during"
+    history_length = "short"
+    background_length = "short"
 
     def __init__(
         self,
@@ -470,9 +521,13 @@ class LaneClosureDuringShortHistoryMediumBackgroundTask(AbstractLaneClosureTask)
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    lane_closure_placement = "during"
+    history_length = "short"
+    background_length = "medium"
 
     def __init__(
         self,
@@ -488,9 +543,13 @@ class LaneClosureDuringShortHistoryLongBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    lane_closure_placement = "during"
+    history_length = "short"
+    background_length = "long"
 
     def __init__(
         self,
@@ -506,9 +565,13 @@ class LaneClosureAfterShortHistoryShortBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    lane_closure_placement = "after"
+    history_length = "short"
+    background_length = "short"
 
     def __init__(
         self,
@@ -524,9 +587,13 @@ class LaneClosureAfterShortHistoryMediumBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    lane_closure_placement = "after"
+    history_length = "short"
+    background_length = "medium"
 
     def __init__(
         self,
@@ -542,9 +609,13 @@ class LaneClosureAfterShortHistoryLongBackgroundTask(AbstractLaneClosureTask):
     Default traffic task, randomly sampled lane closure with all windows available.
     """
 
-    _context_sources = UnivariateCRPSTask._context_sources + ["c_i, c_f"]
+    _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
     __version__ = "0.0.1"  # Modification will trigger re-caching
+
+    lane_closure_placement = "after"
+    history_length = "short"
+    background_length = "long"
 
     def __init__(
         self,
