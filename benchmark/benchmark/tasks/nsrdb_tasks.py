@@ -13,7 +13,7 @@ from ..base import UnivariateCRPSTask
 from ..utils import datetime_to_str
 from ..metrics.constraints import VariableMaxConstraint
 from ..metrics.constraints import MinConstraint
-from ..memorization_mitigation import add_realistic_noise
+from . import WeightCluster
 
 
 def download_all_nsrdb_datasets(
@@ -464,4 +464,23 @@ __TASKS__ = [
     ExplicitDiffuseHorizontalIrradianceFromCloudStatus,
     GlobalHorizontalIrradianceFromClearsky,
     DirectNormalIrradianceFromClearsky,
+]
+
+__CLUSTERS__ = [
+    WeightCluster(
+        weight=1,
+        tasks=[
+            DirectNormalIrradianceFromCloudStatus,
+            ExplicitDirectNormalIrradianceFromCloudStatus,
+            DiffuseHorizontalIrradianceFromCloudStatus,
+            ExplicitDiffuseHorizontalIrradianceFromCloudStatus,
+        ],
+    ),
+    WeightCluster(
+        weight=1,
+        tasks=[
+            GlobalHorizontalIrradianceFromClearsky,
+            DirectNormalIrradianceFromClearsky,
+        ],
+    ),
 ]

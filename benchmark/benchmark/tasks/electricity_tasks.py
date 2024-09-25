@@ -6,6 +6,7 @@ from ..base import UnivariateCRPSTask
 from ..config import DATA_STORAGE_PATH
 from ..utils import get_random_window_univar, datetime_to_str
 from ..memorization_mitigation import add_realistic_noise
+from . import WeightCluster
 
 
 class ElectricityIncreaseInPredictionTask(UnivariateCRPSTask):
@@ -260,4 +261,29 @@ __TASKS__ = [
     ShortNewsElectricityIncreaseInPredictionTask,
     MediumNewsElectricityIncreaseInPredictionTask,
     LongNewsElectricityIncreaseInPredictionTask,
+]
+
+__CLUSTERS__ = [
+    WeightCluster(
+        weight=1,
+        tasks=[
+            ElectricityIncreaseInPredictionTask,
+        ],
+    ),
+    WeightCluster(
+        weight=1,
+        tasks=[
+            ElectricityIncreaseInPredictionWithDistractorText,
+            ElectricityIncreaseInPredictionWithDistractorWithDates,
+            ElectricityIncreaseInPredictionWithSplitContext,
+        ],
+    ),
+    WeightCluster(
+        weight=1,
+        tasks=[
+            ShortNewsElectricityIncreaseInPredictionTask,
+            MediumNewsElectricityIncreaseInPredictionTask,
+            LongNewsElectricityIncreaseInPredictionTask,
+        ],
+    ),
 ]

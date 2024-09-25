@@ -13,7 +13,7 @@ from gluonts.dataset.repository import get_dataset
 
 from ..base import UnivariateCRPSTask
 from ..config import DATA_STORAGE_PATH
-
+from . import WeightCluster
 
 # TODO: rename to traffic_holiday_tasks.py
 from ..data.pems import load_traffic_series
@@ -430,4 +430,16 @@ __TASKS__ = [
     # ExplicitTrafficForecastTaskwithHolidaysInPredictionWindowAndPastYearAnalogy,
     # ExplicitWithDaysTrafficForecastTaskwithHolidaysInPredictionWindowAndPastYearAnalogy,
     # ExplicitWithDatesAndDaysTrafficForecastTaskwithHolidaysInPredictionWindowAndPastYearAnalogy,
+]
+
+__CLUSTERS__ = [
+    WeightCluster(
+        weight=1,
+        tasks=[
+            ImplicitTrafficForecastTaskwithHolidaysInPredictionWindow,
+            ExplicitTrafficForecastTaskwithHolidaysInPredictionWindow,
+            ExplicitWithDaysTrafficForecastTaskwithHolidaysInPredictionWindow,
+            ExplicitWithDatesAndDaysTrafficForecastTaskwithHolidaysInPredictionWindow,
+        ],
+    ),
 ]

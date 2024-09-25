@@ -14,6 +14,7 @@ from ..utils.causal import (
     truncate_regime,
     verbalize_variable_values,
 )
+from . import WeightCluster
 
 """
     Usage:
@@ -648,4 +649,15 @@ __TASKS__ = [
     MinimalCausalContextBivarLinSVAR,  # Level 1: Parents are given
     FullCausalContextImplicitEquationBivarLinSVAR,  # Level 2: Parents and edge weights are given, details on timesteps in the SVAR expression and epsilon have to be inferred from text
     FullCausalContextExplicitEquationBivarLinSVAR,  # Level 3: Parents and edge weights are given along with explicit timestep indexing in the SVAR equation and epsilon have to be inferred from text
+]
+
+__CLUSTERS__ = [
+    WeightCluster(
+        weight=1,
+        tasks=[
+            MinimalCausalContextBivarLinSVAR,
+            FullCausalContextImplicitEquationBivarLinSVAR,
+            FullCausalContextExplicitEquationBivarLinSVAR,
+        ],
+    )
 ]

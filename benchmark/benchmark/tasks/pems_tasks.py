@@ -7,6 +7,7 @@ from benchmark.data.pems import (
     download_instances,
     INSTANCES_DIR,
 )
+from . import WeightCluster
 
 
 # https://stackoverflow.com/questions/9647202/ordinal-numbers-replacement
@@ -648,4 +649,11 @@ __TASKS__ = [
     LaneClosureAfterShortHistoryShortBackgroundTask,
     LaneClosureAfterShortHistoryMediumBackgroundTask,
     LaneClosureAfterShortHistoryLongBackgroundTask,
+]
+
+__CLUSTERS__ = [
+    WeightCluster(
+        weight=1,
+        tasks=__TASKS__,
+    ),
 ]

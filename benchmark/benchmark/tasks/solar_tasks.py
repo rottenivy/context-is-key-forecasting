@@ -15,6 +15,7 @@ from ..config import DATA_STORAGE_PATH
 from ..metrics.constraints import MinConstraint
 from .nsrdb_tasks import download_all_nsrdb_datasets
 from ..memorization_mitigation import add_realistic_noise
+from . import WeightCluster
 
 
 class BaseHalfDayNSRDBSolarForecastTask(UnivariateCRPSTask):
@@ -381,4 +382,23 @@ __TASKS__ = [
     SimilarLocationDaySolarForecastTask,
     ExplicitSimilarLocationDaySolarForecastTask,
     SimilarLocationWithReferenceDaySolarForecastTask,
+]
+
+__CLUSTERS__ = [
+    WeightCluster(
+        weight=1,
+        tasks=[
+            MinimalInfoHalfDaySolarForecastTask,
+            LocaleInfoHalfDaySolarForecastTask,
+            ZenithInfoHalfDaySolarForecastTask,
+        ],
+    ),
+    WeightCluster(
+        weight=1,
+        tasks=[
+            SimilarLocationDaySolarForecastTask,
+            ExplicitSimilarLocationDaySolarForecastTask,
+            SimilarLocationWithReferenceDaySolarForecastTask,
+        ],
+    ),
 ]

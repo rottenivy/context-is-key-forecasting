@@ -8,6 +8,7 @@ from collections import namedtuple
 from ..base import UnivariateCRPSTask
 from ..config import DATA_STORAGE_PATH
 from ..metrics.constraints import MinConstraint, MaxConstraint, ListConstraint
+from . import WeightCluster
 
 Window = namedtuple("Window", ["seed", "history_start", "future_start", "time_end"])
 
@@ -274,4 +275,20 @@ __TASKS__ = [
     SpeedFromLoadTask,
     ExplicitPressureFromSpeedTask,
     ImplicitPressureFromSpeedTask,
+]
+
+__CLUSTERS__ = [
+    WeightCluster(
+        weight=1,
+        tasks=[
+            SpeedFromLoadTask,
+        ],
+    ),
+    WeightCluster(
+        weight=1,
+        tasks=[
+            ExplicitPressureFromSpeedTask,
+            ImplicitPressureFromSpeedTask,
+        ],
+    ),
 ]

@@ -6,6 +6,7 @@ from ...data.montreal_fire.load import (
 )
 from .short_history import MontrealFireShortHistoryTask
 from .utils import calculate_yearly_sum_stats_for_months
+from .. import WeightCluster
 
 
 class MontrealFireCausalConfoundingTask(MontrealFireShortHistoryTask):
@@ -206,5 +207,13 @@ __TASKS__ = [
             for include_causal in [True, False]
             for neutral_tone in [True, False]
         ]
+    )
+]
+
+
+__CLUSTERS__ = [
+    WeightCluster(
+        weight=1,
+        tasks=__TASKS__,
     )
 ]

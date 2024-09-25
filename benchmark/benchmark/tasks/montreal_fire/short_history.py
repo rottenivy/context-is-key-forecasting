@@ -9,6 +9,7 @@ from ...data.montreal_fire.load import (
     get_incident_log,
     get_time_count_series_by_borough,
 )
+from .. import WeightCluster
 
 
 class MontrealFireShortHistoryTask(UnivariateCRPSTask):
@@ -278,4 +279,21 @@ __TASKS__ = [
     MontrealFireNauticalRescueImplicitShortHistoryTask,
     MontrealFireIceRescueExplicitShortHistoryTask,
     MontrealFireIceRescueImplicitShortHistoryTask,
+]
+
+
+__CLUSTERS__ = [
+    WeightCluster(
+        weight=1,
+        tasks=[
+            MontrealFireFieldFireExplicitShortHistoryTask,
+            MontrealFireFieldFireImplicitShortHistoryTask,
+            MontrealFireTrashFireExplicitShortHistoryTask,
+            MontrealFireTrashFireImplicitShortHistoryTask,
+            MontrealFireNauticalRescueExplicitShortHistoryTask,
+            MontrealFireNauticalRescueImplicitShortHistoryTask,
+            MontrealFireIceRescueExplicitShortHistoryTask,
+            MontrealFireIceRescueImplicitShortHistoryTask,
+        ],
+    )
 ]

@@ -12,6 +12,7 @@ from ..base import UnivariateCRPSTask
 from ..config import DATA_STORAGE_PATH
 from ..utils import get_random_window_univar, datetime_to_str
 from ..memorization_mitigation import add_realistic_noise
+from . import WeightCluster
 
 get_dataset = partial(get_dataset, path=DATA_STORAGE_PATH)
 
@@ -436,4 +437,23 @@ __TASKS__ = [
     ATMUnderPeriodicMaintenanceTaskWithConclusionLessExplicit,
     ATMUnderPeriodicMaintenanceTaskWithoutConclusion,
     IncreasedWithdrawalScenario,
+]
+
+__CLUSTERS__ = [
+    WeightCluster(
+        weight=1,
+        tasks=[
+            CashDepletedinATMScenarioTask,
+            ATMBuildingClosedTask,
+            IncreasedWithdrawalScenario,
+        ],
+    ),
+    WeightCluster(
+        weight=1,
+        tasks=[
+            ATMUnderPeriodicMaintenanceTaskWithConclusion,
+            ATMUnderPeriodicMaintenanceTaskWithConclusionLessExplicit,
+            ATMUnderPeriodicMaintenanceTaskWithoutConclusion,
+        ],
+    ),
 ]

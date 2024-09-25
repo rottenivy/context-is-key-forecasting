@@ -9,6 +9,7 @@ import huggingface_hub
 
 from ..base import UnivariateCRPSTask
 from ..utils import datetime_to_str
+from . import WeightCluster
 
 
 def download_fred_dataset(
@@ -206,4 +207,15 @@ __TASKS__ = [
     UnemploymentCountyUsingSingleStateData,
     UnemploymentCountyUsingMultipleStateData,
     UnemploymentCountyUsingExplicitMultipleStateData,
+]
+
+__CLUSTERS__ = [
+    WeightCluster(
+        weight=1,
+        tasks=[
+            UnemploymentCountyUsingSingleStateData,
+            UnemploymentCountyUsingMultipleStateData,
+            UnemploymentCountyUsingExplicitMultipleStateData,
+        ],
+    ),
 ]

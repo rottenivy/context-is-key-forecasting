@@ -6,6 +6,7 @@ from gluonts.dataset.util import to_pandas
 from ..base import UnivariateCRPSTask
 from ..config import DATA_STORAGE_PATH
 from ..utils import get_random_window_univar, datetime_to_str
+from . import WeightCluster
 
 from benchmark.data.pems import (
     load_traffic_series,
@@ -128,3 +129,12 @@ class DecreaseInTrafficInPredictionTask(UnivariateCRPSTask):
 
 
 __TASKS__ = [DecreaseInTrafficInPredictionTask]
+
+__CLUSTERS__ = [
+    WeightCluster(
+        weight=1,
+        tasks=[
+            DecreaseInTrafficInPredictionTask,
+        ],
+    ),
+]

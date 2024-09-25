@@ -9,6 +9,7 @@ from ...data.montreal_fire.load import (
     get_incident_log,
     get_time_count_series_by_borough,
 )
+from .. import WeightCluster
 
 
 class MontrealFireNauticalRescueAnalogyTask(UnivariateCRPSTask):
@@ -299,4 +300,14 @@ __TASKS__ = [
     # XXX: see above comment for reason of leaving out
     # MontrealFireNauticalRescueAnalogyReferenceLocalizationTask,
     # MontrealFireNauticalRescueAnalogyNoLocalizationTask,
+]
+
+__CLUSTERS__ = [
+    WeightCluster(
+        weight=1,
+        tasks=[
+            MontrealFireNauticalRescueAnalogyFullLocalizationMaybeWaterTask,
+            MontrealFireNauticalRescueAnalogyTargetLocalizationMaybeWaterTask,
+        ],
+    )
 ]

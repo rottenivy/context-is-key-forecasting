@@ -14,6 +14,7 @@ from ..window_selection import (
     median_absolute_deviation_intersection_is_low,
     is_baseline_prediction_poor,
 )
+from . import WeightCluster
 
 from benchmark.data.pems import (
     load_traffic_series,
@@ -381,4 +382,14 @@ class BoundedPredConstraintsBasedOnPredQuantilesTask(
 __TASKS__ = [
     OraclePredUnivariateConstraintsTask,
     BoundedPredConstraintsBasedOnPredQuantilesTask,
+]
+
+__CLUSTERS__ = [
+    WeightCluster(
+        weight=1,
+        tasks=[
+            OraclePredUnivariateConstraintsTask,
+            BoundedPredConstraintsBasedOnPredQuantilesTask,
+        ],
+    ),
 ]
