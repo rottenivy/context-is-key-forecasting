@@ -12,12 +12,13 @@ import pandas as pd
 
 from collections import defaultdict
 from pathlib import Path
-
 from benchmark.baselines.crazycast import CrazyCast
 from benchmark.baselines.lag_llama import lag_llama
 from benchmark.baselines.chronos import ChronosForecaster
 from benchmark.baselines.moirai import MoiraiForecaster
 from benchmark.baselines.llm_processes import LLMPForecaster
+from benchmark.baselines.timellm import TimeLLMForecaster
+from benchmark.baselines.unitime import UniTimeForecaster
 from benchmark.baselines.naive import oracle_baseline, random_baseline
 from benchmark.baselines.statsmodels import (
     ExponentialSmoothingForecaster,
@@ -198,6 +199,72 @@ def experiment_crazycast(
     del cc_forecaster
 
     return results, {"total_cost": total_cost}
+
+
+def experiment_timellm(
+    use_context,
+    dataset,
+    pred_len,
+    n_samples,
+    output_folder,
+    max_parallel=1,
+    skip_cache_miss=False,
+):
+    """
+    TimeLLM baselines
+    Doesn't use n_samples as it is not implemented in the TimeLLMForecaster
+
+    """
+    timellm_forecaster = TimeLLMForecaster(
+        use_context=use_context,
+        dataset=dataset,
+        pred_len=pred_len,
+    )
+
+    return (
+        evaluate_all_tasks(
+            timellm_forecaster,
+            n_samples=n_samples,
+            output_folder=f"{output_folder}/{timellm_forecaster.cache_name}",
+            max_parallel=max_parallel,
+            skip_cache_miss=skip_cache_miss,
+        ),
+        {},
+    )
+
+
+def experiment_unitime(
+    use_context,
+    pred_len,
+    n_samples,
+    output_folder,
+    dataset="",
+    per_dataset_checkpoint=False,
+    max_parallel=1,
+    skip_cache_miss=False,
+):
+    """
+    TimeLLM baselines
+    Doesn't use n_samples as it is not implemented in the TimeLLMForecaster
+
+    """
+    unitime_forecaster = UniTimeForecaster(
+        use_context=use_context,
+        dataset=dataset,
+        pred_len=pred_len,
+        per_dataset_checkpoint=per_dataset_checkpoint,
+    )
+
+    return (
+        evaluate_all_tasks(
+            unitime_forecaster,
+            n_samples=n_samples,
+            output_folder=f"{output_folder}/{unitime_forecaster.cache_name}",
+            max_parallel=max_parallel,
+            skip_cache_miss=skip_cache_miss,
+        ),
+        {},
+    )
 
 
 def experiment_llmp(

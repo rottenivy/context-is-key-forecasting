@@ -28,7 +28,7 @@ class MoiraiForecaster(Baseline):
         seed=42,
     ):
         """
-        Get predictions from a Chronos model.
+        Get predictions from a Moirai model.
 
         Notes:
         ------
@@ -65,9 +65,6 @@ class MoiraiForecaster(Baseline):
         # If there is no period, then disable the seasonal component of the model (seasonal_periods will be ignored)
 
         set_seed(self.seed)
-        past_time = (
-            task_instance.past_time
-        )  # this is a df with index as time, single column as that has the values
 
         model = MoiraiForecast(
             module=MoiraiModule.from_pretrained(
@@ -84,7 +81,11 @@ class MoiraiForecaster(Baseline):
 
         with torch.no_grad():
 
-            target = past_time.to_numpy().flatten()
+            target = (
+                task_instance.past_time[[task_instance.past_time.columns[-1]]]
+                .to_numpy()
+                .flatten()
+            )
 
             # Time series values. Shape: (batch, time, variate)
             past_target = rearrange(

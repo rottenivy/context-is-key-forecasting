@@ -56,7 +56,8 @@ class ChronosForecaster(Baseline):
         )
 
         hist_values = torch.tensor(
-            task_instance.past_time.values, dtype=torch.bfloat16
+            task_instance.past_time[[task_instance.past_time.columns[-1]]].values,
+            dtype=torch.bfloat16,
         ).flatten()
 
         start_inference = time.time()
@@ -65,6 +66,7 @@ class ChronosForecaster(Baseline):
             context=hist_values,
             prediction_length=len(task_instance.future_time),
             num_samples=n_samples,
+            limit_prediction_length=False,
         )
         end_inference = time.time()
 
