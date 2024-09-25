@@ -11,9 +11,7 @@ import numpy as np
 from ..base import UnivariateCRPSTask
 from ..config import DATA_STORAGE_PATH
 from ..utils import get_random_window_univar, datetime_to_str
-
-from abc import ABC, abstractmethod
-
+from ..memorization_mitigation import add_realistic_noise
 
 get_dataset = partial(get_dataset, path=DATA_STORAGE_PATH)
 
@@ -26,7 +24,7 @@ class CashDepletedinATMScenarioTask(UnivariateCRPSTask):
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def random_instance(self):
         datasets = [
@@ -77,6 +75,10 @@ class CashDepletedinATMScenarioTask(UnivariateCRPSTask):
             # Convert history index to timestamp for consistency
             history_series.index = history_series.index.to_timestamp()
 
+        # Transform
+        history_series = add_realistic_noise(history_series, self.random)
+        future_series = add_realistic_noise(future_series, self.random)
+
         background = f"This is the number of cash withdrawals from an automated teller machine (ATM) in an arbitrary location in England."
         scenario = self.get_scenario(drop_start_date, drop_duration)
 
@@ -104,7 +106,7 @@ class ATMBuildingClosedTask(CashDepletedinATMScenarioTask):
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def get_scenario(self, drop_start_date, drop_duration):
         scenario = f"Consider that the building which contains the ATM is closed from {datetime_to_str(drop_start_date)}, for {drop_duration} {'day' if drop_duration == 1 else 'days'}."  # TODO: May also specify drop end date instead of the drop duration.
@@ -120,7 +122,7 @@ class ATMUnderPeriodicMaintenanceTaskWithConclusion(UnivariateCRPSTask):
     # XXX: No c_h since the context doesn't say what happened due to maintenance
     _context_sources = UnivariateCRPSTask._context_sources + ["c_i", "c_cov"]
     _skills = UnivariateCRPSTask._skills + ["instruction following", "reasoning: math"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def random_instance(self):
         datasets = [
@@ -177,6 +179,10 @@ class ATMUnderPeriodicMaintenanceTaskWithConclusion(UnivariateCRPSTask):
         # Convert future index to timestamp for consistency
         future_series.index = future_series.index.to_timestamp()
 
+        # Transform
+        history_series = add_realistic_noise(history_series, self.random)
+        future_series = add_realistic_noise(future_series, self.random)
+
         # Instantiate the class variables
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()
@@ -217,7 +223,7 @@ class ATMUnderPeriodicMaintenanceTaskWithConclusionLessExplicit(
         "instruction following",
         "reasoning: deduction",
     ]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def get_background(self, drop_duration, drop_spacing, drop_start_date):
         background = f"This is the number of cash withdrawals from an automated teller machine (ATM) in an arbitrary location in England."  # This is generic background information common to all NN5 tasks
@@ -233,7 +239,7 @@ class ATMUnderPeriodicMaintenanceTaskWithoutConclusion(
         "instruction following",
         "reasoning: deduction",
     ]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def get_background(self, drop_duration, drop_spacing, drop_start_date):
         background = f"This is the number of cash withdrawals from an automated teller machine (ATM) in an arbitrary location in England."  # This is generic background information common to all NN5 tasks
@@ -249,6 +255,8 @@ class ATMUnderPeriodicMaintenanceWithRandomValuesTask(UnivariateCRPSTask):
     NOTE: This task is too hard right now since the randomly sampled data looks too similar to the other data. So it's hard even for humans. Hence, not putting it in __TASKS__ for now.
 
     """
+
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(self, fixed_config: dict = None, seed: int = None):
         super().__init__(seed=seed, fixed_config=fixed_config)
@@ -312,6 +320,10 @@ class ATMUnderPeriodicMaintenanceWithRandomValuesTask(UnivariateCRPSTask):
         # Convert future index to timestamp for consistency
         future_series.index = future_series.index.to_timestamp()
 
+        # Transform
+        history_series = add_realistic_noise(history_series, self.random)
+        future_series = add_realistic_noise(future_series, self.random)
+
         background = f"This is the number of cash withdrawals from an automated teller machine (ATM) in an arbitrary location in England."  # This is generic background information common to all NN5 tasks
         background += f" The ATM was under maintenance for {drop_duration} {'day' if drop_duration == 1 else 'days'}, periodically every {drop_spacing} days, starting from {datetime_to_str(drop_start_date)}, resulting in corrupted values in the data. Assume that the ATM will not be in maintenance in the future."
 
@@ -331,7 +343,7 @@ class IncreasedWithdrawalScenario(UnivariateCRPSTask):
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_i", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def random_instance(self):
         datasets = [
@@ -391,6 +403,10 @@ class IncreasedWithdrawalScenario(UnivariateCRPSTask):
 
         # Convert history index to timestamp for consistency
         history_series.index = history_series.index.to_timestamp()
+
+        # Transform
+        history_series = add_realistic_noise(history_series, self.random)
+        future_series = add_realistic_noise(future_series, self.random)
 
         event_type = self.random.choice(
             ["festival", "holiday", "celebration", "party", "music concert", "carnival"]

@@ -5,6 +5,7 @@ import numpy as np
 from ..base import UnivariateCRPSTask
 from ..config import DATA_STORAGE_PATH
 from ..utils import get_random_window_univar, datetime_to_str
+from ..memorization_mitigation import add_realistic_noise
 
 
 class ElectricityIncreaseInPredictionTask(UnivariateCRPSTask):
@@ -18,7 +19,7 @@ class ElectricityIncreaseInPredictionTask(UnivariateCRPSTask):
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.2"  # Modification will trigger re-caching
+    __version__ = "0.0.3"  # Modification will trigger re-caching
 
     def random_instance(self):
         datasets = ["electricity_hourly"]
@@ -72,6 +73,10 @@ class ElectricityIncreaseInPredictionTask(UnivariateCRPSTask):
             # Convert future index to timestamp for consistency
             history_series.index = history_series.index.to_timestamp()
 
+            # Transform
+            history_series = add_realistic_noise(history_series, self.random)
+            future_series = add_realistic_noise(future_series, self.random)
+
             background = f"This is the electricity consumption recorded in Kilowatt (kW) in city A."
             scenario = self.get_scenario(
                 spike_start_date, spike_duration, spike_magnitude
@@ -108,7 +113,7 @@ class ElectricityIncreaseInPredictionWithDistractorText(
         "instruction following",
         "retrieval: context",
     ]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def get_scenario(self, spike_start_date, spike_duration, spike_magnitude):
         relevant_context = f"Suppose that there is a heat wave in city A from {datetime_to_str(spike_start_date)} for {spike_duration} {'hour' if spike_duration == 1 else 'hours'}, leading to excessive use of air conditioning, and {spike_magnitude} times the usual electricity being consumed."
@@ -150,7 +155,7 @@ class ElectricityIncreaseInPredictionWithDistractorWithDates(
         "instruction following",
         "retrieval: context",
     ]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def get_scenario(self, spike_start_date, spike_duration, spike_magnitude):
         distractor_types = [1, 2]
@@ -180,7 +185,7 @@ class ElectricityIncreaseInPredictionWithSplitContext(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def get_scenario(self, spike_start_date, spike_duration, spike_magnitude):
         distractor_factors = [3, 4, 5, 6, 7, 8]
@@ -199,7 +204,7 @@ class ShortNewsElectricityIncreaseInPredictionTask(ElectricityIncreaseInPredicti
         "instruction following",
         "retrieval: context",
     ]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def get_scenario(self, spike_start_date, spike_duration, spike_magnitude):
         # This news article was generated with the assistance of Claude
@@ -220,7 +225,7 @@ class MediumNewsElectricityIncreaseInPredictionTask(
         "instruction following",
         "retrieval: context",
     ]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def get_scenario(self, spike_start_date, spike_duration, spike_magnitude):
         # This news article was generated with the assistance of Claude
@@ -239,7 +244,7 @@ class LongNewsElectricityIncreaseInPredictionTask(ElectricityIncreaseInPredictio
         "instruction following",
         "retrieval: context",
     ]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def get_scenario(self, spike_start_date, spike_duration, spike_magnitude):
         # This news article was generated with the assistance of Claude

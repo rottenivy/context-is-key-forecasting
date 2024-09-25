@@ -14,6 +14,7 @@ from ..base import UnivariateCRPSTask
 from ..config import DATA_STORAGE_PATH
 from ..metrics.constraints import MinConstraint
 from .nsrdb_tasks import download_all_nsrdb_datasets
+from ..memorization_mitigation import add_realistic_noise
 
 
 class BaseHalfDayNSRDBSolarForecastTask(UnivariateCRPSTask):
@@ -26,7 +27,7 @@ class BaseHalfDayNSRDBSolarForecastTask(UnivariateCRPSTask):
     Use the Direct Normal Irradiance, due to being more variable than the Global Horizontal Irradiance.
     """
 
-    __version__ = "0.0.3"  # Modification will trigger re-caching
+    __version__ = "0.0.4"  # Modification will trigger re-caching
 
     def random_instance(self):
         # All lot of this work is repeated for all instances, so it wouldn't hurt to cache it.
@@ -53,6 +54,10 @@ class BaseHalfDayNSRDBSolarForecastTask(UnivariateCRPSTask):
 
         state = header["State"][2:-1]
         country = header["Country"][2:-1]
+
+        # Shift the dates by one day forward
+        history_series.index = history_series.index + pd.Timedelta(days=1)
+        future_series.index = future_series.index + pd.Timedelta(days=1)
 
         background = self.get_background(
             full_history_series,
@@ -106,7 +111,7 @@ class MinimalInfoHalfDaySolarForecastTask(BaseHalfDayNSRDBSolarForecastTask):
 
     _context_sources = ["c_i"]
     _skills = BaseHalfDayNSRDBSolarForecastTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.2"  # Modification will trigger re-caching
+    __version__ = "0.0.3"  # Modification will trigger re-caching
 
     def get_background(
         self,
@@ -124,7 +129,7 @@ class LocaleInfoHalfDaySolarForecastTask(BaseHalfDayNSRDBSolarForecastTask):
 
     _context_sources = ["c_i"]
     _skills = BaseHalfDayNSRDBSolarForecastTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.2"  # Modification will trigger re-caching
+    __version__ = "0.0.3"  # Modification will trigger re-caching
 
     def get_background(
         self,
@@ -145,7 +150,7 @@ class ZenithInfoHalfDaySolarForecastTask(BaseHalfDayNSRDBSolarForecastTask):
 
     _context_sources = ["c_i", "c_h"]
     _skills = BaseHalfDayNSRDBSolarForecastTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.2"  # Modification will trigger re-caching
+    __version__ = "0.0.3"  # Modification will trigger re-caching
 
     def get_background(
         self,
@@ -180,7 +185,7 @@ class BaseHalfDaySolarForecastTask(UnivariateCRPSTask):
     learns the daily shape of the signal.
     """
 
-    __version__ = "0.0.2"  # Modification will trigger re-caching
+    __version__ = "0.0.3"  # Modification will trigger re-caching
 
     def random_instance(self):
         dataset = get_dataset(
@@ -204,6 +209,14 @@ class BaseHalfDaySolarForecastTask(UnivariateCRPSTask):
         future_series = full_series.iloc[
             (day * 24 * 6) + forecast_time : (day * 24 * 6) + 24 * 6
         ]
+
+        # Transform
+        history_series = add_realistic_noise(
+            history_series, self.random, noise_level=0.01, skip_zero_values=True
+        )
+        future_series = add_realistic_noise(
+            future_series, self.random, noise_level=0.01, skip_zero_values=True
+        )
 
         background = self.get_background(
             full_history_series, future_series.index[0].start_time
@@ -246,7 +259,7 @@ class SimilarLocationDaySolarForecastTask(BaseHalfDaySolarForecastTask):
         "reasoning: analogy",
         "retrieval: memory",
     ]
-    __version__ = "0.0.2"  # Modification will trigger re-caching
+    __version__ = "0.0.3"  # Modification will trigger re-caching
 
     def random_instance(self):
         dataset = get_dataset(
@@ -271,6 +284,22 @@ class SimilarLocationDaySolarForecastTask(BaseHalfDaySolarForecastTask):
         future_series = full_series.iloc[
             (day * 24 * 6) + forecast_time : (day * 24 * 6) + 24 * 6
         ]
+
+        # Transform
+        history_series = add_realistic_noise(
+            history_series,
+            self.random,
+            noise_level=0.01,
+            skip_zero_values=True,
+            constraints=[MinConstraint(0)],
+        )
+        future_series = add_realistic_noise(
+            future_series,
+            self.random,
+            noise_level=0.01,
+            skip_zero_values=True,
+            constraints=[MinConstraint(0)],
+        )
 
         background = self.get_background(
             full_history_series, future_series.index[0].start_time
@@ -298,7 +327,7 @@ class ExplicitSimilarLocationDaySolarForecastTask(SimilarLocationDaySolarForecas
 
     _context_sources = ["c_i"]
     _skills = SimilarLocationDaySolarForecastTask._skills + ["retrieval: memory"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def get_background(
         self, full_history_series: pd.Series, forecast_date: pd.Timestamp
@@ -319,7 +348,7 @@ class SimilarLocationWithReferenceDaySolarForecastTask(
         "reasoning: deduction",
         "retrieval: memory",
     ]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def get_background(
         self, full_history_series: pd.Series, forecast_date: pd.Timestamp

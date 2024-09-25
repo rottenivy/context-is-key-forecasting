@@ -12,6 +12,8 @@ import huggingface_hub
 from ..base import UnivariateCRPSTask
 from ..utils import datetime_to_str
 from ..metrics.constraints import VariableMaxConstraint
+from ..metrics.constraints import MinConstraint
+from ..memorization_mitigation import add_realistic_noise
 
 
 def download_all_nsrdb_datasets(
@@ -63,7 +65,7 @@ class BaseIrradianceFromCloudStatus(UnivariateCRPSTask):
     _context_sources = ["c_i", "c_cov"]
     # Part of the task involve understanding the impact of longer cloudy period (denser clouds)
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.2"  # Modification will trigger re-caching
+    __version__ = "0.0.3"  # Modification will trigger re-caching
 
     # Those must be overriden
     irradiance_column: str = ""
@@ -183,9 +185,14 @@ class BaseIrradianceFromCloudStatus(UnivariateCRPSTask):
         history_series = df[self.irradiance_column].iloc[:48]
         future_series = df[self.irradiance_column].iloc[48:]
 
+        # Shift the dates by one day forward
+        history_series.index = history_series.index + pd.Timedelta(days=1)
+        future_series.index = future_series.index + pd.Timedelta(days=1)
+
         # Instantiate the class variables
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()
+        self.metric_constraint = MinConstraint(0)
         self.constraints = None
         self.background = self.get_background(header)
         self.scenario = self.get_scenario(df)
@@ -200,7 +207,7 @@ class BaseIrradianceFromCloudStatus(UnivariateCRPSTask):
 
 
 class GlobalHorizontalIrradianceFromCloudStatus(BaseIrradianceFromCloudStatus):
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     irradiance_column: str = "GHI"
     irradiance_short_description: str = "Global Horizontal Irradiance"
@@ -211,7 +218,7 @@ class GlobalHorizontalIrradianceFromCloudStatus(BaseIrradianceFromCloudStatus):
 
 
 class DirectNormalIrradianceFromCloudStatus(BaseIrradianceFromCloudStatus):
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     irradiance_column: str = "DNI"
     irradiance_short_description: str = "Direct Normal Irradiance"
@@ -224,7 +231,7 @@ class DirectNormalIrradianceFromCloudStatus(BaseIrradianceFromCloudStatus):
 class ExplicitDirectNormalIrradianceFromCloudStatus(
     DirectNormalIrradianceFromCloudStatus
 ):
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
     irradiance_explicit_effect: str = (
         "When there are no clouds to block the sun, the Direct Normal Irradiance is mostly a function of the position of the sun in the sky, "
@@ -236,7 +243,7 @@ class ExplicitDirectNormalIrradianceFromCloudStatus(
 
 
 class DiffuseHorizontalIrradianceFromCloudStatus(BaseIrradianceFromCloudStatus):
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     irradiance_column: str = "DHI"
     irradiance_short_description: str = "Diffuse Horizontal Irradiance"
@@ -250,7 +257,7 @@ class ExplicitDiffuseHorizontalIrradianceFromCloudStatus(
     DiffuseHorizontalIrradianceFromCloudStatus
 ):
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
     irradiance_explicit_effect: str = (
         "Even when there are no clouds to scatter the sun light, there will still be some Diffuse Horizontal Irradiance, "
         + "since clouds are not the only cause of light scattering. "
@@ -270,7 +277,7 @@ class BaseIrradianceFromClearsky(UnivariateCRPSTask):
     _context_sources = ["c_i", "c_cov"]
     # Part of the task involve understanding the impact of longer cloudy period (denser clouds)
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     # Those must be overriden
     irradiance_column: str = ""
@@ -360,12 +367,23 @@ class BaseIrradianceFromClearsky(UnivariateCRPSTask):
         history_series = df[self.irradiance_column].iloc[:48]
         future_series = df[self.irradiance_column].iloc[48:]
 
+        # Shift the dates by one day forward
+        history_series.index = history_series.index + pd.Timedelta(days=1)
+        future_series.index = future_series.index + pd.Timedelta(days=1)
+
         # Instantiate the class variables
         self.past_time = history_series.to_frame()
         self.future_time = future_series.to_frame()
         self.clearsky = df["Clearsky " + self.irradiance_column]
         # Warning: self.clearsky_constraints must align with self.metric_constraint
         self.clearsky_constraints = self.clearsky.iloc[::3]
+
+        # Shift the dates by one day forward
+        self.clearsky.index = self.clearsky.index + pd.Timedelta(days=1)
+        self.clearsky_constraints.index = (
+            self.clearsky_constraints.index + pd.Timedelta(days=1)
+        )
+
         self.metric_constraint = VariableMaxConstraint(
             np.arange(0, 24, 3), self.clearsky[48:].values[np.arange(0, 24, 3)]
         )
@@ -414,7 +432,7 @@ class BaseIrradianceFromClearsky(UnivariateCRPSTask):
 
 
 class GlobalHorizontalIrradianceFromClearsky(BaseIrradianceFromClearsky):
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     irradiance_column: str = "GHI"
     irradiance_short_description: str = "Global Horizontal Irradiance"
@@ -424,7 +442,7 @@ class GlobalHorizontalIrradianceFromClearsky(BaseIrradianceFromClearsky):
 
 
 class DirectNormalIrradianceFromClearsky(BaseIrradianceFromClearsky):
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     irradiance_column: str = "DNI"
     irradiance_short_description: str = "Direct Normal Irradiance"
