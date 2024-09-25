@@ -168,6 +168,10 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         # Find the nth occurrence of the weekday within the month
         week_of_month = (start_date.day - 1) // 7  # Get the week number (0-based)
 
+        if week_of_month == 4:
+            week_of_month = 0
+            month += 1
+
         # Determine the corresponding date in 2024
         first_of_month_2024 = pd.Timestamp(2024, month, 1)
         target_start_date = first_of_month_2024 + WeekOfMonth(
