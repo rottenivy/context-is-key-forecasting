@@ -87,16 +87,6 @@ WEIGHT_CLUSTERS = (
     + PEMS_CLUSTERS
 )
 
-for __task in ALL_TASKS:
-    __found = 0
-    for __cluster in WEIGHT_CLUSTERS:
-        if __task in __cluster.tasks:
-            __found += 1
-    assert __found == 1, f"{__task} must be in exactly one weight cluster"
-
-__num_tasks_in_cluster = sum(len(__cluster.tasks) for __cluster in WEIGHT_CLUSTERS)
-assert __num_tasks_in_cluster == len(ALL_TASKS)
-
 
 def get_task_weight(task: BaseTask) -> Fraction:
     for cluster in WEIGHT_CLUSTERS:

@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from abc import abstractmethod
 
-from .base import BaseTask
+from ..base import BaseTask
 
 
 class BaseConstrainedTask(BaseTask):
