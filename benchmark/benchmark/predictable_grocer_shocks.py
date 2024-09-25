@@ -49,9 +49,6 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         with open(self.grocer_sales_influences_path, "r") as file:
             self.influences = json.load(file)
 
-        if not hasattr(self, "sales_categories"):  # hack for debugging
-            self.sales_categories = list(self.influences.keys())
-
         super().__init__(seed=seed, fixed_config=fixed_config)
 
     def init_data(self):
@@ -130,18 +127,6 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         )
         if covariates is not None:
             covariates = self.mitigate_memorization(covariates)
-            history_covariates = covariates.iloc[: -self.prediction_length]
-            future_covariates = covariates.iloc[-self.prediction_length :]
-            future_covariates[
-                shock_delay_in_days : shock_delay_in_days + shock_duration
-            ] = self.apply_influence_to_series(
-                future_covariates[
-                    shock_delay_in_days : shock_delay_in_days + shock_duration
-                ],
-                impact_magnitude,
-                direction,
-            )
-            covariates = pd.concat([history_covariates, future_covariates])
 
         self.min_magnitude = self.min_magnitude
         self.max_magnitude = self.max_magnitude
