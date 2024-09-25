@@ -14,7 +14,7 @@ Window = namedtuple("Window", ["seed", "history_start", "future_start", "time_en
 
 class WindTunnelTask(UnivariateCRPSTask):
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov"]
-    __version__ = "0.0.3"  # Modification will trigger re-caching
+    __version__ = "0.0.4"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -165,7 +165,7 @@ class SpeedFromLoadTask(WindTunnelTask):
         "reasoning: math",
         "instruction following",
     ]
-    __version__ = "0.0.3"  # Modification will trigger re-caching
+    __version__ = "0.0.4"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -177,7 +177,7 @@ class SpeedFromLoadTask(WindTunnelTask):
             Window(4, 0, 952, 1100),
             Window(7, 0, 613, 1000),
             Window(3, 300, 807, 1420),
-            Window(4, 0, 1886, 2000),  # Contains a NaN in the data
+            Window(4, 0, 1886, 2000),
             Window(5, 0, 502, 600),
             Window(6, 0, 686, 880),
             Window(2, 0, 440, 700),
@@ -211,7 +211,7 @@ class ExplicitPressureFromSpeedTask(WindTunnelTask):
         "reasoning: math",
         "instruction following",
     ]
-    __version__ = "0.0.2"  # Modification will trigger re-caching
+    __version__ = "0.0.3"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -257,7 +257,7 @@ class ImplicitPressureFromSpeedTask(ExplicitPressureFromSpeedTask):
         "reasoning: math",
         "instruction following",
     ]
-    __version__ = "0.0.2"  # Modification will trigger re-caching
+    __version__ = "0.0.3"  # Modification will trigger re-caching
 
     def __init__(
         self,
