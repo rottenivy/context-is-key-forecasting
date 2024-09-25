@@ -9,6 +9,18 @@ from benchmark.data.pems import (
 )
 
 
+freeway_dir_context = "The freeway is {freeway_dir}."
+district_context = "The district is {district}."
+county_context = "The county is {county}."
+abs_pm_context = "The absolute postmile marker is {abs_pm}."
+
+short_background = freeway_dir_context
+medium_background = f"{freeway_dir_context} {district_context} {county_context}"
+long_background = (
+    f"{freeway_dir_context} {district_context} {county_context} {abs_pm_context}"
+)
+
+
 class DefaultLaneClosureTrafficTask(UnivariateCRPSTask):
     """
     Default traffic task, randomly sampled lane closure with all windows available.
