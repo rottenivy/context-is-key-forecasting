@@ -443,8 +443,13 @@ __CLUSTERS__ = [
     WeightCluster(
         weight=1,
         tasks=[
-            CashDepletedinATMScenarioTask,
             ATMBuildingClosedTask,
+        ],
+    ),
+    WeightCluster(
+        weight=1,
+        tasks=[
+            CashDepletedinATMScenarioTask,
             IncreasedWithdrawalScenario,
         ],
     ),
