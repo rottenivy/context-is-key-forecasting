@@ -3,13 +3,14 @@ import os
 import pandas as pd
 from pandas.tseries.offsets import WeekOfMonth
 
-from .base import UnivariateCRPSTask
-from .data.dominicks import (
+from ..base import UnivariateCRPSTask
+from ..data.dominicks import (
     download_dominicks,
     DOMINICK_JSON_PATH,
     DOMINICK_CSV_PATH,
 )
-from .utils import get_random_window_univar
+from ..utils import get_random_window_univar
+from . import WeightCluster
 
 
 class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
@@ -1113,4 +1114,11 @@ __TASKS__ = [
     PredictableGrocerTemporaryShockCovariateBakeryTask,
     PredictableGrocerTemporaryShockCovariateGmTask,
     PredictableGrocerTemporaryShockCovariateFishTask,
+]
+
+__CLUSTERS__ = [
+    WeightCluster(
+        weight=1,
+        tasks=__TASKS__,
+    ),
 ]

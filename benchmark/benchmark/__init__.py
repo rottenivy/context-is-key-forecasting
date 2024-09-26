@@ -17,7 +17,10 @@ from .tasks.predictable_constraints_real_data import (
     __TASKS__ as PREDICTABLE_CONSTRAINT_TASKS,
     __CLUSTERS__ as PREDICTABLE_CONSTRAINT_CLUSTERS,
 )
-from .predictable_grocer_shocks import __TASKS__ as PREDICTABLE_GROCER_SHOCKS_TASKS
+from .tasks.predictable_grocer_shocks import (
+    __TASKS__ as PREDICTABLE_GROCER_SHOCKS_TASKS,
+    __CLUSTERS__ as PREDICTABLE_GROCER_SHOCKS_CLUSTERS,
+)
 
 # from .tasks.predictable_spikes_in_pred import (
 #     __TASKS__ as PREDICTABLE_SPIKES_IN_PRED_TASKS,
@@ -76,6 +79,7 @@ WEIGHT_CLUSTERS = (
     + NN5_CLUSTERS
     + PRED_CHANGE_CLUSTERS
     + PREDICTABLE_CONSTRAINT_CLUSTERS
+    + PREDICTABLE_GROCER_SHOCKS_CLUSTERS
     + SENSOR_MAINTENANCE_CLUSTERS
     + CAUSAL_CHAMBERS_CLUSTERS
     + CATEGORICAL_CAUSAL_CLUSTERS
