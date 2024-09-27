@@ -60,6 +60,24 @@ model_name_map = {
     "Lag-Llama": "Lag-Llama (no context)",
 }
 
+# LLM models to their associated columns, both with and without context
+LLM_MODELS_TO_COLUMNS = {
+    "DP - GPT-4o": ("CC-GPT-4o", "CC-GPT-4o (no ctx)"),
+    "DP - Llama-3.1-405B-Instruct": (
+        "CC-Llama-3.1-405b-instruct-temp10",
+        "CC-Llama-3.1-405b-instruct-temp10 (no ctx)",
+    ),
+    "DP - GPT-4o-mini": ("CC-GPT-4o-mini", "CC-GPT-4o-mini (no ctx)"),
+    "LLMP - LLama3-8B": ("LLama3-8B", "LLama3-8B (no ctx)"),
+    "LLMP - LLama3-8B-Instruct": ("LLama3-8B-instruct", "LLama3-8B-instruct (no ctx)"),
+    # "LLMP - LLama3-70B-Instruct": ("LLama3-70B-instruct", "LLama3-70B-instruct (no ctx)"),
+    "DP - Mixtral-8x7B": ("Mixtral-8x7B", "Mixtral-8x7B (no ctx)"),
+    "DP - Mixtral-Instruct-8x7B": (
+        "Mixtral-8x7B-Instruct",
+        "Mixtral-8x7B-Instruct (no ctx)",
+    ),
+}
+
 skill_name_map = {
     "instruction following": "Instruction Following",
     "retrieval: context": "Retrieval: Context",
@@ -79,6 +97,13 @@ desired_skill_order = [
     "reasoning: analogy",
     "reasoning: math",
     "reasoning: causal",
+]
+
+NO_CONTEXT_MODELS = [
+    "Statsmodels",
+    "Lag-Llama",
+    "Moirai_base",
+    "Chronos_base",
 ]
 
 desired_context_source_order = ["c_i", "c_h", "c_f", "c_cov", "c_causal"]
@@ -210,7 +235,7 @@ skill_df = skill_df.rename(index=model_name_map)
 skill_df = skill_df.rename(columns=skill_name_map)
 
 # Create LaTeX table for skills
-latex_skill_table = skill_df.to_latex(index=True)
+latex_skill_table = skill_df.to_latex(index=True, escape=True)
 latex_skill_table = latex_skill_table.replace("±", r"$\pm$")
 
 # 2. Create the LaTeX table for context sources
@@ -272,7 +297,7 @@ context_df = context_df[desired_context_source_order + ["Average"]]
 context_df = context_df.rename(index=model_name_map)
 
 # Create LaTeX table for context sources
-latex_context_table = context_df.to_latex(index=True)
+latex_context_table = context_df.to_latex(index=True, escape=True)
 latex_context_table = latex_context_table.replace("±", r"$\pm$")
 
 # Save LaTeX tables to a file on your local machine
@@ -284,3 +309,100 @@ with open(args.output, "w") as f:
 # Step 6: Print ignored tasks and models
 print("\nIgnored Tasks:", ignored_tasks)
 print("\nIgnored Models:", ignored_models)
+
+
+# Step 7: Compute for how many tasks the various models "win" against the no-context models
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+sns.set_theme()
+
+all_wins_ctx = [[], [], [], [], []]
+all_wins_no_ctx = [[], [], [], [], []]
+model_names = []
+
+for model, (column_ctx, column_no_ctx) in LLM_MODELS_TO_COLUMNS.items():
+    model_names.append(model)
+    wins_ctx = [0, 0, 0, 0, 0]
+    wins_no_ctx = [0, 0, 0, 0, 0]
+    for _, row in performance_means_copy.iterrows():
+        w_ctx = 0
+        w_no_ctx = 0
+        for other_model in NO_CONTEXT_MODELS:
+            if row[column_ctx] <= row[other_model]:
+                w_ctx += 1
+            if row[column_no_ctx] <= row[other_model]:
+                w_no_ctx += 1
+        wins_ctx[w_ctx] += 1
+        wins_no_ctx[w_no_ctx] += 1
+    for w in range(5):
+        all_wins_ctx[w].append(wins_ctx[w])
+        all_wins_no_ctx[w].append(wins_no_ctx[w])
+all_wins_ctx = [np.array(l) for l in all_wins_ctx]
+all_wins_no_ctx = [np.array(l) for l in all_wins_no_ctx]
+model_names = np.array(model_names)
+
+# Sort against the number of perfect 4 out of 4 wins tasks
+sort_order = np.argsort(all_wins_ctx[4] + 0.001 * all_wins_ctx[3])
+all_wins_ctx = [l[sort_order] for l in all_wins_ctx]
+all_wins_no_ctx = [l[sort_order] for l in all_wins_no_ctx]
+model_names = model_names[sort_order]
+
+wins_to_labels = [
+    (4, "Beats all numerical models"),
+    (3, "Beats 75% of the numerical models"),
+    (2, "Beats 50% of the numerical models"),
+    (1, "Beats 25% of the numerical models"),
+    (0, "Beats none of the numerical models"),
+]
+colors = [
+    (0, 0.5, 0),
+    (1, 1, 0),
+    (0.75, 0.75, 1),
+    (1, 0.5, 0),
+    (0.75, 0, 0),
+]
+
+fig = plt.figure(figsize=(8, 2))
+ax1, ax2 = fig.subplots(1, 2, sharey=True)
+fig.subplots_adjust(wspace=0.05)
+
+left = np.zeros(len(model_names))
+for (wins, label), color in zip(wins_to_labels, colors):
+    numbers = all_wins_ctx[wins]
+    ax1.barh(
+        y=model_names,
+        width=numbers,
+        label=label,
+        left=left,
+        color=color,
+        height=0.9,
+    )
+    left += numbers
+ax1.set_title("With context")
+ax1.set_xlim([-1, left[0] + 1])
+ax1.xaxis.set_ticklabels([])
+ax1.set_ylim([-0.6, len(model_names) - 1 + 0.6])
+
+left = np.zeros(len(model_names))
+for (wins, label), color in zip(wins_to_labels, colors):
+    numbers = all_wins_no_ctx[wins]
+    ax2.barh(
+        y=model_names,
+        width=numbers,
+        label=label,
+        left=left,
+        color=color,
+        height=0.9,
+    )
+    left += numbers
+ax2.set_title("Without context")
+ax2.set_xlim([-1, left[0] + 1])
+ax2.xaxis.set_ticklabels([])
+
+ax2.legend(loc="lower right", bbox_to_anchor=(1, 1.15), ncols=2)
+# fig.tight_layout()
+fig.savefig("llm_wins_against_pure_numerical_methods.png", bbox_inches="tight")
+fig.savefig(
+    "llm_wins_against_pure_numerical_methods.pdf", bbox_inches="tight", transparent=True
+)
