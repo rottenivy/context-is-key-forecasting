@@ -71,8 +71,8 @@ LLM_MODELS_TO_COLUMNS = {
     "LLMP - LLama3-8B": ("LLama3-8B", "LLama3-8B (no ctx)"),
     "LLMP - LLama3-8B-Instruct": ("LLama3-8B-instruct", "LLama3-8B-instruct (no ctx)"),
     # "LLMP - LLama3-70B-Instruct": ("LLama3-70B-instruct", "LLama3-70B-instruct (no ctx)"),
-    "DP - Mixtral-8x7B": ("Mixtral-8x7B", "Mixtral-8x7B (no ctx)"),
-    "DP - Mixtral-Instruct-8x7B": (
+    "LLMP - Mixtral-8x7B": ("Mixtral-8x7B", "Mixtral-8x7B (no ctx)"),
+    "LLMP - Mixtral-Instruct-8x7B": (
         "Mixtral-8x7B-Instruct",
         "Mixtral-8x7B-Instruct (no ctx)",
     ),
