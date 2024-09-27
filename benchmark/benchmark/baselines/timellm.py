@@ -228,11 +228,7 @@ class TimeLLMForecaster(Baseline):
         self.seed = seed
 
         set_seed(self.seed)
-
-        ckpt_folder = (
-            f"Time-LLM-{dataset}-pl_{pred_len}-ckpt/best_checkpoint/pytorch_model"
-        )
-        ckpt_filename = "mp_rank_00_model_states.pt"
+        ckpt_filename = f"TimeLLM-{dataset}-pl_{pred_len}-ckpt.pth"
 
         # Get the directory of the current script file
         script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -248,10 +244,7 @@ class TimeLLMForecaster(Baseline):
 
         # Check if the checkpoint exists locally, otherwise download it
         if not os.path.exists(ckpt_path):
-            ckpt_path = hf_hub_download(
-                repo_id=hf_repo,
-                filename=f"{ckpt_folder}/{ckpt_filename}",
-            )
+            ckpt_path = hf_hub_download(repo_id=hf_repo, filename=ckpt_filename)
 
         args = DotDict(dict())
 
