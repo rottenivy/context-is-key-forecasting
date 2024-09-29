@@ -118,7 +118,7 @@ class UniTimeStarCasterWrapper(nn.Module):
         past_time = past_time.unsqueeze(-1)
         mask = torch.ones_like(past_time)
         data_id = -1
-        seq_len = 96
+        seq_len = past_time.shape[1]
         stride = 16
 
         info = (data_id, seq_len, stride, context)

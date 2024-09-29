@@ -211,7 +211,7 @@ class EvaluationPipeline:
 
 class TimeLLMForecaster(Baseline):
 
-    __version__ = "0.0.4"  # Modification will trigger re-caching
+    __version__ = "0.0.8"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -307,11 +307,34 @@ class TimeLLMForecaster(Baseline):
         )
         # non-determinism inherent to the model/GPU
         # We get samples from the model itself
-        _, predictions = pipeline.evaluation_step(
-            past_time,
-            future_time,
-            context,
-        )
+        try:
+            batch_size = 25
+            subgroup_size = 5
+            predictions = []
+
+            for i in range(0, batch_size, subgroup_size):
+                past_time_subgroup = past_time[i : i + subgroup_size]
+                future_time_subgroup = future_time[i : i + subgroup_size]
+                context_subgroup = context
+
+                _, preds_subgroup = pipeline.evaluation_step(
+                    past_time_subgroup,
+                    future_time_subgroup,
+                    context_subgroup,
+                )
+                predictions.append(preds_subgroup)
+
+            predictions = torch.cat(predictions, dim=0)
+            if predictions.shape[-1] < future_time.shape[-1]:
+                last_value = predictions[:, -1].unsqueeze(-1)
+                repeat_count = future_time.shape[-1] - predictions.shape[-1]
+                predictions = torch.cat(
+                    [predictions, last_value.repeat(1, repeat_count)], dim=-1
+                )
+        except Exception as e:
+            logging.error(
+                f"Error occurred while making predictions for task {task_instance}. Error: {e}"
+            )
 
         predictions = predictions.unsqueeze(-1)
 
