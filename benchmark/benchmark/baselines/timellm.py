@@ -307,38 +307,33 @@ class TimeLLMForecaster(Baseline):
         )
         # non-determinism inherent to the model/GPU
         # We get samples from the model itself
-        try:
-            batch_size = 25
-            subgroup_size = 5
-            predictions = []
+        batch_size = 25
+        subgroup_size = 5
+        predictions = []
 
-            for i in range(0, batch_size, subgroup_size):
-                past_time_subgroup = past_time[i : i + subgroup_size]
-                future_time_subgroup = future_time[i : i + subgroup_size]
-                context_subgroup = context
+        for i in range(0, batch_size, subgroup_size):
+            past_time_subgroup = past_time[i : i + subgroup_size]
+            future_time_subgroup = future_time[i : i + subgroup_size]
+            context_subgroup = context
 
-                _, preds_subgroup = pipeline.evaluation_step(
-                    past_time_subgroup,
-                    future_time_subgroup,
-                    context_subgroup,
-                )
-                predictions.append(preds_subgroup)
+            _, preds_subgroup = pipeline.evaluation_step(
+                past_time_subgroup,
+                future_time_subgroup,
+                context_subgroup,
+            )
+            predictions.append(preds_subgroup)
 
-            predictions = torch.cat(predictions, dim=0)
-            if predictions.shape[-1] < future_time.shape[-1]:
-                last_value = predictions[:, -1].unsqueeze(-1)
-                repeat_count = future_time.shape[-1] - predictions.shape[-1]
-                predictions = torch.cat(
-                    [predictions, last_value.repeat(1, repeat_count)], dim=-1
-                )
-        except Exception as e:
-            logging.error(
-                f"Error occurred while making predictions for task {task_instance}. Error: {e}"
+        prediction_tensor = torch.cat(predictions, dim=0)
+        if prediction_tensor.shape[-1] < future_time.shape[-1]:
+            last_value = prediction_tensor[:, -1].unsqueeze(-1)
+            repeat_count = future_time.shape[-1] - prediction_tensor.shape[-1]
+            prediction_tensor = torch.cat(
+                [prediction_tensor, last_value.repeat(1, repeat_count)], dim=-1
             )
 
-        predictions = predictions.unsqueeze(-1)
+        prediction_tensor = prediction_tensor.unsqueeze(-1)
 
-        return predictions.cpu().numpy()
+        return prediction_tensor.cpu().numpy()
 
     def _make_prompt(self, task_instance):
         """
