@@ -69,13 +69,30 @@ LLM_MODELS_TO_COLUMNS = {
     ),
     "DP - GPT-4o-mini": ("CC-GPT-4o-mini", "CC-GPT-4o-mini (no ctx)"),
     "LLMP - Llama3-8B": ("LLama3-8B", "LLama3-8B (no ctx)"),
+    "LLMP - Llama3-70B": ("LLama3-70B", "LLama3-70B (no ctx)"),
     "LLMP - Llama3-8B-Instruct": ("LLama3-8B-instruct", "LLama3-8B-instruct (no ctx)"),
-    # "LLMP - Llama3-70B-Instruct": ("LLama3-70B-instruct", "LLama3-70B-instruct (no ctx)"),
+    "LLMP - Llama3-70B-Instruct": (
+        "LLama3-70B-instruct",
+        "LLama3-70B-instruct (no ctx)",
+    ),
     "LLMP - Mixtral-8x7B": ("Mixtral-8x7B", "Mixtral-8x7B (no ctx)"),
     "LLMP - Mixtral-Instruct-8x7B": (
         "Mixtral-8x7B-Instruct",
         "Mixtral-8x7B-Instruct (no ctx)",
     ),
+    "DP LlaMa-70B-Instruct": (
+        "CC-OpenRouter-LLaMa-70B-Inst",
+        "CC-OpenRouter-LLaMa-70B-Inst (no ctx)",
+    ),
+    "DP LlaMa-8B-Instruct": (
+        "CC-OpenRouter-LLaMa-8B-Inst",
+        "CC-OpenRouter-LLaMa-8B-Inst (no ctx)",
+    ),
+    "DP Mixtral-Instruct-8x7B": (
+        "CC-OpenRouter-Mixtral-8x7B-Inst",
+        "CC-OpenRouter-Mixtral-8x7B-Inst (no ctx)",
+    ),
+    "UniTime": ("UniTime-ctx", "UniTime-noctx"),
 }
 
 skill_name_map = {
@@ -102,8 +119,8 @@ desired_skill_order = [
 NO_CONTEXT_MODELS = [
     "Statsmodels",
     "Lag-Llama",
-    "Moirai_base",
-    "Chronos_base",
+    "Moirai_large",
+    "Chronos_large",
 ]
 
 desired_context_source_order = ["c_i", "c_h", "c_f", "c_cov", "c_causal"]
@@ -361,7 +378,7 @@ colors = [
     (0.75, 0, 0),
 ]
 
-fig = plt.figure(figsize=(8, 2))
+fig = plt.figure(figsize=(8, 3.4))
 ax1, ax2 = fig.subplots(1, 2, sharey=True)
 fig.subplots_adjust(wspace=0.15)
 
@@ -404,7 +421,7 @@ ax2.set_title("Without context")
 ax2.set_xlim([0, 1])
 ax2.set_xticks([0, 0.25, 0.5, 0.75, 1], labels=["0%", "25%", "50%", "75%", "100%"])
 
-ax2.legend(loc="lower right", bbox_to_anchor=(0.95, 1.15), ncols=5)
+ax2.legend(loc="lower right", bbox_to_anchor=(0.95, 1.1), ncols=5)
 # fig.tight_layout()
 fig.savefig("llm_wins_against_pure_numerical_methods.png", bbox_inches="tight")
 fig.savefig(
