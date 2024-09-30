@@ -68,9 +68,9 @@ LLM_MODELS_TO_COLUMNS = {
         "CC-Llama-3.1-405b-instruct-temp10 (no ctx)",
     ),
     "DP - GPT-4o-mini": ("CC-GPT-4o-mini", "CC-GPT-4o-mini (no ctx)"),
-    "LLMP - LLama3-8B": ("LLama3-8B", "LLama3-8B (no ctx)"),
-    "LLMP - LLama3-8B-Instruct": ("LLama3-8B-instruct", "LLama3-8B-instruct (no ctx)"),
-    # "LLMP - LLama3-70B-Instruct": ("LLama3-70B-instruct", "LLama3-70B-instruct (no ctx)"),
+    "LLMP - Llama3-8B": ("LLama3-8B", "LLama3-8B (no ctx)"),
+    "LLMP - Llama3-8B-Instruct": ("LLama3-8B-instruct", "LLama3-8B-instruct (no ctx)"),
+    # "LLMP - Llama3-70B-Instruct": ("LLama3-70B-instruct", "LLama3-70B-instruct (no ctx)"),
     "LLMP - Mixtral-8x7B": ("Mixtral-8x7B", "Mixtral-8x7B (no ctx)"),
     "LLMP - Mixtral-Instruct-8x7B": (
         "Mixtral-8x7B-Instruct",
@@ -109,11 +109,7 @@ NO_CONTEXT_MODELS = [
 desired_context_source_order = ["c_i", "c_h", "c_f", "c_cov", "c_causal"]
 
 # Tasks to ignore
-tasks_to_ignore = [
-    "SimilarLocationDaySolarForecastTask",
-    "SimilarLocationWithReferenceDaySolarForecastTask",
-    "ExplicitSimilarLocationDaySolarForecastTask",
-]  #  "SimilarLocationDaySolarForecastTask", "SimilarLocationWithReferenceDaySolarForecastTask", "ExplicitSimilarLocationDaySolarForecastTask" --> Llama-3-8B performs terribly; also cannot run Llama-405B
+tasks_to_ignore = []
 models_to_ignore = ["Naive_random", "Naive_oracle"]
 
 # Track ignored tasks and ignored models
@@ -348,12 +344,14 @@ all_wins_ctx = [l[sort_order] for l in all_wins_ctx]
 all_wins_no_ctx = [l[sort_order] for l in all_wins_no_ctx]
 model_names = model_names[sort_order]
 
+num_tasks = sum(aw[0] for aw in all_wins_ctx)
+
 wins_to_labels = [
-    (4, "Beats all numerical models"),
-    (3, "Beats 75% of the numerical models"),
-    (2, "Beats 50% of the numerical models"),
-    (1, "Beats 25% of the numerical models"),
-    (0, "Beats none of the numerical models"),
+    (4, "Beats all"),
+    (3, "Beats 75%"),
+    (2, "Beats 50%"),
+    (1, "Beats 25%"),
+    (0, "Beats none"),
 ]
 colors = [
     (0, 0.5, 0),
@@ -365,11 +363,11 @@ colors = [
 
 fig = plt.figure(figsize=(8, 2))
 ax1, ax2 = fig.subplots(1, 2, sharey=True)
-fig.subplots_adjust(wspace=0.05)
+fig.subplots_adjust(wspace=0.15)
 
 left = np.zeros(len(model_names))
 for (wins, label), color in zip(wins_to_labels, colors):
-    numbers = all_wins_ctx[wins]
+    numbers = all_wins_ctx[wins] / num_tasks
     ax1.barh(
         y=model_names,
         width=numbers,
@@ -379,14 +377,17 @@ for (wins, label), color in zip(wins_to_labels, colors):
         height=0.9,
     )
     left += numbers
+for x in [0.25, 0.5, 0.75]:
+    ax1.axvline(x=x, color="#ffffff", linewidth=0.75)
+    ax1.axvline(x=x, color="#3f3f3f", linewidth=0.75, linestyle=":")
 ax1.set_title("With context")
-ax1.set_xlim([-1, left[0] + 1])
-ax1.xaxis.set_ticklabels([])
+ax1.set_xlim([0, 1])
+ax1.set_xticks([0, 0.25, 0.5, 0.75, 1], labels=["0%", "25%", "50%", "75%", "100%"])
 ax1.set_ylim([-0.6, len(model_names) - 1 + 0.6])
 
 left = np.zeros(len(model_names))
 for (wins, label), color in zip(wins_to_labels, colors):
-    numbers = all_wins_no_ctx[wins]
+    numbers = all_wins_no_ctx[wins] / num_tasks
     ax2.barh(
         y=model_names,
         width=numbers,
@@ -396,11 +397,14 @@ for (wins, label), color in zip(wins_to_labels, colors):
         height=0.9,
     )
     left += numbers
+for x in [0.25, 0.5, 0.75]:
+    ax2.axvline(x=x, color="#ffffff", linewidth=0.75)
+    ax2.axvline(x=x, color="#3f3f3f", linewidth=0.75, linestyle=":")
 ax2.set_title("Without context")
-ax2.set_xlim([-1, left[0] + 1])
-ax2.xaxis.set_ticklabels([])
+ax2.set_xlim([0, 1])
+ax2.set_xticks([0, 0.25, 0.5, 0.75, 1], labels=["0%", "25%", "50%", "75%", "100%"])
 
-ax2.legend(loc="lower right", bbox_to_anchor=(1, 1.15), ncols=2)
+ax2.legend(loc="lower right", bbox_to_anchor=(0.95, 1.15), ncols=5)
 # fig.tight_layout()
 fig.savefig("llm_wins_against_pure_numerical_methods.png", bbox_inches="tight")
 fig.savefig(
