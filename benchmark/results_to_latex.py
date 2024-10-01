@@ -80,11 +80,11 @@ LLM_MODELS_TO_COLUMNS = {
         "Mixtral-8x7B-Instruct",
         "Mixtral-8x7B-Instruct (no ctx)",
     ),
-    "DP LlaMa-70B-Inst": (
+    "DP Llama-70B-Inst": (
         "CC-OpenRouter-LLaMa-70B-Inst",
         "CC-OpenRouter-LLaMa-70B-Inst (no ctx)",
     ),
-    "DP LlaMa-8B-Inst": (
+    "DP Llama-8B-Inst": (
         "CC-OpenRouter-LLaMa-8B-Inst",
         "CC-OpenRouter-LLaMa-8B-Inst (no ctx)",
     ),
