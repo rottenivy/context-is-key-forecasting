@@ -62,33 +62,33 @@ model_name_map = {
 
 # LLM models to their associated columns, both with and without context
 LLM_MODELS_TO_COLUMNS = {
-    "DP - GPT-4o": ("CC-GPT-4o", "CC-GPT-4o (no ctx)"),
-    "DP - Llama-3.1-405B-Instruct": (
+    "DP GPT-4o": ("CC-GPT-4o", "CC-GPT-4o (no ctx)"),
+    "DP Llama-3.1-405B-Inst": (
         "CC-Llama-3.1-405b-instruct-temp10",
         "CC-Llama-3.1-405b-instruct-temp10 (no ctx)",
     ),
-    "DP - GPT-4o-mini": ("CC-GPT-4o-mini", "CC-GPT-4o-mini (no ctx)"),
-    "LLMP - Llama3-8B": ("LLama3-8B", "LLama3-8B (no ctx)"),
-    "LLMP - Llama3-70B": ("LLama3-70B", "LLama3-70B (no ctx)"),
-    "LLMP - Llama3-8B-Instruct": ("LLama3-8B-instruct", "LLama3-8B-instruct (no ctx)"),
-    "LLMP - Llama3-70B-Instruct": (
+    "DP GPT-4o-mini": ("CC-GPT-4o-mini", "CC-GPT-4o-mini (no ctx)"),
+    "LLMP Llama3-8B": ("LLama3-8B", "LLama3-8B (no ctx)"),
+    "LLMP Llama3-70B": ("LLama3-70B", "LLama3-70B (no ctx)"),
+    "LLMP Llama3-8B-Inst": ("LLama3-8B-instruct", "LLama3-8B-instruct (no ctx)"),
+    "LLMP Llama3-70B-Inst": (
         "LLama3-70B-instruct",
         "LLama3-70B-instruct (no ctx)",
     ),
-    "LLMP - Mixtral-8x7B": ("Mixtral-8x7B", "Mixtral-8x7B (no ctx)"),
-    "LLMP - Mixtral-Instruct-8x7B": (
+    "LLMP Mixtral-8x7B": ("Mixtral-8x7B", "Mixtral-8x7B (no ctx)"),
+    "LLMP Mixtral-8x7B-Inst": (
         "Mixtral-8x7B-Instruct",
         "Mixtral-8x7B-Instruct (no ctx)",
     ),
-    "DP LlaMa-70B-Instruct": (
+    "DP LlaMa-70B-Inst": (
         "CC-OpenRouter-LLaMa-70B-Inst",
         "CC-OpenRouter-LLaMa-70B-Inst (no ctx)",
     ),
-    "DP LlaMa-8B-Instruct": (
+    "DP LlaMa-8B-Inst": (
         "CC-OpenRouter-LLaMa-8B-Inst",
         "CC-OpenRouter-LLaMa-8B-Inst (no ctx)",
     ),
-    "DP Mixtral-Instruct-8x7B": (
+    "DP Mixtral-8x7B-Inst": (
         "CC-OpenRouter-Mixtral-8x7B-Inst",
         "CC-OpenRouter-Mixtral-8x7B-Inst (no ctx)",
     ),
@@ -336,9 +336,12 @@ model_names = []
 
 for model, (column_ctx, column_no_ctx) in LLM_MODELS_TO_COLUMNS.items():
     model_names.append(model)
-    wins_ctx = [0, 0, 0, 0, 0]
-    wins_no_ctx = [0, 0, 0, 0, 0]
-    for _, row in performance_means_copy.iterrows():
+    wins_ctx = [0.0, 0.0, 0.0, 0.0, 0.0]
+    wins_no_ctx = [0.0, 0.0, 0.0, 0.0, 0.0]
+    for index, row in performance_means_copy.iterrows():
+        task = data["Task"].loc[index]
+        weight = TASK_NAME_TO_WEIGHT[task] if args.weight_average else 1.0
+
         w_ctx = 0
         w_no_ctx = 0
         for other_model in NO_CONTEXT_MODELS:
@@ -346,8 +349,8 @@ for model, (column_ctx, column_no_ctx) in LLM_MODELS_TO_COLUMNS.items():
                 w_ctx += 1
             if row[column_no_ctx] <= row[other_model]:
                 w_no_ctx += 1
-        wins_ctx[w_ctx] += 1
-        wins_no_ctx[w_no_ctx] += 1
+        wins_ctx[w_ctx] += weight
+        wins_no_ctx[w_no_ctx] += weight
     for w in range(5):
         all_wins_ctx[w].append(wins_ctx[w])
         all_wins_no_ctx[w].append(wins_no_ctx[w])
