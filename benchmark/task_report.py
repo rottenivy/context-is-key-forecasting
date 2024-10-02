@@ -188,10 +188,10 @@ def create_task_summary_page(tasks):
         for seed in range(1, 6):
             task = task_cls(seed=seed)
 
-            context_sources = map(
-                lambda x: context_source_mapping.get(x), task._context_sources
+            context_sources = list(
+                map(lambda x: context_source_mapping.get(x), task._context_sources)
             )
-            capabilities = map(lambda x: skill_name_map.get(x), task._skills[2:])
+            capabilities = list(map(lambda x: skill_name_map.get(x), task._skills[2:]))
 
             if task.background:
                 task.background = task.background.replace("\n", "<br />")
@@ -201,12 +201,27 @@ def create_task_summary_page(tasks):
                 task.scenario = task.scenario.replace("\n", "<br />")
 
             seeds += f"""
-        <div class="section">
-            <h2 class="text-center text-primary">Seed {seed}</h2>
-            <p class="text-center">{task.background}</p>
-            <p class="text-center">{task.scenario}</p>
-            <p class="text-center"><strong>Constraints:</strong> {task.constraints}</p>
-            <br>
+                <div class="section">
+                    <h2 class="text-center text-primary">Seed {seed}</h2>
+            """
+
+            if task.background:
+                seeds += f"""
+                    <p class="text-center">{task.background}</p>
+                """
+
+            if task.scenario:
+                seeds += f"""
+                    <p class="text-center">{task.scenario}</p>
+                """
+
+            if task.constraints:
+                seeds += f"""
+                    <p class="text-center"><strong>Constraints:</strong> {task.constraints}</p>
+                    <br>
+                """
+
+            seeds += f"""
             <p class="text-center"><strong>Types of context:</strong> {context_sources}</p>
             <p class="text-center"><strong>Capabilities:</strong> {capabilities}</p>
             <br>
