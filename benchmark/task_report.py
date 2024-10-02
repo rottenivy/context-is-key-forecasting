@@ -164,11 +164,34 @@ def create_task_summary_page(tasks):
 </html>
 """
 
+    context_source_mapping = {
+        "c_h": "Historical information",
+        "c_f": "Future information",
+        "c_i": "Intemporal information",
+        "c_cov": "Covariate information",
+        "c_causal": "Causal information",
+    }
+
+    skill_name_map = {
+        "instruction following": "Instruction Following",
+        "retrieval: context": "Retrieval: Context",
+        "retrieval: memory": "Retrieval: Memory",
+        "reasoning: deduction": "Reasoning: Deduction",
+        "reasoning: analogy": "Reasoning: Analogy",
+        "reasoning: math": "Reasoning: Math",
+        "reasoning: causal": "Reasoning: Causal",
+    }
+
     for task_cls in tasks:
         task_name = task_cls.__name__
         seeds = ""
         for seed in range(1, 6):
             task = task_cls(seed=seed)
+
+            context_sources = map(
+                lambda x: context_source_mapping.get(x), task._context_sources
+            )
+            capabilities = map(lambda x: skill_name_map.get(x), task._skills[2:])
 
             if task.background:
                 task.background = task.background.replace("\n", "<br />")
@@ -180,12 +203,12 @@ def create_task_summary_page(tasks):
             seeds += f"""
         <div class="section">
             <h2 class="text-center text-primary">Seed {seed}</h2>
-            <p class="text-center"><strong>Background:</strong> {task.background}</p>
+            <p class="text-center">{task.background}</p>
+            <p class="text-center">{task.scenario}</p>
             <p class="text-center"><strong>Constraints:</strong> {task.constraints}</p>
-            <p class="text-center"><strong>Scenario:</strong> {task.scenario}</p>
             <br>
-            <p class="text-center"><strong>Context sources:</strong> {task._context_sources}</p>
-            <p class="text-center"><strong>Skills:</strong> {task._skills}</p>
+            <p class="text-center"><strong>Types of context:</strong> {context_sources}</p>
+            <p class="text-center"><strong>Capabilities:</strong> {capabilities}</p>
             <br>
             <p class="text-center">
                 {_figure_to_html(task.plot())}
