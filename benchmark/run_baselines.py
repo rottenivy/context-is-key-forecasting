@@ -20,6 +20,7 @@ from benchmark.baselines.llm_processes import LLMPForecaster
 from benchmark.baselines.timellm import TimeLLMForecaster
 from benchmark.baselines.unitime import UniTimeForecaster
 from benchmark.baselines.naive import oracle_baseline, random_baseline
+from benchmark.baselines.nixtla import TimeGEN1
 from benchmark.baselines.statsmodels import (
     ExponentialSmoothingForecaster,
 )
@@ -265,6 +266,23 @@ def experiment_unitime(
         ),
         {},
     )
+
+
+def experiment_timegen1(
+    n_samples, output_folder, max_parallel=10, skip_cache_miss=False
+):
+    """
+    Nixtla TimeGEN-1 baseline
+
+    """
+    results = evaluate_all_tasks(
+        TimeGEN1,
+        n_samples=n_samples,
+        output_folder=f"{output_folder}/timegen1/",
+        max_parallel=max_parallel,
+        skip_cache_miss=skip_cache_miss,
+    )
+    return results, {}
 
 
 def experiment_llmp(
