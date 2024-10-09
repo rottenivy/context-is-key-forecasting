@@ -18,6 +18,9 @@ RESULT_CACHE_PATH = Path(os.environ.get("STARCASTER_RESULT_CACHE", "./inference_
 METRIC_SCALING_CACHE_PATH = os.environ.get(
     "STARCASTER_METRIC_SCALING_CACHE", "./metric_scaling_cache"
 )
+COMPUTE_METRIC_VARIANCE = bool(
+    os.environ.get("STARCASTER_METRIC_COMPUTE_VARIANCE", "")
+)  # bool("") == False
 
 # OpenAI configuration
 OPENAI_USE_AZURE = (

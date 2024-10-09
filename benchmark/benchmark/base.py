@@ -13,6 +13,7 @@ from abc import ABC, abstractmethod
 from .metrics.roi_metric import threshold_weighted_crps
 from .metrics.scaling_cache import DefaultScalingCache
 from .utils.plot import plot_task
+from .config import COMPUTE_METRIC_VARIANCE
 
 
 ALLOWED_CONTEXT_SOURCES = ["c_h", "c_i", "c_f", "c_cov", "c_causal"]
@@ -235,4 +236,5 @@ class UnivariateCRPSTask(BaseTask):
             region_of_interest=self.region_of_interest,
             roi_weight=self.roi_weight,
             constraint=self.metric_constraint,
+            compute_variance=COMPUTE_METRIC_VARIANCE,
         )

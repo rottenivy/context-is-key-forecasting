@@ -1,8 +1,9 @@
 from typing import Optional, Literal
 import numpy as np
+import pandas as pd
 
 from .constraints import Constraint
-from .crps import crps
+from .crps import crps, weighted_sum_crps_variance
 
 
 def mean_crps(target, samples):
@@ -27,6 +28,7 @@ def threshold_weighted_crps(
     violation_factor: float = 10.0,
     violation_function: Literal["linear", "exponential"] = "linear",
     log_transform: bool = False,
+    compute_variance: bool = False,
 ) -> dict[str, float]:
     """
     Compute the scaled twCRPS, which adds a penalty term when constraints are violated.
@@ -67,6 +69,9 @@ def threshold_weighted_crps(
         Which function to use to transform the constraint violation, before sending it to the CRPS.
     log_transform: bool, default False
         If set to true, the metric is transformed using log(1 + m).
+    compute_variance: bool, default False
+        If set to True, estimate the variance of the error of the metric, and add it to the result dictionary.
+        If set to False, set it to -1.
 
     Returns:
     --------
@@ -80,7 +85,11 @@ def threshold_weighted_crps(
         "non_roi_crps": the CRPS only for the forecast not in the region of interest.
         "violation_mean": the average constraint violation over the samples.
         "violation_crps": the CRPS of the constraint violation.
+        "metric_variance": an unbiased estimate of the variance of the metric.
     """
+    variance_target = target.to_numpy() if isinstance(target, pd.Series) else target
+    variance_forecast = forecast
+
     if region_of_interest:
         roi_mask = format_roi_mask(region_of_interest, forecast.shape)
         roi_crps = mean_crps(target=target[roi_mask], samples=forecast[:, roi_mask])
@@ -91,6 +100,10 @@ def threshold_weighted_crps(
         standard_crps = mean_crps(target=target, samples=forecast)
         num_roi_timesteps = roi_mask.sum()
         num_non_roi_timesteps = (~roi_mask).sum()
+        variance_weights = scaling * (
+            roi_weight * roi_mask / num_roi_timesteps
+            + (1 - roi_weight) * ~roi_mask / num_non_roi_timesteps
+        )
     else:
         crps_value = mean_crps(target=target, samples=forecast)
         # Those will only be used in the reporting
@@ -99,6 +112,7 @@ def threshold_weighted_crps(
         standard_crps = crps_value
         num_roi_timesteps = len(target)
         num_non_roi_timesteps = 0
+        variance_weights = np.full(target.shape, fill_value=scaling / len(target))
 
     if constraint:
         violation_amount = constraint.violation(samples=forecast, scaling=scaling)
@@ -111,6 +125,12 @@ def threshold_weighted_crps(
         # The target is set to zero, since we make sure that the ground truth always satisfy the constraints
         # The crps code assume multivariate input, so add a dummy dimension
         violation_crps = crps(target=np.zeros(1), samples=violation_func[:, None])[0]
+
+        variance_target = np.concatenate((variance_target, np.zeros(1)), axis=0)
+        variance_forecast = np.concatenate(
+            (variance_forecast, violation_func[:, None]), axis=1
+        )
+        variance_weights = np.concatenate((variance_weights, 1.0 * np.ones(1)), axis=0)
     else:
         violation_amount = np.zeros(forecast.shape[0])
         violation_func = np.zeros(forecast.shape[0])
@@ -121,6 +141,15 @@ def threshold_weighted_crps(
         metric = np.log(1 + raw_metric)
     else:
         metric = raw_metric
+
+    if compute_variance:
+        variance = weighted_sum_crps_variance(
+            target=variance_target,
+            samples=variance_forecast,
+            weights=variance_weights,
+        )
+    else:
+        variance = -1
 
     return {
         "metric": metric,
@@ -134,6 +163,7 @@ def threshold_weighted_crps(
         "num_non_roi_timesteps": num_non_roi_timesteps,
         "violation_mean": violation_amount.mean(),
         "violation_crps": violation_crps,
+        "variance": variance,
     }
 
 

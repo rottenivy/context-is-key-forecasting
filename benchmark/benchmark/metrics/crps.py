@@ -124,7 +124,7 @@ def _crps_ea_XX_eb_XX(Xa, ya, Xb, yb):
     N = len(Xa)
 
     # We want to compute:
-    # \sum_i≠j≠k≠l |Xa_i - Xa_j| |Xb_k - Xb_l|
+    # sum_i≠j≠k≠l |Xa_i - Xa_j| |Xb_k - Xb_l|
     # Instead of doing a sum over i, j, k, l all differents,
     # we take the sum over all i, j, k, l (which is the product between a sum over i, j and a sum over k, l),
     # then substract the collisions, ignoring those between i and j and those between k and l, since those
@@ -134,7 +134,7 @@ def _crps_ea_XX_eb_XX(Xa, ya, Xb, yb):
     sum_eb_XX = np.abs(Xb[:, None] - Xb[None, :]).sum()
 
     # Single conflicts: either i=k, i=l, j=k, or j=l
-    # By symmetry, we are left with: 4 \sum_i≠j≠k |Xa_i - Xa_j| |Xb_i - Xb_k|
+    # By symmetry, we are left with: 4 sum_i≠j≠k |Xa_i - Xa_j| |Xb_i - Xb_k|
     left = np.abs(Xa[:, None, None] - Xa[None, :, None])  # i, j, k
     right = np.abs(Xb[:, None, None] - Xb[None, None, :])  # i, j, k
     product = left * right
@@ -143,7 +143,7 @@ def _crps_ea_XX_eb_XX(Xa, ya, Xb, yb):
     sum_single_conflict = product.sum()
 
     # Double conflicts: either i=k and j=l, or i=l and j=k
-    # By symmetry, we are left with: 2 \sum_i≠j |Xa_i - Xa_j| |Xb_i - Xb_j|
+    # By symmetry, we are left with: 2 sum_i≠j |Xa_i - Xa_j| |Xb_i - Xb_j|
     left = np.abs(Xa[:, None] - Xa[None, :])  # i, j
     right = np.abs(Xb[:, None] - Xb[None, :])  # i, j
     product = left * right
@@ -278,14 +278,14 @@ def crps_covariance(
 def weighted_sum_crps_variance(
     target: np.array,
     samples: np.array,
-    weights: list[float],
+    weights: np.array,
 ) -> float:
     """
     Unbiased estimator of the variance of the numerical estimate of the
     given weighted sum of CRPS values.
 
     This implementation assumes that the univariate is estimated using:
-    CRPS(X, y) ~ (1 / n) * \sum_i |x_i - y| - 1 / (2 * n * (n-1)) * \sum_i,i' |x_i - x_i'|.
+    CRPS(X, y) ~ (1 / n) * sum_i |x_i - y| - 1 / (2 * n * (n-1)) * sum_i,i' |x_i - x_i'|.
     This formula gives the same result as the one used in the crps() implementation above.
 
     Note that this is a heavy computation, being O(k^2 n^3) with k variables and n samples.
@@ -297,7 +297,7 @@ def weighted_sum_crps_variance(
         The target values. (k variables)
     samples: np.ndarray
         The forecast values. (n samples, k variables)
-    weights: list[float]
+    weights: np.array
         The weight given to the CRPS of each variable. (k variables)
 
     Returns:
@@ -307,12 +307,13 @@ def weighted_sum_crps_variance(
     """
     assert len(target.shape) == 1
     assert len(samples.shape) == 2
-    assert target.shape[0] == samples.shape[1] == len(weights)
+    assert len(weights.shape) == 1
+    assert target.shape[0] == samples.shape[1] == weights.shape[0]
 
     s = 0.0
 
-    for i in range(len(target)):
-        for j in range(i, len(target)):
+    for i in range(target.shape[0]):
+        for j in range(i, target.shape[0]):
             Xa = samples[:, i]
             Xb = samples[:, j]
             ya = target[i]
