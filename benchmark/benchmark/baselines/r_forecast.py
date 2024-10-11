@@ -22,7 +22,7 @@ from .base import Baseline
 from ..base import BaseTask
 
 
-class RETS(Baseline):
+class R_ETS(Baseline):
 
     __version__ = "0.0.1"  # Modification will trigger re-caching
 
@@ -47,8 +47,8 @@ class RETS(Baseline):
         self.model = model
 
         # Required R packages:
-        self._stats_pkg = rpackages.importr("stats")
-        self._forecast_pkg = rpackages.importr("forecast")
+        self._stats_pkg = None  # "stats"
+        self._forecast_pkg = None  # "forecast"
 
     def __call__(self, task_instance: BaseTask, n_samples: int) -> np.ndarray:
         starting_time = time.time()
@@ -77,6 +77,12 @@ class RETS(Baseline):
         Note: If seasonal_periods is <= 0, then we set the period to 1, which skips it if the model uses "Z" as its seasonal component.
               If the model uses "A" or "M", then it will fail.
         """
+        # Lazy initialization, since otherwise the parallel dispatching using pickle will not work
+        if self._stats_pkg is None:
+            self._stats_pkg = rpackages.importr("stats")
+        if self._forecast_pkg is None:
+            self._forecast_pkg = rpackages.importr("forecast")
+
         history = pandas2ri.py2rpy(past_time[past_time.columns[-1]])
         ts = self._stats_pkg.ts(history, frequency=max(1, seasonal_periods))
         fit = self._forecast_pkg.ets(ts, model=self.model)
@@ -99,3 +105,10 @@ class RETS(Baseline):
         return f"{self.__class__.__name__}_" + "_".join(
             [f"{k}={getattr(self, k)}" for k in args_to_include]
         )
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Don't pickle the R packages
+        state["_stats_pkg"] = None
+        state["_forecast_pkg"] = None
+        return state
