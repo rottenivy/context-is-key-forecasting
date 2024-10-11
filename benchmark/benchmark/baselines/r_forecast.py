@@ -9,8 +9,14 @@ import pandas as pd
 import numpy as np
 import time
 
-import rpy2.robjects.packages as rpackages
-from rpy2.robjects import numpy2ri, pandas2ri
+_rpy2_initialized = False
+try:
+    import rpy2.robjects.packages as rpackages
+    from rpy2.robjects import numpy2ri, pandas2ri
+
+    _rpy2_initialized = True
+except:
+    pass
 
 from .base import Baseline
 from ..base import BaseTask
@@ -33,6 +39,9 @@ class RETS(Baseline):
             Which model to use, a 3 letters code for error, trend, and seasonality.
             The letters can be Z (automatic), A (additive), M (multiplicative) or N (none)
         """
+        if not _rpy2_initialized:
+            raise RuntimeError("The rpy2 package has not been successfully imported.")
+
         super().__init__()
 
         self.model = model
