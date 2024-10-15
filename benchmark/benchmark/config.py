@@ -27,6 +27,10 @@ OPENAI_API_KEY = os.environ.get("STARCASTER_OPENAI_API_KEY", "")
 OPENAI_API_VERSION = os.environ.get("STARCASTER_OPENAI_API_VERSION", None)
 OPENAI_AZURE_ENDPOINT = os.environ.get("STARCASTER_OPENAI_AZURE_ENDPOINT", None)
 
+# Nixtla configuration
+NIXTLA_BASE_URL = os.environ.get("STARCASTER_NIXTLA_BASE_URL", None)
+NIXTLA_API_KEY = os.environ.get("STARCASTER_NIXTLA_API_KEY", None)
+
 
 DATA_STORAGE_PATH = Path(os.environ.get("STARCASTER_DATA_STORE", "benchmark/data"))
 if not DATA_STORAGE_PATH.exists():

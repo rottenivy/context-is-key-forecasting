@@ -7,6 +7,7 @@ timellm @ git+https://github.com/AndrewRWilliams/TimeLLMBaseline.git
 unitime @ git+https://github.com/AndrewRWilliams/UniTimeBaseline.git
 gluonts[torch]>=0.14.4
 gradio
+nixtla
 numpy
 openai
 pandas

@@ -1,9 +1,0 @@
-[
-    {
-        "label": "TimeLLM",
-        "method": "timellm",
-        "use_context": true,
-        "dataset": "etth1",
-        "pred_len": "96"
-    }
-]
