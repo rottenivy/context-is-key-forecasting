@@ -294,9 +294,9 @@ def weighted_sum_crps_variance(
     Parameters:
     -----------
     target: np.ndarray
-        The target values. (k variables)
+        The target values: y in the above formula. (k variables)
     samples: np.ndarray
-        The forecast values. (n samples, k variables)
+        The forecast values: X in the above formula. (n samples, k variables)
     weights: np.array
         The weight given to the CRPS of each variable. (k variables)
 
