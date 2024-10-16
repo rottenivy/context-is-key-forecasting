@@ -70,6 +70,9 @@ class ExponentialSmoothingForecaster(Baseline):
         # With the trend, we will have 4 parameters to be fitted, so disable it if we don't have any points to fit with
         # Note: this still requires an absolute minimum of 3 values in past_time
         disable_trend = len(past_time) < 5
+        # Disable the periodic component if there is not at least two periods in history
+        if len(past_time) < 2 * seasonal_periods:
+            seasonal_periods = -1
         # If there is no period, then disable the seasonal component of the model (seasonal_periods will be ignored)
         model = statsmodels.tsa.holtwinters.ExponentialSmoothing(
             endog=past_time[past_time.columns[-1]],
@@ -156,6 +159,9 @@ class ETSModelForecaster(Baseline):
 
         Note: If seasonal_periods is <= 0, then the seasonal component is skipped.
         """
+        # Disable the periodic component if there is not at least two periods in history
+        if len(past_time) < 2 * seasonal_periods:
+            seasonal_periods = -1
         # If there is no period, then disable the seasonal component of the model (seasonal_periods will be ignored)
         model = statsmodels.tsa.exponential_smoothing.ets.ETSModel(
             endog=past_time[past_time.columns[-1]],
