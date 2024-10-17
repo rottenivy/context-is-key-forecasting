@@ -24,6 +24,7 @@ from benchmark.baselines.nixtla import TimeGEN1
 from benchmark.baselines.statsmodels import (
     ExponentialSmoothingForecaster,
 )
+from benchmark.baselines.r_forecast import R_ETS, R_Arima
 from benchmark.evaluation import evaluate_all_tasks
 from benchmark.config import RESULT_CACHE_PATH
 
@@ -132,6 +133,44 @@ def experiment_statsmodels(
             ExponentialSmoothingForecaster(),
             n_samples=n_samples,
             output_folder=f"{output_folder}/exp_smoothing/",
+            max_parallel=max_parallel,
+            skip_cache_miss=skip_cache_miss,
+        ),
+        {},
+    )
+
+
+def experiment_r_ets(
+    n_samples, output_folder, max_parallel=None, skip_cache_miss=False
+):
+    """
+    Baseline using the R "forecast" package: ETS
+
+    """
+    return (
+        evaluate_all_tasks(
+            R_ETS(),
+            n_samples=n_samples,
+            output_folder=f"{output_folder}/r_ets/",
+            max_parallel=max_parallel,
+            skip_cache_miss=skip_cache_miss,
+        ),
+        {},
+    )
+
+
+def experiment_r_arima(
+    n_samples, output_folder, max_parallel=None, skip_cache_miss=False
+):
+    """
+    Baseline using the R "forecast" package: Arima
+
+    """
+    return (
+        evaluate_all_tasks(
+            R_Arima(),
+            n_samples=n_samples,
+            output_folder=f"{output_folder}/r_arima/",
             max_parallel=max_parallel,
             skip_cache_miss=skip_cache_miss,
         ),

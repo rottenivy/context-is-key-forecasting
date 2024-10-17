@@ -96,12 +96,13 @@ def plot_forecast_univariate(task, samples, path, return_fig=False):
 
     ax.set_title(task.name)
 
-    fig.savefig(path / "forecast.pdf")
-    fig.savefig(path / "forecast.png", bbox_inches="tight")
-    if return_fig:
-        return fig
-    else:
-        plt.close(fig)
+    if path:
+        fig.savefig(path / "forecast.pdf")
+        fig.savefig(path / "forecast.png", bbox_inches="tight")
+        if return_fig:
+            return fig
+        else:
+            plt.close(fig)
 
 
 def save_context(task, path):
