@@ -38,7 +38,7 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -252,7 +252,7 @@ class PredictableGrocerTemporaryShockUnivariateTask(
 ):
     _context_sources = UnivariateCRPSTask._context_sources + ["c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -289,7 +289,7 @@ class PredictableGrocerPersistentShockUnivariateBeerTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -307,7 +307,7 @@ class PredictableGrocerPersistentShockUnivariateMeatTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -325,7 +325,7 @@ class PredictableGrocerPersistentShockUnivariateGroceryTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -343,7 +343,7 @@ class PredictableGrocerPersistentShockUnivariateDairyTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -361,7 +361,7 @@ class PredictableGrocerPersistentShockUnivariateProduceTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -379,7 +379,7 @@ class PredictableGrocerPersistentShockUnivariateFrozenTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -397,7 +397,7 @@ class PredictableGrocerPersistentShockUnivariatePharmacyTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -415,7 +415,7 @@ class PredictableGrocerPersistentShockUnivariateBakeryTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -433,7 +433,7 @@ class PredictableGrocerPersistentShockUnivariateGmTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -458,7 +458,7 @@ class PredictableGrocerPersistentShockUnivariateFishTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -476,7 +476,7 @@ class PredictableGrocerTemporaryShockUnivariateBeerTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -494,7 +494,7 @@ class PredictableGrocerTemporaryShockUnivariateMeatTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -512,7 +512,7 @@ class PredictableGrocerTemporaryShockUnivariateGroceryTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -530,7 +530,7 @@ class PredictableGrocerTemporaryShockUnivariateDairyTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -548,7 +548,7 @@ class PredictableGrocerTemporaryShockUnivariateProduceTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -566,7 +566,7 @@ class PredictableGrocerTemporaryShockUnivariateFrozenTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -584,7 +584,7 @@ class PredictableGrocerTemporaryShockUnivariatePharmacyTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -602,7 +602,7 @@ class PredictableGrocerTemporaryShockUnivariateBakeryTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -620,7 +620,7 @@ class PredictableGrocerTemporaryShockUnivariateGmTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -645,7 +645,7 @@ class PredictableGrocerTemporaryShockUnivariateFishTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_f"]
     _skills = UnivariateCRPSTask._skills + ["instruction following"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -662,7 +662,7 @@ class PredictableGrocerPersistentShockCovariateTask(
 ):
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -708,7 +708,7 @@ class PredictableGrocerPersistentShockCovariateBeerTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -726,7 +726,7 @@ class PredictableGrocerPersistentShockCovariateMeatTask(
 ):
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -744,7 +744,7 @@ class PredictableGrocerPersistentShockCovariateGroceryTask(
 ):
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -762,7 +762,7 @@ class PredictableGrocerPersistentShockCovariateDairyTask(
 ):
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -780,7 +780,7 @@ class PredictableGrocerPersistentShockCovariateProduceTask(
 ):
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -798,7 +798,7 @@ class PredictableGrocerPersistentShockCovariateFrozenTask(
 ):
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -816,7 +816,7 @@ class PredictableGrocerPersistentShockCovariatePharmacyTask(
 ):
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -834,7 +834,7 @@ class PredictableGrocerPersistentShockCovariateBakeryTask(
 ):
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -853,7 +853,7 @@ class PredictableGrocerPersistentShockCovariateGmTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -879,7 +879,7 @@ class PredictableGrocerPersistentShockCovariateFishTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -898,7 +898,7 @@ class PredictableGrocerTemporaryShockCovariateBeerTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -917,7 +917,7 @@ class PredictableGrocerTemporaryShockCovariateMeatTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -936,7 +936,7 @@ class PredictableGrocerTemporaryShockCovariateGroceryTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -954,7 +954,7 @@ class PredictableGrocerTemporaryShockCovariateDairyTask(
 ):
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -973,7 +973,7 @@ class PredictableGrocerTemporaryShockCovariateProduceTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -992,7 +992,7 @@ class PredictableGrocerTemporaryShockCovariateFrozenTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -1011,7 +1011,7 @@ class PredictableGrocerTemporaryShockCovariatePharmacyTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -1030,7 +1030,7 @@ class PredictableGrocerTemporaryShockCovariateBakeryTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -1049,7 +1049,7 @@ class PredictableGrocerTemporaryShockCovariateGmTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
@@ -1075,7 +1075,7 @@ class PredictableGrocerTemporaryShockCovariateFishTask(
 
     _context_sources = UnivariateCRPSTask._context_sources + ["c_cov", "c_f"]
     _skills = UnivariateCRPSTask._skills + ["reasoning: deduction"]
-    __version__ = "0.0.1"  # Modification will trigger re-caching
+    __version__ = "0.0.2"  # Modification will trigger re-caching
 
     def __init__(
         self,
