@@ -34,59 +34,6 @@ def extract_mean_std(performance_str):
         return np.nan, np.nan
 
 
-# Model name map
-model_name_map = {
-    "CC-GPT-4o": "Direct Prompt - GPT-4o",
-    "CC-GPT-4o (no ctx)": "Direct Prompt - GPT-4o (no context)",
-    "CC-Llama-3.1-405b-instruct": "Direct Prompt - Llama-3.1-405B-Instruct",
-    "CC-Llama-3.1-405b-instruct (no ctx)": "Direct Prompt - Llama-3.1-405B-Instruct (no context)",
-    "CC-GPT-4o-mini": "Direct Prompt - GPT-4o-mini",
-    "CC-GPT-4o-mini (no ctx)": "Direct Prompt - GPT-4o-mini (no context)",
-    "LLama3-8B": "LLMP - LLama3-8B",
-    "LLama3-8B (no ctx)": "LLMP - LLama3-8B (no context)",
-    "LLama3-8B-instruct": "LLMP - LLama3-8B-Instruct",
-    "LLama3-8B-instruct (no ctx)": "LLMP - LLama3-8B-Instruct (no context)",
-    "LLama3-70B-instruct": "LLMP - LLama3-70B-Instruct",
-    "LLama3-70B-instruct (no ctx)": "LLMP - LLama3-70B-Instruct (no context)",
-    "Statsmodels": "Exponential Smoothing (no context)",
-    "Lag-Llama": "Lag-Llama (no context)",
-}
-
-# LLM models to their associated columns, both with and without context
-LLM_MODELS_TO_COLUMNS = {
-    "DP GPT-4o": ("CC-GPT-4o", "CC-GPT-4o (no ctx)"),
-    "DP Llama-3.1-405B-Inst": (
-        "CC-Llama-3.1-405b-instruct-temp10",
-        "CC-Llama-3.1-405b-instruct-temp10 (no ctx)",
-    ),
-    "DP GPT-4o-mini": ("CC-GPT-4o-mini", "CC-GPT-4o-mini (no ctx)"),
-    "LLMP Llama3-8B": ("LLama3-8B", "LLama3-8B (no ctx)"),
-    "LLMP Llama3-70B": ("LLama3-70B", "LLama3-70B (no ctx)"),
-    "LLMP Llama3-8B-Inst": ("LLama3-8B-instruct", "LLama3-8B-instruct (no ctx)"),
-    "LLMP Llama3-70B-Inst": (
-        "LLama3-70B-instruct",
-        "LLama3-70B-instruct (no ctx)",
-    ),
-    "LLMP Mixtral-8x7B": ("Mixtral-8x7B", "Mixtral-8x7B (no ctx)"),
-    "LLMP Mixtral-8x7B-Inst": (
-        "Mixtral-8x7B-Instruct",
-        "Mixtral-8x7B-Instruct (no ctx)",
-    ),
-    "DP LlaMa-70B-Inst": (
-        "CC-OpenRouter-LLaMa-70B-Inst",
-        "CC-OpenRouter-LLaMa-70B-Inst (no ctx)",
-    ),
-    "DP LlaMa-8B-Inst": (
-        "CC-OpenRouter-LLaMa-8B-Inst",
-        "CC-OpenRouter-LLaMa-8B-Inst (no ctx)",
-    ),
-    "DP Mixtral-8x7B-Inst": (
-        "CC-OpenRouter-Mixtral-8x7B-Inst",
-        "CC-OpenRouter-Mixtral-8x7B-Inst (no ctx)",
-    ),
-    "UniTime": ("UniTime-ctx", "UniTime-noctx"),
-}
-
 skill_name_map = {
     "instruction following": "Instruction Following",
     "retrieval: context": "Retrieval: Context",
@@ -204,8 +151,21 @@ models_to_keep = [
 ]
 
 
-# For each model, calculate the average performance for each skill and context source
 def simulate_rank(means, std):
+    """
+    For each model + task pairs, we are given an estimate of the true
+    score (means) with an associated standard error (std).
+    We then simulate what could be the true score, by assuming that
+    the error follows a Gaussian distribution.
+    From this simulation, we find the rank of each model, for each task.
+
+    Using this simulation allows us to get an estimate of what the true
+    average rank is for each model, with the appropriate standard error.
+
+    Note that this is very crude, but is still better than just
+    using the means, or assuming any overlap between the standard errors
+    to have equal ranks.
+    """
     simulation = means + np.random.normal(loc=0, scale=std)
     rank_df = simulation.apply(lambda row: row.rank(), axis=1)
     return rank_df
