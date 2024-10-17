@@ -263,7 +263,7 @@ class PredictableGrocerTemporaryShockUnivariateTask(
 
     def get_shock_duration(self, shock_delay_in_days):
         """
-        Shock is temporary for a random duration between of at least 2 days.
+        Shock is temporary for a random duration that does not exceed the forecast horizon.
         """
         return self.random.randint(2, self.prediction_length - shock_delay_in_days)
 
