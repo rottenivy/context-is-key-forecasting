@@ -1,8 +1,0 @@
-[
-    {
-        "label": "LLama3-70B-instruct",
-        "method": "llmp",
-        "llm": "llama-3-70B-instruct",
-        "use_context": true
-    }
-]
