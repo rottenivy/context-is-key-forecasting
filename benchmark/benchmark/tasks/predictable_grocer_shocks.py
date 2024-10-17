@@ -235,7 +235,7 @@ class PredictableGrocerPersistentShockUnivariateTask(UnivariateCRPSTask):
         shock_description = shock_description.replace(
             "{impact}", str(self.impact_magnitude) + "%"
         )
-        shock_description += f" This impact is expected to last for at least {self.prediction_length - shock_delay_in_days} days."
+        shock_description += f" This impact is expected to last indefinitely."
         return shock_description
 
     @property
@@ -265,7 +265,22 @@ class PredictableGrocerTemporaryShockUnivariateTask(
         """
         Shock is temporary for a random duration between of at least 2 days.
         """
-        return self.random.randint(2, self.prediction_length - shock_delay_in_days + 1)
+        return self.random.randint(2, self.prediction_length - shock_delay_in_days)
+
+    def get_scenario_context(self, shock_delay_in_days, influence_info, covariates):
+        """
+        Get the context of the event.
+
+        """
+
+        shock_description = influence_info["influence"].replace(
+            "{time_in_days}", str(shock_delay_in_days)
+        )
+        shock_description = shock_description.replace(
+            "{impact}", str(self.impact_magnitude) + "%"
+        )
+        shock_description += f" This impact is expected to last {self.prediction_length - shock_delay_in_days} days."
+        return shock_description
 
 
 class PredictableGrocerPersistentShockUnivariateBeerTask(
