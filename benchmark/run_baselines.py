@@ -200,6 +200,7 @@ def experiment_crazycast(
         "gpt-35-turbo": {"input": 0.002, "output": 0.002},
         "gpt-3.5-turbo": {"input": 0.003, "output": 0.006},  # OpenAI API
         "gpt-4o-mini": {"input": 0.00015, "output": 0.0006},  # OpenAI API
+        "llama-3.1-405b": {"input": 0.0, "output": 0.0},  # Toolkit
         "llama-3.1-405b-instruct": {"input": 0.0, "output": 0.0},  # Toolkit
         "llama-2-7B": {"input": 0.0, "output": 0.0},  # Toolkit
         "llama-2-70B": {"input": 0.0, "output": 0.0},  # Toolkit
@@ -215,13 +216,13 @@ def experiment_crazycast(
         "gemma-2-27B": {"input": 0.0, "output": 0.0},  # Toolkit
         "gemma-2-27B-instruct": {"input": 0.0, "output": 0.0},  # Toolkit
     }
-    if llm not in openai_costs:
+    if not llm.startswith("openrouter-") and llm not in openai_costs:
         raise ValueError(f"Invalid model: {llm} -- Not in cost dictionary")
 
     cc_forecaster = CrazyCast(
         model=llm,
         use_context=use_context,
-        token_cost=openai_costs[llm],
+        token_cost=openai_costs[llm] if not llm.startswith("openrouter-") else None,
         batch_size=batch_size,
         batch_size_on_retry=batch_size_on_retry,
         n_retries=n_retries,
@@ -346,7 +347,7 @@ def experiment_llmp(
     )
 
 
-def compile_results(results):
+def compile_results(results, cap=None):
     # Compile results into Pandas dataframe
     errors = defaultdict(list)
     missing = defaultdict(list)
@@ -367,7 +368,11 @@ def compile_results(results):
                     else:
                         errors[method].append(seed_res)
                 else:
-                    task_results.append(seed_res["score"])
+                    if cap == None:
+                        score = seed_res["score"]
+                    else:
+                        score = min(seed_res["score"], cap)
+                    task_results.append(score)
 
             mean = np.mean(task_results)
             std = np.std(task_results, ddof=1)
@@ -450,6 +455,11 @@ def main():
         action="store_true",
         help="Upload results to server (need to set STARCASTER_REPORT_ACCESS_TOKEN environment variable)",
     )
+    parser.add_argument(
+        "--cap",
+        type=float,
+        help="Cap value to cap each instance's metric",
+    )
 
     args = parser.parse_args()
     output_folder = Path(args.output)
@@ -509,14 +519,17 @@ def main():
         extra_infos[exp_label] = extra_info
 
         # Compile results
-        current_results, missing, errors = compile_results(current_results)
+        current_results, missing, errors = compile_results(
+            current_results, cap=args.cap
+        )
         print(current_results)
         print("Number of missing results:", {k: len(v) for k, v in missing.items()})
         print("Number of errors:", {k: len(v) for k, v in errors.items()})
 
         # Save results to CSV. Note: Saved in output_folder / exp_label, not output_folder as it is exp-specific result
-        print(f"Saving results to {output_folder/exp_label}/results.csv")
-        current_results.to_csv(output_folder / exp_label / "results.csv")
+        filename = "results.csv" if not args.cap else f"results-cap-{args.cap}.csv"
+        print(f"Saving results to {output_folder/exp_label}/{filename}")
+        current_results.to_csv(output_folder / exp_label / filename)
         print(f"Saving missing results to {output_folder/exp_label}/missing.json")
         with open(output_folder / exp_label / "missing.json", "w") as f:
             json.dump(missing, f)
@@ -528,14 +541,15 @@ def main():
     if args.upload_results:
         print("Compiling all results and uploading them...")
         # Compile results
-        all_results, missing, errors = compile_results(all_results)
+        all_results, missing, errors = compile_results(all_results, cap=args.cap)
         print(all_results)
         print("Number of missing results:", {k: len(v) for k, v in missing.items()})
         print("Number of errors:", {k: len(v) for k, v in errors.items()})
 
         # Save results to CSV
-        print(f"Saving results to {output_folder}/results.csv")
-        all_results.to_csv(output_folder / "results.csv")
+        filename = "results.csv" if not args.cap else f"results-cap-{args.cap}.csv"
+        print(f"Saving results to {output_folder}/{filename}")
+        all_results.to_csv(output_folder / filename)
         print(f"Saving missing results to {output_folder}/missing.json")
         with open(output_folder / "missing.json", "w") as f:
             json.dump(missing, f)
