@@ -24,7 +24,34 @@ from .utils import extract_html_tags
 
 from .hf_utils.cc_hf_api import LLM_MAP, get_model_and_tokenizer, hf_generate
 
+# For OpenRouter
+from openai import OpenAI
+from os import getenv
+
 logger = logging.getLogger("CrazyCast")
+
+# As of 28 Sep 2024
+OPENROUTER_COSTS = {
+    "openrouter-llama-3-8b-instruct-DeepInfra": {"input": 0.000055, "output": 0.000055},
+    "openrouter-llama-3-8b-instruct-NovitaAI": {"input": 0.000063, "output": 0.000063},
+    "openrouter-llama-3-8b-instruct-Together": {"input": 0.00007, "output": 0.00007},
+    "openrouter-llama-3-8b-instruct-Lepton": {"input": 0.000162, "output": 0.000162},
+    "openrouter-llama-3-8b-instruct-Mancer": {"input": 0.0001875, "output": 0.001125},
+    "openrouter-llama-3-8b-instruct-Fireworks": {"input": 0.0002, "output": 0.0002},
+    "openrouter-llama-3-8b-instruct-Mancer (private)": {
+        "input": 0.00025,
+        "output": 0.0015,
+    },
+    "openrouter-llama-3-70b-instruct-DeepInfra": {"input": 0.00035, "output": 0.0004},
+    "openrouter-llama-3-70b-instruct-NovitaAI": {"input": 0.00051, "output": 0.00074},
+    "openrouter-llama-3-70b-instruct-Together": {"input": 0.000792, "output": 0.000792},
+    "openrouter-llama-3-70b-instruct-Lepton": {"input": 0.0008, "output": 0.0008},
+    "openrouter-llama-3-70b-instruct-Fireworks": {"input": 0.0009, "output": 0.0009},
+    "openrouter-mixtral-8x7b-instruct-DeepInfra": {"input": 0.00024, "output": 0.00024},
+    "openrouter-mixtral-8x7b-instruct-Fireworks": {"input": 0.0005, "output": 0.0005},
+    "openrouter-mixtral-8x7b-instruct-Lepton": {"input": 0.0005, "output": 0.0005},
+    "openrouter-mixtral-8x7b-instruct-Together": {"input": 0.00054, "output": 0.00054},
+}
 
 
 def dict_to_obj(data):
@@ -86,6 +113,26 @@ def huggingface_model_client(
     return response
 
 
+def openrouter_client(model, messages, n=1, max_tokens=10000, temperature=1.0):
+    """
+    Client for OpenRouter chat models
+    """
+    # gets API Key from environment variable OPENAI_API_KEY
+    client = OpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=getenv("OPENROUTER_API_KEY"),
+    )
+    model_from = "meta-llama" if model.startswith("llama") else "mistralai"
+    completion = client.chat.completions.create(
+        model=f"{model_from}/{model[11:]}",  # exclude "openrouter-" from the model
+        messages=messages,
+        n=n,
+        max_tokens=max_tokens,
+        temperature=temperature,
+    )
+    return completion
+
+
 def llama_3_1_405b_instruct_client(
     model, messages, n=1, max_tokens=10000, temperature=1.0
 ):
@@ -126,6 +173,11 @@ def llama_3_1_405b_instruct_client(
         timeout=600,
     )
     response.raise_for_status()
+    status = response.status_code
+    if status != 200:
+        raise Exception(
+            f"API returned non-200 status code: {status}.", f"Response: {response.text}"
+        )
 
     return dict_to_obj(response.json())
 
@@ -173,10 +225,17 @@ class CrazyCast(Baseline):
         self.model = model
         self.use_context = use_context
         self.fail_on_invalid = fail_on_invalid
-        self.n_retries = n_retries
+        if model == "llama-3.1-405b-instruct":
+            self.n_retries = 10
+        elif model.startswith("openrouter-"):
+            self.n_retries = 15
+        else:
+            self.n_retries = 3  # Default for GPT-4o
         self.batch_size = batch_size
         self.batch_size_on_retry = batch_size_on_retry
         self.token_cost = token_cost
+        self.total_input_cost = 0  # For OpenRouter
+        self.total_output_cost = 0  # For OpenRouter
         self.total_cost = 0  # Accumulator for monetary value of queries
         self.temperature = temperature
         self.dry_run = dry_run
@@ -212,6 +271,12 @@ class CrazyCast(Baseline):
 
         elif self.model == "llama-3.1-405b-instruct":
             return partial(llama_3_1_405b_instruct_client, temperature=self.temperature)
+
+        elif self.model.startswith("openrouter-"):
+            return partial(
+                openrouter_client,
+                temperature=self.temperature,
+            )
 
         elif self.model in LLM_MAP.keys():
             return partial(
@@ -389,6 +454,33 @@ Example:
                     # Append forecast to list of valid forecasts
                     valid_forecasts.append(forecast)
 
+                    # If OpenRouter, compute costs here as costs differ per call
+                    if self.model.startswith("openrouter-"):
+                        # Get provider
+                        provider = chat_completion.provider
+                        # Make string
+                        model_name = self.model + "-" + provider
+                        # Compute costs with Openrouter cost dict
+                        input_cost = (
+                            total_tokens["input"]
+                            / 1000
+                            * OPENROUTER_COSTS[model_name]["input"]
+                        )
+                        output_cost = (
+                            total_tokens["output"]
+                            / 1000
+                            * OPENROUTER_COSTS[model_name]["input"]
+                        )
+                        current_cost = round(input_cost + output_cost, 2)
+                        logger.info(f"Forecast cost: {current_cost}$")
+
+                        self.total_input_cost += input_cost
+                        self.total_output_cost += output_cost
+                        self.total_cost += current_cost
+                        total_tokens = {
+                            "input": 0,
+                            "output": 0,
+                        }  # As cost for current tokens has been accounted for, reset total_tokens
                 except Exception as e:
                     logger.info("Sample rejected due to invalid format.")
                     logger.debug(f"Rejection details: {e}")
@@ -422,7 +514,12 @@ Example:
 
         # Estimate cost of API calls
         logger.info(f"Total tokens used: {total_tokens}")
-        if self.token_cost is not None:
+        if self.model.startswith("openrouter-"):
+            extra_info["input_token_cost"] = self.total_input_cost
+            extra_info["output_token_cost"] = self.total_output_cost
+            extra_info["total_token_cost"] = self.total_cost
+
+        elif self.token_cost is not None:
             input_cost = total_tokens["input"] / 1000 * self.token_cost["input"]
             output_cost = total_tokens["output"] / 1000 * self.token_cost["output"]
             current_cost = round(input_cost + output_cost, 2)
