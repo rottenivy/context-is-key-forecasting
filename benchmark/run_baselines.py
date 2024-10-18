@@ -19,8 +19,8 @@ from benchmark.baselines.moirai import MoiraiForecaster
 from benchmark.baselines.llm_processes import LLMPForecaster
 from benchmark.baselines.timellm import TimeLLMForecaster
 from benchmark.baselines.unitime import UniTimeForecaster
+from benchmark.baselines.timegen import timegen1
 from benchmark.baselines.naive import oracle_baseline, random_baseline
-from benchmark.baselines.nixtla import TimeGEN1
 from benchmark.baselines.statsmodels import (
     ExponentialSmoothingForecaster,
 )
@@ -316,7 +316,7 @@ def experiment_timegen1(
 
     """
     results = evaluate_all_tasks(
-        TimeGEN1,
+        timegen1,
         n_samples=n_samples,
         output_folder=f"{output_folder}/timegen1/",
         max_parallel=max_parallel,

@@ -13,7 +13,7 @@ nixtla_client = NixtlaClient(
 assert nixtla_client.validate_api_key(), "Nixtla Client: Invalid API key or base URL"
 
 
-def TimeGEN1(task_instance, n_samples=50):
+def timegen1(task_instance, n_samples=50):
     """
     Get forecasts from Nixtla's TimeGEN-1 model
 
@@ -54,4 +54,4 @@ def TimeGEN1(task_instance, n_samples=50):
     return forecast
 
 
-TimeGEN1.__version__ = "0.0.1"
+timegen1.__version__ = "0.0.1"
