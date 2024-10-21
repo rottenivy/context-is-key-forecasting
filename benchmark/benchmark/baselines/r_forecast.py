@@ -98,6 +98,22 @@ class R_ETS(Baseline):
         )
         samples = samples[:, :, None]
 
+        if np.isnan(samples).any():
+            # If the model fails, then switch off the trend component of the model, then rerun it.
+            no_trend_model = self.model[0] + "N" + self.model[2]
+
+            fit = self._forecast_pkg.ets(ts, model=no_trend_model)
+
+            samples = np.stack(
+                [
+                    numpy2ri.rpy2py(
+                        self._forecast_pkg.simulate_ets(fit, nsim=len(future_time))
+                    )
+                    for _ in range(n_samples)
+                ]
+            )
+            samples = samples[:, :, None]
+
         return samples
 
     @property
