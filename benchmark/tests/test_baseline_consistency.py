@@ -2,7 +2,7 @@ import pytest
 import types
 
 
-from benchmark.baselines.direct_prompt import CrazyCast
+from benchmark.baselines.direct_prompt import DirectPrompt
 from benchmark.baselines.lag_llama import lag_llama
 from benchmark.baselines.llm_processes import LLMPForecaster
 from benchmark.baselines.naive import oracle_baseline, random_baseline
@@ -14,7 +14,7 @@ from benchmark.utils import get_all_parent_classes
 
 
 ALL_BASELINES = [
-    CrazyCast,
+    DirectPrompt,
     lag_llama,
     LLMPForecaster,
     oracle_baseline,

@@ -12,7 +12,7 @@ import pandas as pd
 
 from collections import defaultdict
 from pathlib import Path
-from benchmark.baselines.direct_prompt import CrazyCast
+from benchmark.baselines.direct_prompt import DirectPrompt
 from benchmark.baselines.lag_llama import lag_llama
 from benchmark.baselines.chronos import ChronosForecaster
 from benchmark.baselines.moirai import MoiraiForecaster
@@ -178,7 +178,7 @@ def experiment_r_arima(
     )
 
 
-def experiment_crazycast(
+def experiment_directprompt(
     llm,
     use_context,
     n_samples,
@@ -191,7 +191,7 @@ def experiment_crazycast(
     temperature=1.0,
 ):
     """
-    CrazyCast baselines
+    DirectPrompt baselines
 
     """
     # Costs per 1000 tokens
@@ -219,7 +219,7 @@ def experiment_crazycast(
     if not llm.startswith("openrouter-") and llm not in openai_costs:
         raise ValueError(f"Invalid model: {llm} -- Not in cost dictionary")
 
-    cc_forecaster = CrazyCast(
+    dp_forecaster = DirectPrompt(
         model=llm,
         use_context=use_context,
         token_cost=openai_costs[llm] if not llm.startswith("openrouter-") else None,
@@ -230,14 +230,14 @@ def experiment_crazycast(
         dry_run=skip_cache_miss,
     )
     results = evaluate_all_tasks(
-        cc_forecaster,
+        dp_forecaster,
         n_samples=n_samples,
-        output_folder=f"{output_folder}/{cc_forecaster.cache_name}",
+        output_folder=f"{output_folder}/{dp_forecaster.cache_name}",
         max_parallel=max_parallel,
         skip_cache_miss=skip_cache_miss,
     )
-    total_cost = cc_forecaster.total_cost
-    del cc_forecaster
+    total_cost = dp_forecaster.total_cost
+    del dp_forecaster
 
     return results, {"total_cost": total_cost}
 

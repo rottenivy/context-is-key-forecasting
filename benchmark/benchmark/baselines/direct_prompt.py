@@ -1,5 +1,5 @@
 """
-Open AI based LLM Process
+Direct prompt method
 
 """
 
@@ -28,7 +28,7 @@ from .hf_utils.dp_hf_api import LLM_MAP, get_model_and_tokenizer, hf_generate
 from openai import OpenAI
 from os import getenv
 
-logger = logging.getLogger("CrazyCast")
+logger = logging.getLogger("DirectPrompt")
 
 # As of 28 Sep 2024
 OPENROUTER_COSTS = {
@@ -182,7 +182,7 @@ def llama_3_1_405b_instruct_client(
     return dict_to_obj(response.json())
 
 
-class CrazyCast(Baseline):
+class DirectPrompt(Baseline):
     """
     A simple baseline that uses any instruction-tuned LLM to produce forecastss
 
@@ -406,7 +406,7 @@ Example:
         total_tokens = {"input": 0, "output": 0}
         valid_forecasts = []
 
-        max_batch_size = task_instance.max_crazycast_batch_size
+        max_batch_size = task_instance.max_directprompt_batch_size
         if max_batch_size is not None:
             batch_size = min(default_batch_size, max_batch_size)
             n_retries = self.n_retries + default_batch_size // batch_size
