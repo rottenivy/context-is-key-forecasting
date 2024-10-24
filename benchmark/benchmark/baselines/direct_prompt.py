@@ -22,7 +22,7 @@ from ..config import (
 )
 from .utils import extract_html_tags
 
-from .hf_utils.cc_hf_api import LLM_MAP, get_model_and_tokenizer, hf_generate
+from .hf_utils.dp_hf_api import LLM_MAP, get_model_and_tokenizer, hf_generate
 
 # For OpenRouter
 from openai import OpenAI

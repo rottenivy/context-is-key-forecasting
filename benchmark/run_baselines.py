@@ -12,7 +12,7 @@ import pandas as pd
 
 from collections import defaultdict
 from pathlib import Path
-from benchmark.baselines.crazycast import CrazyCast
+from benchmark.baselines.direct_prompt import CrazyCast
 from benchmark.baselines.lag_llama import lag_llama
 from benchmark.baselines.chronos import ChronosForecaster
 from benchmark.baselines.moirai import MoiraiForecaster

@@ -2,7 +2,7 @@ import pytest
 import types
 
 
-from benchmark.baselines.crazycast import CrazyCast
+from benchmark.baselines.direct_prompt import CrazyCast
 from benchmark.baselines.lag_llama import lag_llama
 from benchmark.baselines.llm_processes import LLMPForecaster
 from benchmark.baselines.naive import oracle_baseline, random_baseline
