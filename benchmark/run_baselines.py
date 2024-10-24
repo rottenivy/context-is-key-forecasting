@@ -171,7 +171,7 @@ def experiment_r_arima(
             R_Arima(),
             n_samples=n_samples,
             output_folder=f"{output_folder}/r_arima/",
-            max_parallel=max_parallel,
+            max_parallel=1,  # Hardcoded as it's buggy with None
             skip_cache_miss=skip_cache_miss,
         ),
         {},
@@ -260,6 +260,7 @@ def experiment_timellm(
         use_context=use_context,
         dataset=dataset,
         pred_len=pred_len,
+        dry_run=skip_cache_miss,
     )
 
     return (
@@ -294,6 +295,7 @@ def experiment_unitime(
         dataset=dataset,
         pred_len=pred_len,
         per_dataset_checkpoint=per_dataset_checkpoint,
+        dry_run=skip_cache_miss,
     )
 
     return (
@@ -539,26 +541,27 @@ def main():
 
     # Compile and upload results to server
     if args.upload_results:
-        print("Compiling all results and uploading them...")
-        # Compile results
-        all_results, missing, errors = compile_results(all_results, cap=args.cap)
-        print(all_results)
-        print("Number of missing results:", {k: len(v) for k, v in missing.items()})
-        print("Number of errors:", {k: len(v) for k, v in errors.items()})
+        print("Uploading of results temporarily disabled")
+        # print("Compiling all results and uploading them...")
+        # # Compile results
+        # all_results, missing, errors = compile_results(all_results, cap=args.cap)
+        # print(all_results)
+        # print("Number of missing results:", {k: len(v) for k, v in missing.items()})
+        # print("Number of errors:", {k: len(v) for k, v in errors.items()})
 
-        # Save results to CSV
-        filename = "results.csv" if not args.cap else f"results-cap-{args.cap}.csv"
-        print(f"Saving results to {output_folder}/{filename}")
-        all_results.to_csv(output_folder / filename)
-        print(f"Saving missing results to {output_folder}/missing.json")
-        with open(output_folder / "missing.json", "w") as f:
-            json.dump(missing, f)
-        print(f"Saving errors to {output_folder}/errors.json")
-        with open(output_folder / "errors.json", "w") as f:
-            json.dump(errors, f)
-            print("Uploading results to server...")
-            upload_results(output_folder / "results.csv")
-            print("Results uploaded!")
+        # # Save results to CSV
+        # filename = "results.csv" if not args.cap else f"results-cap-{args.cap}.csv"
+        # print(f"Saving results to {output_folder}/{filename}")
+        # all_results.to_csv(output_folder / filename)
+        # print(f"Saving missing results to {output_folder}/missing.json")
+        # with open(output_folder / "missing.json", "w") as f:
+        #     json.dump(missing, f)
+        # print(f"Saving errors to {output_folder}/errors.json")
+        # with open(output_folder / "errors.json", "w") as f:
+        #     json.dump(errors, f)
+        #     print("Uploading results to server...")
+        #     upload_results(output_folder / "results.csv" if not args.cap else f"results-cap-{args.cap}.csv")
+        #     print("Results uploaded!")
 
 
 if __name__ == "__main__":
