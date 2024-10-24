@@ -18,14 +18,8 @@ parser.add_argument(
     "--output",
     type=str,
 )
-parser.add_argument(
-    "--weight_average",
-    action="store_true",
-)
-parser.add_argument(
-    "--weight_skills",
-    action="store_true",
-)
+parser.add_argument("--weight_average", action="store_true", default=True)
+parser.add_argument("--weight_skills", action="store_true", default=True)
 args = parser.parse_args()
 
 
@@ -46,16 +40,25 @@ def extract_mean_std(performance_str):
 model_name_map = {
     "CC-GPT-4o": "Direct Prompt - GPT-4o",
     "CC-GPT-4o (no ctx)": "Direct Prompt - GPT-4o (no context)",
-    "CC-Llama-3.1-405b-instruct": "Direct Prompt - Llama-3.1-405B-Instruct",
-    "CC-Llama-3.1-405b-instruct (no ctx)": "Direct Prompt - Llama-3.1-405B-Instruct (no context)",
+    "CC-Llama-3.1-405b-instruct-temp10": "Direct Prompt - Llama-3.1-405B-Instruct",
+    "CC-Llama-3.1-405b-instruct-temp10 (no ctx)": "Direct Prompt - Llama-3.1-405B-Instruct (no context)",
     "CC-GPT-4o-mini": "Direct Prompt - GPT-4o-mini",
     "CC-GPT-4o-mini (no ctx)": "Direct Prompt - GPT-4o-mini (no context)",
+    "CC-OpenRouter-LLaMa-70B-Inst": "Direct Prompt - LLaMa-70B-Inst",
+    "CC-OpenRouter-Mixtral-8x7B-Inst": "Direct Prompt - Mixtral-8x7B-Inst",
+    "CC-OpenRouter-LLaMa-8B-Inst": "Direct Prompt - LLaMa-8B-Inst",
     "LLama3-8B": "LLMP - LLama3-8B",
     "LLama3-8B (no ctx)": "LLMP - LLama3-8B (no context)",
     "LLama3-8B-instruct": "LLMP - LLama3-8B-Instruct",
     "LLama3-8B-instruct (no ctx)": "LLMP - LLama3-8B-Instruct (no context)",
+    "LLama3-70B": "LLMP - LLama3-70B",
+    "LLama3-70B (no ctx)": "LLMP - LLama3-70B (no context)",
     "LLama3-70B-instruct": "LLMP - LLama3-70B-Instruct",
     "LLama3-70B-instruct (no ctx)": "LLMP - LLama3-70B-Instruct (no context)",
+    "Mixtral-8x7B": "LLMP - Mixtral-8x7B",
+    "Mixtral-8x7B (no ctx)": "LLMP - Mixtral-8x7B (no context)",
+    "Mixtral-8x7B-Instruct": "LLMP - Mixtral-8x7B-Instruct",
+    "Mixtral-8x7B-Instruct (no ctx)": "LLMP - Mixtral-8x7B-Instruct (no context)",
     "Statsmodels": "Exponential Smoothing (no context)",
     "Lag-Llama": "Lag-Llama (no context)",
 }
@@ -93,6 +96,7 @@ LLM_MODELS_TO_COLUMNS = {
         "CC-OpenRouter-Mixtral-8x7B-Inst (no ctx)",
     ),
     "UniTime": ("UniTime-ctx", "UniTime-noctx"),
+    "TimeLLM (ETTh1)": ("TimeLLM-ctx", "TimeLLM-noctx"),
 }
 
 skill_name_map = {
@@ -118,16 +122,45 @@ desired_skill_order = [
 
 NO_CONTEXT_MODELS = [
     "Statsmodels",
-    "Lag-Llama",
+    "R_Arima",
+    "R_ETS",
+    "Lag-Llama-GPU",
     "Moirai_large",
     "Chronos_large",
+    "TimeGEN1",
 ]
 
 desired_context_source_order = ["c_i", "c_h", "c_f", "c_cov", "c_causal"]
 
 # Tasks to ignore
 tasks_to_ignore = []
-models_to_ignore = ["Naive_random", "Naive_oracle"]
+models_to_ignore = [
+    "Naive_random",
+    "Naive_oracle",
+    "Naive",
+    # Comment from here if you want all models
+    # "Moirai_small",
+    # "Moirai_base",
+    # "Chronos_tiny",
+    # "Chronos_mini",
+    # "Chronos_small",
+    # "Chronos_base",
+    # "Mixtral-8x7B (no ctx)",
+    # "Mixtral-8x7B-Instruct (no ctx)",
+    # "LLama3-8B (no ctx)",
+    # "LLama3-8B-instruct (no ctx)",
+    # "LLama3-70B (no ctx)",
+    # "LLama3-70B-Instruct (no context)",
+    # "LLama3-70B-instruct (no ctx)",
+    # "CC-Llama-3.1-405b-instruct-temp10 (no ctx)",
+    # "CC-GPT-4o-mini (no ctx)",
+    # "Direct Prompt - GPT-4o (no ctx)",
+    # "CC-OpenRouter-LLaMa-70B-Inst (no ctx)",
+    # "CC-OpenRouter-Mixtral-8x7B-Inst (no ctx)",
+    # "CC-OpenRouter-LLaMa-8B-Inst (no ctx)",
+    # "UniTime-noctx",
+    # "TimeLLM-noctx",
+]
 
 # Track ignored tasks and ignored models
 ignored_tasks = []
@@ -166,6 +199,8 @@ for model in performance_means_copy.columns:
         # Drop the model from the DataFrame if it has any NaN
         performance_means_copy.drop(columns=[model], inplace=True)
         performance_stderrs_copy.drop(columns=[model], inplace=True)
+
+print("Total # of tasks:", len(performance_means_copy))
 
 # Dynamically extract skills and context sources using TaskName._skills and TaskName._context_sources
 skills_map = {}
@@ -211,8 +246,11 @@ for model in performance_means_copy.columns:
                 total_weight += weight
                 total_values += weight * value
                 total_variances += (weight * stderr) ** 2
-        mean = total_values / total_weight
-        variance = total_variances / (total_weight**2)
+        if total_weight == 0 and total_values == 0:
+            mean = variance = 0
+        else:
+            mean = total_values / total_weight
+            variance = total_variances / (total_weight**2)
         stderr = variance**0.5
         entry[skill] = f"{mean:.3f} ± {stderr:.3f}"
 
@@ -227,21 +265,24 @@ for model in performance_means_copy.columns:
             total_weight += weight
             total_values += weight * value
             total_variances += (weight * stderr) ** 2
-    mean = total_values / total_weight
-    variance = total_variances / (total_weight**2)
+    if total_weight == 0 and total_values == 0:
+        mean = variance = 0
+    else:
+        mean = total_values / total_weight
+        variance = total_variances / (total_weight**2)
     stderr = variance**0.5
     entry["Average"] = f"{mean:.3f} ± {stderr:.3f}"
 
     skill_data[model] = entry
 skill_df = pd.DataFrame(skill_data).T
 
+print("Total # of models:", len(skill_df))
 
 # Sort the DataFrame by "Average Rank" (best to worst)
 skill_df = skill_df.sort_values(by="Average")
 
 # Reorder the columns of the skill DataFrame based on the desired order
-skill_df = skill_df[desired_skill_order + ["Average"]]
-# skill_df.to_excel("skill_df.xlsx", sheet_name="Results skill wise")
+skill_df = skill_df[["Average"] + ["Average"] + desired_skill_order]
 
 # Map row and column name
 skill_df = skill_df.rename(index=model_name_map)
@@ -275,8 +316,11 @@ for model in performance_means_copy.columns:
                 total_weight += weight
                 total_values += weight * value
                 total_variances += (weight * stderr) ** 2
-        mean = total_values / total_weight
-        variance = total_variances / (total_weight**2)
+        if total_weight == 0 and total_values == 0:
+            mean = variance = 0
+        else:
+            mean = total_values / total_weight
+            variance = total_variances / (total_weight**2)
         stderr = variance**0.5
         entry[context] = f"{mean:.3f} ± {stderr:.3f}"
 
@@ -291,8 +335,11 @@ for model in performance_means_copy.columns:
             total_weight += weight
             total_values += weight * value
             total_variances += (weight * stderr) ** 2
-    mean = total_values / total_weight
-    variance = total_variances / (total_weight**2)
+    if total_weight == 0 and total_values == 0:
+        mean = variance = 0
+    else:
+        mean = total_values / total_weight
+        variance = total_variances / (total_weight**2)
     stderr = variance**0.5
     entry["Average"] = f"{mean:.3f} ± {stderr:.3f}"
 
@@ -304,7 +351,7 @@ context_df = pd.DataFrame(context_data).T
 context_df = context_df.sort_values(by="Average")
 
 # Reorder the columns of the DataFrame based on the desired order
-context_df = context_df[desired_context_source_order + ["Average"]]
+context_df = context_df[desired_context_source_order]
 
 # Map row and column name
 context_df = context_df.rename(index=model_name_map)
@@ -320,6 +367,7 @@ with open(args.output, "w") as f:
     f.write(latex_context_table)
 
 # Step 6: Print ignored tasks and models
+print("Saved LaTeX table to", args.output)
 print("\nIgnored Tasks:", ignored_tasks)
 print("\nIgnored Models:", ignored_models)
 
@@ -330,14 +378,78 @@ import seaborn as sns
 
 sns.set_theme()
 
-all_wins_ctx = [[], [], [], [], []]
-all_wins_no_ctx = [[], [], [], [], []]
+wins_to_slots = {
+    7: 4,
+    6: 3,
+    5: 3,
+    4: 2,
+    3: 2,
+    2: 1,
+    1: 1,
+    0: 0,
+}
+wins_to_labels = [
+    (4, "Beats all"),
+    (3, "Beats 5 or 6"),
+    (2, "Beats 3 or 4"),
+    (1, "Beats 1 or 2"),
+    (0, "Beats none"),
+]
+# wins_to_slots = {
+#     7: 4,
+#     6: 3,
+#     5: 3,
+#     4: 3,
+#     3: 1,
+#     2: 1,
+#     1: 1,
+#     0: 0,
+# }
+# wins_to_labels = [
+#     (4, "Beats all"),
+#     (3, "Beats majority"),
+#     (2, None),
+#     (1, "Beats minority"),
+#     (0, "Beats none"),
+# ]
+colors = [
+    (0, 0.5, 0),
+    (1, 1, 0),
+    (0.75, 0.75, 1),
+    (1, 0.5, 0),
+    (0.75, 0, 0),
+]
+# wins_to_slots = {
+#     7: 7,
+#     6: 6,
+#     5: 5,
+#     4: 4,
+#     3: 3,
+#     2: 2,
+#     1: 1,
+#     0: 0,
+# }
+# wins_to_labels = [
+#     (7, "7"),
+#     (6, "6"),
+#     (5, "5"),
+#     (4, "4"),
+#     (3, "3"),
+#     (2, "2"),
+#     (1, "1"),
+#     (0, "0"),
+# ]
+# from matplotlib import colormaps
+# colors = colormaps["viridis"](np.linspace(0, 1, 8))
+
+all_wins_ctx = [[] for _ in wins_to_labels]
+all_wins_no_ctx = [[] for _ in wins_to_labels]
 model_names = []
 
 for model, (column_ctx, column_no_ctx) in LLM_MODELS_TO_COLUMNS.items():
     model_names.append(model)
-    wins_ctx = [0.0, 0.0, 0.0, 0.0, 0.0]
-    wins_no_ctx = [0.0, 0.0, 0.0, 0.0, 0.0]
+    wins_ctx = [0.0 for _ in wins_to_labels]
+    wins_no_ctx = [0.0 for _ in wins_to_labels]
     for index, row in performance_means_copy.iterrows():
         task = data["Task"].loc[index]
         weight = TASK_NAME_TO_WEIGHT[task] if args.weight_average else 1.0
@@ -349,9 +461,9 @@ for model, (column_ctx, column_no_ctx) in LLM_MODELS_TO_COLUMNS.items():
                 w_ctx += 1
             if row[column_no_ctx] <= row[other_model]:
                 w_no_ctx += 1
-        wins_ctx[w_ctx] += weight
-        wins_no_ctx[w_no_ctx] += weight
-    for w in range(5):
+        wins_ctx[wins_to_slots[w_ctx]] += weight
+        wins_no_ctx[wins_to_slots[w_no_ctx]] += weight
+    for w in range(len(wins_to_labels)):
         all_wins_ctx[w].append(wins_ctx[w])
         all_wins_no_ctx[w].append(wins_no_ctx[w])
 all_wins_ctx = [np.array(l) for l in all_wins_ctx]
@@ -359,27 +471,12 @@ all_wins_no_ctx = [np.array(l) for l in all_wins_no_ctx]
 model_names = np.array(model_names)
 
 # Sort against the number of perfect 4 out of 4 wins tasks
-sort_order = np.argsort(all_wins_ctx[4] + 0.001 * all_wins_ctx[3])
+sort_order = np.argsort(all_wins_ctx[-1] + 0.001 * all_wins_ctx[-2])
 all_wins_ctx = [l[sort_order] for l in all_wins_ctx]
 all_wins_no_ctx = [l[sort_order] for l in all_wins_no_ctx]
 model_names = model_names[sort_order]
 
 num_tasks = sum(aw[0] for aw in all_wins_ctx)
-
-wins_to_labels = [
-    (4, "Beats all"),
-    (3, "Beats 75%"),
-    (2, "Beats 50%"),
-    (1, "Beats 25%"),
-    (0, "Beats none"),
-]
-colors = [
-    (0, 0.5, 0),
-    (1, 1, 0),
-    (0.75, 0.75, 1),
-    (1, 0.5, 0),
-    (0.75, 0, 0),
-]
 
 fig = plt.figure(figsize=(8, 3.4))
 ax1, ax2 = fig.subplots(1, 2, sharey=True)
