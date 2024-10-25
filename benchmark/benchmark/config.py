@@ -38,3 +38,12 @@ NIXTLA_API_KEY = os.environ.get("STARCASTER_NIXTLA_API_KEY", None)
 DATA_STORAGE_PATH = Path(os.environ.get("STARCASTER_DATA_STORE", "benchmark/data"))
 if not DATA_STORAGE_PATH.exists():
     DATA_STORAGE_PATH.mkdir(parents=True, exist_ok=True)
+
+# Data location for the data required for various tasks
+DOMINICK_STORAGE_PATH = os.environ.get(
+    "STARCASTER_DOMINICK_STORE", os.path.join(DATA_STORAGE_PATH, "dominicks")
+)
+HF_CACHE_DIR = os.environ.get("HF_HOME", os.path.join(DATA_STORAGE_PATH, "hf_cache"))
+TRAFFIC_STORAGE_PATH = os.environ.get(
+    "TRAFFIC_DATA_STORE", os.path.join(DATA_STORAGE_PATH, "traffic_data")
+)

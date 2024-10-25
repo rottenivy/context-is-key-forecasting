@@ -6,12 +6,9 @@ import pandas as pd
 from importlib import resources
 import urllib.request
 
-from ...config import DATA_STORAGE_PATH
+from ...config import DOMINICK_STORAGE_PATH
 
 
-DOMINICK_STORAGE_PATH = os.environ.get(
-    "STARCASTER_DOMINICK_STORE", os.path.join(DATA_STORAGE_PATH, "dominicks")
-)
 DOMINICK_CSV_PATH = os.path.join(
     DOMINICK_STORAGE_PATH, "filtered_dominick_grocer_sales.csv"
 )
