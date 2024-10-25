@@ -393,7 +393,7 @@ def upload_results(results_path):
     import os
     from datetime import datetime
 
-    access_token = os.environ["STARCASTER_REPORT_ACCESS_TOKEN"]
+    access_token = os.environ["CIK_REPORT_ACCESS_TOKEN"]
 
     # Create temporary directory
     tmp_dir = Path(f"/tmp/upload_{int(datetime.now().timestamp())}")
@@ -455,7 +455,7 @@ def main():
     parser.add_argument(
         "--upload-results",
         action="store_true",
-        help="Upload results to server (need to set STARCASTER_REPORT_ACCESS_TOKEN environment variable)",
+        help="Upload results to server (need to set CIK_REPORT_ACCESS_TOKEN environment variable)",
     )
     parser.add_argument(
         "--cap",
