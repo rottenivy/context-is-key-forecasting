@@ -106,14 +106,14 @@ TIME_LLM_CONFIGS = DotDict(
 )
 
 
-class TimeLLMStarCasterWrapper(nn.Module):
+class TimeLLMWrapper(nn.Module):
 
     def __init__(self, time_llm_model):
         super().__init__()
 
         assert isinstance(
             time_llm_model, TimeLLMModel
-        ), f"TimeLLMStarCasterWrapper can only wrap a model of class TimeLLM.Model but got {type(time_llm_model)}"
+        ), f"TimeLLMWrapper can only wrap a model of class TimeLLM.Model but got {type(time_llm_model)}"
         self.base_model = time_llm_model
 
     def forward(self, past_time, context):
@@ -123,17 +123,17 @@ class TimeLLMStarCasterWrapper(nn.Module):
         ).squeeze(-1)
 
 
-class StarCasterBaseline(nn.Module):
+class WrappedBaseline(nn.Module):
 
     def __init__(self, model):
         super().__init__()
 
         self.base_model = model
         if isinstance(self.base_model, TimeLLMModel):
-            self.wrapped_model = TimeLLMStarCasterWrapper(self.base_model)
+            self.wrapped_model = TimeLLMWrapper(self.base_model)
         else:
             raise ValueError(
-                f"StarCasterBaseline can only wrap a model of class TimeLLM.Model but got {type(model)}"
+                f"WrappedBaseline can only wrap a model of class TimeLLM.Model but got {type(model)}"
             )
 
     def forward(self, past_time, context):
@@ -160,9 +160,9 @@ class EvaluationPipeline:
                 "Warning: No CUDA device detected, proceeding with EvaluationPipeline on CPU ....."
             )
 
-        self.model = StarCasterBaseline(model).to(self.device)
+        self.model = WrappedBaseline(model).to(self.device)
 
-    # TODO: This method needs to be replaced to handle actual StarCaster benchmark
+    # TODO: This method needs to be replaced to handle actual CiK benchmark
     def get_evaluation_loader(self) -> Iterable:
         samples = []
         for sample in self.dataset.values():

@@ -104,14 +104,14 @@ UNITIME_CONFIGS = DotDict(
 )
 
 
-class UniTimeStarCasterWrapper(nn.Module):
+class UniTimeWrapper(nn.Module):
 
     def __init__(self, unitime_model):
         super().__init__()
 
         assert isinstance(
             unitime_model, UniTimeModel
-        ), f"UniTimeStarCasterWrapper can only wrap a model of class TimeLLM.Model but got {type(unitime_model)}"
+        ), f"UniTimeWrapper can only wrap a model of class UniTimeModel but got {type(unitime_model)}"
         self.base_model = unitime_model
 
     def forward(self, past_time, context):
@@ -132,10 +132,10 @@ class UniTimeBaseline(nn.Module):
 
         self.base_model = model
         if isinstance(self.base_model, UniTimeModel):
-            self.wrapped_model = UniTimeStarCasterWrapper(self.base_model)
+            self.wrapped_model = UniTimeWrapper(self.base_model)
         else:
             raise ValueError(
-                f"UniTime can only wrap a model of class UniTime.Model but got {type(model)}"
+                f"UniTime can only wrap a model of class UniTimeModel but got {type(model)}"
             )
 
     def forward(self, past_time, context):
@@ -164,7 +164,7 @@ class EvaluationPipeline:
 
         self.model = UniTimeBaseline(model).to(self.device)
 
-    # TODO: This method needs to be replaced to handle actual StarCaster benchmark
+    # TODO: This method needs to be replaced to handle actual CiK benchmark
     def get_evaluation_loader(self) -> Iterable:
         samples = []
         for sample in self.dataset.values():
