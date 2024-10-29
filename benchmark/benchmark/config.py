@@ -26,7 +26,7 @@ from pathlib import Path
 MODEL_STORAGE_PATH = Path(os.environ.get("CIK_MODEL_STORE", "./models"))
 if not os.path.exists(MODEL_STORAGE_PATH):
     os.makedirs(MODEL_STORAGE_PATH, exist_ok=True)
-DATA_STORAGE_PATH = Path(os.environ.get("CIK_DATA_STORE", "benchmark/data"))
+DATA_STORAGE_PATH = Path(os.environ.get("CIK_DATA_STORE", "./data"))
 if not DATA_STORAGE_PATH.exists():
     DATA_STORAGE_PATH.mkdir(parents=True, exist_ok=True)
 DOMINICK_STORAGE_PATH = os.environ.get(
@@ -81,8 +81,8 @@ LLAMA31_405B_API_KEY = os.environ.get("CIK_LLAMA31_405B_API_KEY", None)
 
 # Nixtla configuration
 # CIK_NIXTLA_BASE_URL
-# Must be set to the Nixtla API URL to use the TimeGEN baseline.
-# NIXTLA_API_KEY
-# Must be set to your Nixtla API key to use the TimeGEN baseline.
+# Must be set to the Azure API URL for the Nixtla TimeGEN baseline.
+# CIK_NIXTLA_API_KEY
+# Must be set to your Azure API key for the Nixtla TimeGEN baseline.
 NIXTLA_BASE_URL = os.environ.get("CIK_NIXTLA_BASE_URL", None)
 NIXTLA_API_KEY = os.environ.get("CIK_NIXTLA_API_KEY", None)
