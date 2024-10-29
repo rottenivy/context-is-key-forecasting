@@ -5,6 +5,12 @@
 ![banner](https://github.com/user-attachments/assets/ca15c5f6-a1cc-4db0-891b-767dad4f241e)
 
 
+## Overview of code
+
+* **Baselines:** All baseline code can be found [here](./benchmark/baselines).
+* **Tasks:** All baseline code can be found [here](./benchmark/tasks).
+* **Metrics:** All metric-related code can be found [here](./benchmark/metrics).
+* **Experiments:** Code used to run the experiments can be found [here](./experiments).
 
 
 ## Setting environment variables
@@ -29,7 +35,6 @@ Here is a list of all environment variables which the Context-is-Key benchmark w
 | **CIK_LLAMA31_405B_API_KEY**| API key for the Llama-3.1-405b API.                                     | None (Required for baseline)         |
 | **CIK_NIXTLA_BASE_URL**     | Azure API URL for the Nixtla TimeGEN baseline.                             | None (Required for baseline)         |
 | **CIK_NIXTLA_API_KEY**          | Azure API key for the Nixtla TimeGEN baseline.                          | None (Required for baseline)         |
-
 
 ## Citing this work
 
