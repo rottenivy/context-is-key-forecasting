@@ -71,6 +71,14 @@ OPENAI_API_KEY = os.environ.get("CIK_OPENAI_API_KEY", "")
 OPENAI_API_VERSION = os.environ.get("CIK_OPENAI_API_VERSION", None)
 OPENAI_AZURE_ENDPOINT = os.environ.get("CIK_OPENAI_AZURE_ENDPOINT", None)
 
+# Llama-405b configuration
+# CIK_LLAMA31_405B_URL
+# Must be set to the API URL for the Llama-3.1-405b baseline. We expect a vLLM server.
+# CIK_LLAMA31_405B_API_KEY
+# Must be set to the API key for your Llama-3.1-405b API
+LLAMA31_405B_URL = os.environ.get("CIK_LLAMA31_405B_URL", None)
+LLAMA31_405B_API_KEY = os.environ.get("CIK_LLAMA31_405B_API_KEY", None)
+
 # Nixtla configuration
 # CIK_NIXTLA_BASE_URL
 # Must be set to the Nixtla API URL to use the TimeGEN baseline.

@@ -15,6 +15,8 @@ from types import SimpleNamespace
 
 from .base import Baseline
 from ..config import (
+    LLAMA31_405B_URL,
+    LLAMA31_405B_API_KEY,
     OPENAI_API_KEY,
     OPENAI_API_VERSION,
     OPENAI_AZURE_ENDPOINT,
@@ -153,7 +155,7 @@ def llama_3_1_405b_instruct_client(
     """
 
     headers = {
-        "Authorization": f"Bearer {os.environ['LLAMA_31_405B_TOOLKIT_TOKEN']}",
+        "Authorization": f"Bearer {LLAMA31_405B_API_KEY}",
         "Content-Type": "application/json",
     }
 
@@ -166,7 +168,7 @@ def llama_3_1_405b_instruct_client(
     }
 
     response = requests.post(
-        "https://snow-research-tapes-vllm_llama405b.job.toolkit-sp.yul201.service-now.com/v1/chat/completions",
+        LLAMA31_405B_URL,
         headers=headers,
         json=payload,
         verify=False,
