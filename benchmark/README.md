@@ -1,6 +1,10 @@
-# Push-button Forecasting Benchmark
+# Context is Key: A Benchmark for Forecasting with Essential Textual Information
 
-<img width="946" alt="Push-button forecasting" src="https://github.com/ServiceNow/research-starcaster/assets/2374980/c3620848-7eda-46e3-bc11-6ed2d06022e4">
+📝 [[Paper]](https://arxiv.org/abs/2410.18959) 🌐 [[Website]](https://servicenow.github.io/context-is-key-forecasting) ✉️ [[Contact]](mailto:arjun.ashok@servicenow.com,andrew.williams1@servicenow.com,alexandre.drouin@servicenow.com)
+
+![banner](https://github.com/user-attachments/assets/ca15c5f6-a1cc-4db0-891b-767dad4f241e)
+
+
 
 
 ## Setting environment variables
