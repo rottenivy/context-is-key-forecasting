@@ -1,6 +1,6 @@
 # Context is Key: A Benchmark for Forecasting with Essential Textual Information
 
-📝 [[Paper]](https://arxiv.org/abs/2410.18959) 🌐 [[Website]](https://servicenow.github.io/context-is-key-forecasting) ✉️ [[Contact]](mailto:arjun.ashok@servicenow.com,andrew.williams1@servicenow.com,alexandre.drouin@servicenow.com)
+📝 [[Paper]](https://arxiv.org/abs/2410.18959) 🌐 [[Website]](https://servicenow.github.io/context-is-key-forecasting) ✉️ [[Contact]](mailto:arjun.ashok@servicenow.com,andrew.williams1@servicenow.com,alexandre.drouin@servicenow.com) [[Citation]](#citing-this-work)
 
 ![banner](https://github.com/user-attachments/assets/ca15c5f6-a1cc-4db0-891b-767dad4f241e)
 
@@ -29,3 +29,16 @@ Here is a list of all environment variables which the Context-is-Key benchmark w
 | **CIK_LLAMA31_405B_API_KEY**| API key for the Llama-3.1-405b API.                                     | None (Required for baseline)         |
 | **CIK_NIXTLA_BASE_URL**     | Azure API URL for the Nixtla TimeGEN baseline.                             | None (Required for baseline)         |
 | **CIK_NIXTLA_API_KEY**          | Azure API key for the Nixtla TimeGEN baseline.                          | None (Required for baseline)         |
+
+
+## Citing this work
+
+Please cite the following paper:
+```
+@article{williams2024context,
+  title={Context is Key: A Benchmark for Forecasting with Essential Textual Information},
+  author={Williams, Andrew Robert and Ashok, Arjun and Marcotte, {\'E}tienne and Zantedeschi, Valentina and Subramanian, Jithendaraa and Riachi, Roland and Requeima, James and Lacoste, Alexandre and Rish, Irina and Chapados, Nicolas and others},
+  journal={arXiv preprint arXiv:2410.18959},
+  year={2024}
+}
+```
