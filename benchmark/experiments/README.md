@@ -22,12 +22,3 @@ This is a command line tool to run experiments with baselines and produce report
 
 #### Summary table
 To generate a summary table with the results of multiple methods, simply make a json file with all the experiments you care about and call the command line tool. It will iterate through every single task/seed combination for all experiments (should be fast due to caching) and produce the final table. Note that you can add the `--skip-cache-miss` argument to skip any result that isn't currently computed (e.g., GPT failed due to some error but you don't want to re-query it right now).
-
-
-## exp_launcher.py
-
-This is a script that lists all experiments (json) in a directory (--expdir argument; default `./experiments`) and launches them on toolkit.
-
-* The json files are expected to be suffixed with either `_c<x>` or `_g<x>`, which respectively specify that the job should be run on x CPUs or GPUs (e.g., _g3 means 3 x GPUs).
-* The script will launch individual jobs on toolkit for each of the experiments and they will run in parallel.
-* You can use `python exp_launcher.py --killall` to kill all your running experiments (this will only kill what was launched by this script).
