@@ -389,40 +389,6 @@ def compile_results(results, cap=None):
     return results, missing, errors
 
 
-def upload_results(results_path):
-    import os
-    from datetime import datetime
-
-    access_token = os.environ["CIK_REPORT_ACCESS_TOKEN"]
-
-    # Create temporary directory
-    tmp_dir = Path(f"/tmp/upload_{int(datetime.now().timestamp())}")
-    os.makedirs(tmp_dir)
-
-    # Clone report repository
-    os.system(
-        f"git clone https://anon-forecast:{access_token}@github.com/anon-forecast/benchmark_report_dev.git {tmp_dir}/repo"
-    )
-
-    # Copy results to temporary directory
-    os.system(f"cp {results_path} {tmp_dir}/repo/results.csv")
-
-    # Push results to repository
-    os.chdir(tmp_dir / "repo")
-    os.system("git add results.csv")
-    os.system("git commit -m 'Update results'")
-    os.system("git push origin main")
-
-    # Clean up
-    os.chdir("/tmp")
-    os.system(f"rm -rf {tmp_dir}")
-
-    # Copy results to the cache path in a file tagged with current timestamp
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    destination_path = os.path.join(RESULT_CACHE_PATH, f"results_{timestamp}.csv")
-    os.system(f"cp {results_path} {destination_path}")
-
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -451,11 +417,6 @@ def main():
         "--skip-cache-miss",
         action="store_true",
         help="Skip tasks that have not already been computed",
-    )
-    parser.add_argument(
-        "--upload-results",
-        action="store_true",
-        help="Upload results to server (need to set CIK_REPORT_ACCESS_TOKEN environment variable)",
     )
     parser.add_argument(
         "--cap",
@@ -538,30 +499,6 @@ def main():
         print(f"Saving errors to {output_folder/exp_label}/errors.json")
         with open(output_folder / exp_label / "errors.json", "w") as f:
             json.dump(errors, f)
-
-    # Compile and upload results to server
-    if args.upload_results:
-        print("Uploading of results temporarily disabled")
-        # print("Compiling all results and uploading them...")
-        # # Compile results
-        # all_results, missing, errors = compile_results(all_results, cap=args.cap)
-        # print(all_results)
-        # print("Number of missing results:", {k: len(v) for k, v in missing.items()})
-        # print("Number of errors:", {k: len(v) for k, v in errors.items()})
-
-        # # Save results to CSV
-        # filename = "results.csv" if not args.cap else f"results-cap-{args.cap}.csv"
-        # print(f"Saving results to {output_folder}/{filename}")
-        # all_results.to_csv(output_folder / filename)
-        # print(f"Saving missing results to {output_folder}/missing.json")
-        # with open(output_folder / "missing.json", "w") as f:
-        #     json.dump(missing, f)
-        # print(f"Saving errors to {output_folder}/errors.json")
-        # with open(output_folder / "errors.json", "w") as f:
-        #     json.dump(errors, f)
-        #     print("Uploading results to server...")
-        #     upload_results(output_folder / "results.csv" if not args.cap else f"results-cap-{args.cap}.csv")
-        #     print("Results uploaded!")
 
 
 if __name__ == "__main__":
