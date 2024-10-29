@@ -40,10 +40,13 @@ Here is a list of all environment variables which the Context-is-Key benchmark w
 
 Please cite the following paper:
 ```
-@article{williams2024context,
-  title={Context is Key: A Benchmark for Forecasting with Essential Textual Information},
-  author={Williams, Andrew Robert and Ashok, Arjun and Marcotte, {\'E}tienne and Zantedeschi, Valentina and Subramanian, Jithendaraa and Riachi, Roland and Requeima, James and Lacoste, Alexandre and Rish, Irina and Chapados, Nicolas and others},
-  journal={arXiv preprint arXiv:2410.18959},
-  year={2024}
+@misc{williams2024contextkeybenchmarkforecasting,
+      title={Context is Key: A Benchmark for Forecasting with Essential Textual Information}, 
+      author={Andrew Robert Williams and Arjun Ashok and Étienne Marcotte and Valentina Zantedeschi and Jithendaraa Subramanian and Roland Riachi and James Requeima and Alexandre Lacoste and Irina Rish and Nicolas Chapados and Alexandre Drouin},
+      year={2024},
+      eprint={2410.18959},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2410.18959}, 
 }
 ```
