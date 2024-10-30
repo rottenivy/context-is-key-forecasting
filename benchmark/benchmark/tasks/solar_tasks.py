@@ -97,7 +97,7 @@ class BaseHalfDayNSRDBSolarForecastTask(UnivariateCRPSTask):
         return -1
 
     @property
-    def max_crazycast_batch_size(self) -> int:
+    def max_directprompt_batch_size(self) -> int:
         """
         If set, only request that many samples at once when using a method using Direct Prompting.
         Mainly used to avoid crashing the Llama3-405b server.
@@ -242,7 +242,7 @@ class BaseHalfDaySolarForecastTask(UnivariateCRPSTask):
         return -1
 
     @property
-    def max_crazycast_batch_size(self) -> int:
+    def max_directprompt_batch_size(self) -> int:
         """
         If set, only request that many samples at once when using a method using Direct Prompting.
         Mainly used to avoid crashing the Llama3-405b server.

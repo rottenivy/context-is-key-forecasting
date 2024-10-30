@@ -51,7 +51,7 @@ def get_df(input_folder) -> pd.DataFrame:
     if df.variance.isna().any():
         logging.warning(
             f"There are {df.variance.isna().sum()} missing variance entries, "
-            + "please regenerate the metrics with STARCASTER_METRIC_COMPUTE_VARIANCE=1 environment variable."
+            + "please regenerate the metrics with CIK_METRIC_COMPUTE_VARIANCE=1 environment variable."
         )
 
     return df

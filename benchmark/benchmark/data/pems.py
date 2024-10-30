@@ -14,13 +14,8 @@ import datasets
 
 import zipfile
 
-from benchmark.config import DATA_STORAGE_PATH
+from benchmark.config import HF_CACHE_DIR, TRAFFIC_STORAGE_PATH
 
-HF_CACHE_DIR = os.environ.get("HF_HOME", os.path.join(DATA_STORAGE_PATH, "hf_cache"))
-
-TRAFFIC_STORAGE_PATH = os.environ.get(
-    "TRAFFIC_DATA_STORE", os.path.join(DATA_STORAGE_PATH, "traffic_data")
-)
 TRAFFIC_CSV_FILE = "traffic_merged_sensor_data.csv"
 TRAFFIC_CSV_PATH = os.path.join(TRAFFIC_STORAGE_PATH, TRAFFIC_CSV_FILE)
 

@@ -1,5 +1,5 @@
 """
-Open AI based LLM Process
+Direct prompt method
 
 """
 
@@ -15,6 +15,8 @@ from types import SimpleNamespace
 
 from .base import Baseline
 from ..config import (
+    LLAMA31_405B_URL,
+    LLAMA31_405B_API_KEY,
     OPENAI_API_KEY,
     OPENAI_API_VERSION,
     OPENAI_AZURE_ENDPOINT,
@@ -22,13 +24,13 @@ from ..config import (
 )
 from .utils import extract_html_tags
 
-from .hf_utils.cc_hf_api import LLM_MAP, get_model_and_tokenizer, hf_generate
+from .hf_utils.dp_hf_api import LLM_MAP, get_model_and_tokenizer, hf_generate
 
 # For OpenRouter
 from openai import OpenAI
 from os import getenv
 
-logger = logging.getLogger("CrazyCast")
+logger = logging.getLogger("DirectPrompt")
 
 # As of 28 Sep 2024
 OPENROUTER_COSTS = {
@@ -153,7 +155,7 @@ def llama_3_1_405b_instruct_client(
     """
 
     headers = {
-        "Authorization": f"Bearer {os.environ['LLAMA_31_405B_TOOLKIT_TOKEN']}",
+        "Authorization": f"Bearer {LLAMA31_405B_API_KEY}",
         "Content-Type": "application/json",
     }
 
@@ -166,7 +168,7 @@ def llama_3_1_405b_instruct_client(
     }
 
     response = requests.post(
-        "https://snow-research-tapes-vllm_llama405b.job.toolkit-sp.yul201.service-now.com/v1/chat/completions",
+        LLAMA31_405B_URL,
         headers=headers,
         json=payload,
         verify=False,
@@ -182,7 +184,7 @@ def llama_3_1_405b_instruct_client(
     return dict_to_obj(response.json())
 
 
-class CrazyCast(Baseline):
+class DirectPrompt(Baseline):
     """
     A simple baseline that uses any instruction-tuned LLM to produce forecastss
 
@@ -406,7 +408,7 @@ Example:
         total_tokens = {"input": 0, "output": 0}
         valid_forecasts = []
 
-        max_batch_size = task_instance.max_crazycast_batch_size
+        max_batch_size = task_instance.max_directprompt_batch_size
         if max_batch_size is not None:
             batch_size = min(default_batch_size, max_batch_size)
             n_retries = self.n_retries + default_batch_size // batch_size
