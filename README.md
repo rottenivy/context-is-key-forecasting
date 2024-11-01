@@ -2,7 +2,8 @@
 
 📝 [[Paper]](https://arxiv.org/abs/2410.18959) 🌐 [[Website]](https://servicenow.github.io/context-is-key-forecasting) ✉️ [[Contact]](mailto:arjun.ashok@servicenow.com,andrew.williams1@servicenow.com,alexandre.drouin@servicenow.com) ⭐ [[Citation]](#citing-this-work)
 
-![banner](https://github.com/user-attachments/assets/ca15c5f6-a1cc-4db0-891b-767dad4f241e)
+![banner](https://github.com/user-attachments/assets/6242217e-c245-4a97-a61b-324c13fe4fa8)
+
 
 
 ## Overview of code
