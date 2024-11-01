@@ -8,9 +8,9 @@
 
 ## Overview of code
 
-* **Baselines:** All baseline code can be found [here](./benchmark/baselines).
-* **Tasks:** All baseline code can be found [here](./benchmark/tasks).
-* **Metrics:** All metric-related code can be found [here](./benchmark/metrics).
+* **Baselines:** All baseline code can be found [here](./cik_benchmark/baselines).
+* **Tasks:** All baseline code can be found [here](./cik_benchmark/tasks).
+* **Metrics:** All metric-related code can be found [here](./cik_benchmark/metrics).
 * **Experiments:** Code used to run the experiments can be found [here](./experiments).
 
 
