@@ -4,8 +4,6 @@
 
 ![banner](https://github.com/user-attachments/assets/6242217e-c245-4a97-a61b-324c13fe4fa8)
 
-
-
 ## Overview of code
 
 * **Baselines:** All baseline code can be found [here](./cik_benchmark/baselines).

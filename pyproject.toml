@@ -3,26 +3,48 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "benchmark"
-description = "A benchmark for natural language context-aided forecasting"
-authors = [
-    {name = "TBD"},
-]
+name = "cik-benchmark"
+description = "Context is Key: A Benchmark for Forecasting with Essential Textual Information"
 readme = "README.md"
+long_description_content_type = "text/markdown"
 requires-python = ">3.9"
 license = {text = "Apache-2.0"}
+
+authors = [
+    {name = "Andrew Robert Williams"},
+    {name = "Arjun Ashok"},
+    {name = "Étienne Marcotte"},
+    {name = "Valentina Zantedeschi"},
+    {name = "Jithendaraa Subramanian"},
+    {name = "Roland Riachi"},
+    {name = "James Requeima"},
+    {name = "Alexandre Lacoste"},
+    {name = "Irina Rish"},
+    {name = "Nicolas Chapados"},
+    {name = "Alexandre Drouin"},
+]
+maintainers = [
+    {name = "Andrew Robert Williams", email = "andrew.williams1@servicenow.com"},
+    {name = "Arjun Ashok", email = "arjun.ashok@servicenow.com"},
+    {name = "Alexandre Drouin", email = "alexandre@servicenow.com"},
+]
+
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 3 - Alpha",
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
     "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Software Development :: Libraries :: Python Modules",
     "License :: OSI Approved :: Apache Software License",
 ]
+
 dynamic = ["dependencies", "optional-dependencies", "version"]
 
 [project.urls]
-homepage = "https://github.com/ServiceNow/research-starcaster"
+homepage = "https://github.com/ServiceNow/context-is-key-forecasting/"
 
 [tool.setuptools]
 packages = { find = { where = ["."] } }
@@ -32,9 +54,12 @@ include-package-data = true
 "benchmark.data.dominicks" = ["*.json"]
 
 [tool.setuptools.dynamic]
-version = {attr = "benchmark.__version__"}
+version = {attr = "cik_benchmark.__version__"}
 dependencies = {file = ["requirements.txt"]}
-optional-dependencies = {dev = { file = ["requirements-dev.txt"] }, r = { file = ["requirements-r.txt"] }}
+optional-dependencies = {
+    dev = {file = ["requirements-dev.txt"]},
+    r = {file = ["requirements-r.txt"]}
+}
 
 [tool.black]
 include = '\.pyi?$'
