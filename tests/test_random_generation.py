@@ -1,6 +1,6 @@
 import pytest
 
-from benchmark import ALL_TASKS
+from cik_benchmark import ALL_TASKS
 
 
 def _are_instances_equal(instance_1, instance_2):

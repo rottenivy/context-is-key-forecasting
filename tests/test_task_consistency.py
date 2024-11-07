@@ -6,9 +6,9 @@ Unit tests that check if tasks are consistent with our standards
 import pandas as pd
 import pytest
 
-from benchmark import ALL_TASKS, WEIGHT_CLUSTERS
-from benchmark.base import BaseTask, ALLOWED_CONTEXT_SOURCES, ALLOWED_SKILLS
-from benchmark.utils import get_all_parent_classes
+from cik_benchmark import ALL_TASKS, WEIGHT_CLUSTERS
+from cik_benchmark.base import BaseTask, ALLOWED_CONTEXT_SOURCES, ALLOWED_SKILLS
+from cik_benchmark.utils import get_all_parent_classes
 
 
 @pytest.mark.parametrize("task", ALL_TASKS)

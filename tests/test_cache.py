@@ -6,8 +6,8 @@ import shutil
 from pathlib import Path
 from time import sleep
 
-from benchmark.utils.cache.lock import DirLock
-from benchmark.utils.cache.disk_cache import HDF5DiskCache
+from cik_benchmark.utils.cache.lock import DirLock
+from cik_benchmark.utils.cache.disk_cache import HDF5DiskCache
 
 
 @pytest.fixture

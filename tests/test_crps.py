@@ -5,7 +5,7 @@ Unit test for the CRPS metric.
 import numpy as np
 import pytest
 
-from benchmark.metrics.crps import crps
+from cik_benchmark.metrics.crps import crps
 
 
 def crps_slow(target: np.array, samples: np.array) -> np.float32:

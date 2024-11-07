@@ -16,7 +16,7 @@ from ..window_selection import (
 )
 from . import WeightCluster
 
-from benchmark.data.pems import (
+from cik_benchmark.data.pems import (
     load_traffic_series,
     get_traffic_prediction_length,
     get_traffic_history_factor,

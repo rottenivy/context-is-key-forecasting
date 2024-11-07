@@ -8,7 +8,7 @@ from ..config import DATA_STORAGE_PATH
 from ..utils import get_random_window_univar, datetime_to_str
 from . import WeightCluster
 
-from benchmark.data.pems import (
+from cik_benchmark.data.pems import (
     load_traffic_series,
     get_traffic_prediction_length,
     get_traffic_history_factor,

@@ -1,4 +1,4 @@
-from benchmark import ALL_TASKS
+from cik_benchmark import ALL_TASKS
 
 
 print("Downloading datasets for all tasks...")

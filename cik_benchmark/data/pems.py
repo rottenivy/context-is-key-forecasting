@@ -14,7 +14,7 @@ import datasets
 
 import zipfile
 
-from benchmark.config import HF_CACHE_DIR, TRAFFIC_STORAGE_PATH
+from cik_benchmark.config import HF_CACHE_DIR, TRAFFIC_STORAGE_PATH
 
 TRAFFIC_CSV_FILE = "traffic_merged_sensor_data.csv"
 TRAFFIC_CSV_PATH = os.path.join(TRAFFIC_STORAGE_PATH, TRAFFIC_CSV_FILE)
