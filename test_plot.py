@@ -1,17 +1,17 @@
 from pathlib import Path
 
-from benchmark.predictable_grocer_shocks import (
+from cik_benchmark.predictable_grocer_shocks import (
     PredictableGrocerPersistentShockUnivariateTask,
 )
-from benchmark.tasks.causal_chambers import (
+from cik_benchmark.tasks.causal_chambers import (
     ExplicitPressureFromSpeedTask,
     SpeedFromLoadTask,
 )
-from benchmark.baselines.statsmodels import (
+from cik_benchmark.baselines.statsmodels import (
     ExponentialSmoothingForecaster,
 )
 
-from benchmark.evaluation import evaluate_task
+from cik_benchmark.evaluation import evaluate_task
 
 model = ExponentialSmoothingForecaster()
 

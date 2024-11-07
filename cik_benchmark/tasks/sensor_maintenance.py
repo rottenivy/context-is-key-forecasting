@@ -17,7 +17,7 @@ from . import WeightCluster
 get_dataset = partial(get_dataset, path=DATA_STORAGE_PATH)
 
 
-from benchmark.data.pems import (
+from cik_benchmark.data.pems import (
     load_traffic_series,
     get_traffic_prediction_length,
     get_traffic_history_factor,

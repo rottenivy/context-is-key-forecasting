@@ -1,9 +1,9 @@
 import pandas as pd
 import os
 
-from benchmark.base import UnivariateCRPSTask
+from cik_benchmark.base import UnivariateCRPSTask
 
-from benchmark.data.pems import (
+from cik_benchmark.data.pems import (
     download_instances,
     INSTANCES_DIR,
 )

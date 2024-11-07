@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 import pytest
 
-from benchmark.utils import datetime_to_str
+from cik_benchmark.utils import datetime_to_str
 
 
 @pytest.mark.parametrize(

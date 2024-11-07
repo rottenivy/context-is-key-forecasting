@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
-from benchmark import ALL_TASKS
+from cik_benchmark import ALL_TASKS
 
 TASKS_STR_TO_TASK = {x.__name__: x for x in ALL_TASKS}
 

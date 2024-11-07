@@ -2,15 +2,15 @@ import pytest
 import types
 
 
-from benchmark.baselines.direct_prompt import DirectPrompt
-from benchmark.baselines.lag_llama import lag_llama
-from benchmark.baselines.llm_processes import LLMPForecaster
-from benchmark.baselines.naive import oracle_baseline, random_baseline
-from benchmark.baselines.statsmodels import (
+from cik_benchmark.baselines.direct_prompt import DirectPrompt
+from cik_benchmark.baselines.lag_llama import lag_llama
+from cik_benchmark.baselines.llm_processes import LLMPForecaster
+from cik_benchmark.baselines.naive import oracle_baseline, random_baseline
+from cik_benchmark.baselines.statsmodels import (
     ETSModelForecaster,
     ExponentialSmoothingForecaster,
 )
-from benchmark.utils import get_all_parent_classes
+from cik_benchmark.utils import get_all_parent_classes
 
 
 ALL_BASELINES = [

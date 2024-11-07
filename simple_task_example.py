@@ -3,7 +3,7 @@ import pandas as pd
 import textwrap
 import numpy as np
 
-from benchmark.sensor_maintenance import SensorMaintenanceInPredictionTask
+from cik_benchmark.sensor_maintenance import SensorMaintenanceInPredictionTask
 
 
 def plot_forecast_univariate(task, filename):

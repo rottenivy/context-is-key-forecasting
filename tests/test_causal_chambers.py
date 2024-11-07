@@ -5,7 +5,7 @@ Unit tests for causal chambers tasks
 
 import pandas as pd
 
-from benchmark.tasks.causal_chambers import SpeedFromLoadTask
+from cik_benchmark.tasks.causal_chambers import SpeedFromLoadTask
 
 
 def test_deterministic_instance():

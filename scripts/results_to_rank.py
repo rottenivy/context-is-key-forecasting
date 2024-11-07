@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 import argparse
 from collections import defaultdict
-from benchmark import TASK_NAME_TO_WEIGHT, ALL_TASKS
+from cik_benchmark import TASK_NAME_TO_WEIGHT, ALL_TASKS
 
 
 parser = argparse.ArgumentParser()

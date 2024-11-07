@@ -5,8 +5,8 @@ import pandas as pd
 import plotly.graph_objects as go
 import seaborn as sns
 
-from benchmark import ALL_TASKS
-from benchmark.base import ALLOWED_SKILLS
+from cik_benchmark import ALL_TASKS
+from cik_benchmark.base import ALLOWED_SKILLS
 from datetime import datetime
 from io import BytesIO
 

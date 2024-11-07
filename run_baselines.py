@@ -12,21 +12,21 @@ import pandas as pd
 
 from collections import defaultdict
 from pathlib import Path
-from benchmark.baselines.direct_prompt import DirectPrompt
-from benchmark.baselines.lag_llama import lag_llama
-from benchmark.baselines.chronos import ChronosForecaster
-from benchmark.baselines.moirai import MoiraiForecaster
-from benchmark.baselines.llm_processes import LLMPForecaster
-from benchmark.baselines.timellm import TimeLLMForecaster
-from benchmark.baselines.unitime import UniTimeForecaster
-from benchmark.baselines.timegen import timegen1
-from benchmark.baselines.naive import oracle_baseline, random_baseline
-from benchmark.baselines.statsmodels import (
+from cik_benchmark.baselines.direct_prompt import DirectPrompt
+from cik_benchmark.baselines.lag_llama import lag_llama
+from cik_benchmark.baselines.chronos import ChronosForecaster
+from cik_benchmark.baselines.moirai import MoiraiForecaster
+from cik_benchmark.baselines.llm_processes import LLMPForecaster
+from cik_benchmark.baselines.timellm import TimeLLMForecaster
+from cik_benchmark.baselines.unitime import UniTimeForecaster
+from cik_benchmark.baselines.timegen import timegen1
+from cik_benchmark.baselines.naive import oracle_baseline, random_baseline
+from cik_benchmark.baselines.statsmodels import (
     ExponentialSmoothingForecaster,
 )
-from benchmark.baselines.r_forecast import R_ETS, R_Arima
-from benchmark.evaluation import evaluate_all_tasks
-from benchmark.config import RESULT_CACHE_PATH
+from cik_benchmark.baselines.r_forecast import R_ETS, R_Arima
+from cik_benchmark.evaluation import evaluate_all_tasks
+from cik_benchmark.config import RESULT_CACHE_PATH
 
 
 logging.basicConfig(level=logging.INFO)
