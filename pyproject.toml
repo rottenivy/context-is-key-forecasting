@@ -6,7 +6,6 @@ build-backend = "setuptools.build_meta"
 name = "cik-benchmark"
 description = "Context is Key: A Benchmark for Forecasting with Essential Textual Information"
 readme = "README.md"
-long_description_content_type = "text/markdown"
 requires-python = ">3.9"
 license = {text = "Apache-2.0"}
 
@@ -56,10 +55,7 @@ include-package-data = true
 [tool.setuptools.dynamic]
 version = {attr = "cik_benchmark.__version__"}
 dependencies = {file = ["requirements.txt"]}
-optional-dependencies = {
-    dev = {file = ["requirements-dev.txt"]},
-    r = {file = ["requirements-r.txt"]}
-}
+optional-dependencies = {dev = { file = ["requirements-dev.txt"] }, r = { file = ["requirements-r.txt"] }}
 
 [tool.black]
 include = '\.pyi?$'
