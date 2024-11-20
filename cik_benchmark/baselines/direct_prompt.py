@@ -71,32 +71,28 @@ def dict_to_obj(data):
 
 
 @torch.inference_mode()
-def huggingface_model_client(
+def huggingface_instruct_model_client(
     llm, tokenizer, model, messages, n=1, max_tokens=10000, temperature=1.0, **kwargs
 ):
-    # Process messages into a prompt
-    prompt = ""
-    for message in messages:
-        role = message["role"]
-        content = message["content"]
-        if role == "system":
-            prompt += f"{content}\n"
-        elif role == "user":
-            prompt += f"{content}\n"
+    text = tokenizer.apply_chat_template(
+        messages, tokenize=False, add_generation_prompt=True
+    )
 
-    responses = hf_generate(
-        llm,
-        tokenizer,
-        prompt,
-        batch_size=n,
-        temp=temperature,
-        top_p=0.9,
-        max_new_tokens=max_tokens,
+    model_inputs = tokenizer([text], return_tensors="pt").to(llm.device)
+    batch = {k: v.repeat(n, 1) for k, v in model_inputs.items()}
+    num_input_ids = batch["input_ids"].shape[1]
+
+    generated_ids = llm.generate(
+        **batch, temperature=temperature, max_new_tokens=max_tokens
+    )
+
+    batch_responses = tokenizer.batch_decode(
+        generated_ids[:, num_input_ids:], skip_special_tokens=True
     )
 
     # Now extract the assistant's reply
     choices = []
-    for response_text in responses:
+    for response_text in batch_responses:
         # Create a message object
         message = SimpleNamespace(content=response_text)
         # Create a choice object
@@ -110,9 +106,9 @@ def huggingface_model_client(
     )
 
     # Create a response object
-    response = SimpleNamespace(choices=choices, usage=usage)
+    final_response = SimpleNamespace(choices=choices, usage=usage)
 
-    return response
+    return final_response
 
 
 def openrouter_client(model, messages, n=1, max_tokens=10000, temperature=1.0):
@@ -124,7 +120,16 @@ def openrouter_client(model, messages, n=1, max_tokens=10000, temperature=1.0):
         base_url="https://openrouter.ai/api/v1",
         api_key=getenv("OPENROUTER_API_KEY"),
     )
-    model_from = "meta-llama" if model.startswith("llama") else "mistralai"
+    if model[11:].startswith("llama"):
+        model_from = "meta-llama"
+    elif (
+        model[11:].startswith("mist")
+        or model[11:].startswith("mixt")
+        or model[11:].startswith("Mist")
+    ):
+        model_from = "mistralai"
+    elif model[11:].startswith("qwen"):
+        model_from = "qwen"
     completion = client.chat.completions.create(
         model=f"{model_from}/{model[11:]}",  # exclude "openrouter-" from the model
         messages=messages,
@@ -227,12 +232,12 @@ class DirectPrompt(Baseline):
         self.model = model
         self.use_context = use_context
         self.fail_on_invalid = fail_on_invalid
-        if model == "llama-3.1-405b-instruct":
+        if model == "llama-3.1-405b-instruct" or model == "llama-3.1-405b":
             self.n_retries = 10
         elif model.startswith("openrouter-"):
-            self.n_retries = 15
+            self.n_retries = 50  # atleast 25 required since batch size is 1
         else:
-            self.n_retries = 3  # Default for GPT-4o
+            self.n_retries = n_retries
         self.batch_size = batch_size
         self.batch_size_on_retry = batch_size_on_retry
         self.token_cost = token_cost
@@ -282,7 +287,7 @@ class DirectPrompt(Baseline):
 
         elif self.model in LLM_MAP.keys():
             return partial(
-                huggingface_model_client,
+                huggingface_instruct_model_client,
                 llm=self.llm,
                 tokenizer=self.tokenizer,
                 temperature=self.temperature,
@@ -463,26 +468,26 @@ Example:
                         # Make string
                         model_name = self.model + "-" + provider
                         # Compute costs with Openrouter cost dict
-                        input_cost = (
-                            total_tokens["input"]
-                            / 1000
-                            * OPENROUTER_COSTS[model_name]["input"]
-                        )
-                        output_cost = (
-                            total_tokens["output"]
-                            / 1000
-                            * OPENROUTER_COSTS[model_name]["input"]
-                        )
-                        current_cost = round(input_cost + output_cost, 2)
-                        logger.info(f"Forecast cost: {current_cost}$")
+                        if model_name in OPENROUTER_COSTS:
+                            input_cost = (
+                                total_tokens["input"]
+                                / 1000
+                                * OPENROUTER_COSTS[model_name]["input"]
+                            )
+                            output_cost = (
+                                total_tokens["output"]
+                                / 1000
+                                * OPENROUTER_COSTS[model_name]["input"]
+                            )
+                            current_cost = round(input_cost + output_cost, 2)
+                            logger.info(f"Forecast cost: {current_cost}$")
+                        else:
+                            input_cost = output_cost = current_cost = 0
+                            logger.info(f"Cost not recorded")
 
                         self.total_input_cost += input_cost
                         self.total_output_cost += output_cost
                         self.total_cost += current_cost
-                        total_tokens = {
-                            "input": 0,
-                            "output": 0,
-                        }  # As cost for current tokens has been accounted for, reset total_tokens
                 except Exception as e:
                     logger.info("Sample rejected due to invalid format.")
                     logger.debug(f"Rejection details: {e}")
