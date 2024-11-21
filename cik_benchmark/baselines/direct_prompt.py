@@ -114,7 +114,7 @@ def huggingface_instruct_model_client(
     # Make generation pipeline
     pipe = pipeline(
         task="text-generation",
-        model=model,
+        model=llm,
         tokenizer=tokenizer,
         device_map="auto",
     )
