@@ -20,3 +20,4 @@ tenacity
 h5py
 transformers>4.4.1
 sentencepiece
+lm-format-enforcer
