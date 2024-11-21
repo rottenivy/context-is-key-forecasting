@@ -2,7 +2,7 @@
 Direct prompt method
 
 """
-
+import inspect
 import logging
 import numpy as np
 import os
@@ -11,6 +11,7 @@ import requests
 from functools import partial
 import time
 
+from transformers import pipeline
 from types import SimpleNamespace
 
 from .base import Baseline
@@ -70,31 +71,71 @@ def dict_to_obj(data):
         return data
 
 
+import re
+from lmformatenforcer import JsonSchemaParser, RegexParser
+from lmformatenforcer.integrations.transformers import (
+    build_transformers_prefix_allowed_tokens_fn,
+)
+
+
 @torch.inference_mode()
 def huggingface_instruct_model_client(
-    llm, tokenizer, model, messages, n=1, max_tokens=10000, temperature=1.0, **kwargs
+    llm,
+    tokenizer,
+    model,
+    messages,
+    n=1,
+    max_tokens=10000,
+    temperature=1.0,
+    constrained_decoding=True,
+    future_timestamps=None,
+    **kwargs,
 ):
-    text = tokenizer.apply_chat_template(
-        messages, tokenize=False, add_generation_prompt=True
+    if constrained_decoding:
+        assert (
+            future_timestamps is not None
+        ), "Future timestamps must be provided for constrained decoding"
+
+    def constrained_decoding_regex(required_timestamps):
+        """
+        Generates a regular expression to force the model output
+        to satisfy the required format and provide values for
+        all required timestamps
+
+        """
+        timestamp_regex = "".join(
+            [
+                r"\(\s*{}\s*,\s*[-+]?\d+(\.\d+)?\)\n".format(re.escape(ts))
+                for ts in required_timestamps
+            ]
+        )
+        return r"<forecast>\n{}<\/forecast>".format(timestamp_regex)
+
+    # Make generation pipeline
+    pipe = pipeline(
+        task="text-generation",
+        model=llm,
+        tokenizer=tokenizer,
+        device_map="auto",
     )
 
-    model_inputs = tokenizer([text], return_tensors="pt").to(llm.device)
-    batch = {k: v.repeat(n, 1) for k, v in model_inputs.items()}
-    num_input_ids = batch["input_ids"].shape[1]
-
-    generated_ids = llm.generate(
-        **batch, temperature=temperature, max_new_tokens=max_tokens
-    )
-
-    batch_responses = tokenizer.batch_decode(
-        generated_ids[:, num_input_ids:], skip_special_tokens=True
+    # Build a regex parser with the generated regex
+    parser = RegexParser(constrained_decoding_regex(future_timestamps))
+    prefix_function = build_transformers_prefix_allowed_tokens_fn(
+        pipe.tokenizer, parser
     )
 
     # Now extract the assistant's reply
     choices = []
-    for response_text in batch_responses:
+    for response in pipe(
+        [messages] * n,
+        max_length=max_tokens,
+        temperature=temperature,
+        prefix_allowed_tokens_fn=prefix_function,
+        batch_size=n,
+    ):
         # Create a message object
-        message = SimpleNamespace(content=response_text)
+        message = SimpleNamespace(content=response[0]["generated_text"][-1]["content"])
         # Create a choice object
         choice = SimpleNamespace(message=message)
         choices.append(choice)
@@ -208,6 +249,9 @@ class DirectPrompt(Baseline):
         If not None, the maximum batch size on the attemps (before the retries)
     batch_size_on_retry: int, default=5
         The batch size to use on retries
+    constrained_decoding: bool, default=True
+        If True, use constrained decoding to ensure the model returns the forecast in the expected format.
+        Note: this is only supported for HuggingFace models.
     token_cost: dict, default=None
             The cost of tokens used in the API call. If provided, the cost of the API call will be estimated.
             Expected keys are "input" and "output" for the price of input and output tokens, respectively.
@@ -224,11 +268,11 @@ class DirectPrompt(Baseline):
         n_retries=3,
         batch_size_on_retry=5,
         batch_size=None,
+        constrained_decoding=True,
         token_cost: dict = None,
         temperature: float = 1.0,
         dry_run: bool = False,
     ) -> None:
-
         self.model = model
         self.use_context = use_context
         self.fail_on_invalid = fail_on_invalid
@@ -240,6 +284,7 @@ class DirectPrompt(Baseline):
             self.n_retries = n_retries
         self.batch_size = batch_size
         self.batch_size_on_retry = batch_size_on_retry
+        self.constrained_decoding = constrained_decoding
         self.token_cost = token_cost
         self.total_input_cost = 0  # For OpenRouter
         self.total_output_cost = 0  # For OpenRouter
@@ -291,6 +336,7 @@ class DirectPrompt(Baseline):
                 llm=self.llm,
                 tokenizer=self.tokenizer,
                 temperature=self.temperature,
+                constrained_decoding=self.constrained_decoding,
             )
 
         else:
@@ -426,9 +472,23 @@ Example:
         while len(valid_forecasts) < n_samples and n_retries > 0:
             logger.info(f"Requesting forecast of {batch_size} samples from the model.")
             client_start_time = time.time()
-            chat_completion = self.client(
-                model=self.model, n=batch_size, messages=messages
-            )
+
+            # Pass future timestamps as kwarg in case the client supports constrained decoding
+            if "future_timestamps" in inspect.signature(self.client).parameters:
+                chat_completion = self.client(
+                    model=self.model,
+                    n=batch_size,
+                    messages=messages,
+                    # Pass future timestamps as kwarg in case the client supports constrained decoding
+                    future_timestamps=task_instance.future_time.index.strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    ).values,
+                )
+            else:
+                chat_completion = self.client(
+                    model=self.model, n=batch_size, messages=messages
+                )
+
             total_client_time += time.time() - client_start_time
             total_tokens["input"] += chat_completion.usage.prompt_tokens
             total_tokens["output"] += chat_completion.usage.completion_tokens
