@@ -80,10 +80,21 @@ from lmformatenforcer.integrations.transformers import (
 
 @torch.inference_mode()
 def huggingface_instruct_model_client(
-    llm, tokenizer, model, messages, n=1, max_tokens=10000, temperature=1.0, constrained_decoding=True, future_timestamps=None, **kwargs
+    llm,
+    tokenizer,
+    model,
+    messages,
+    n=1,
+    max_tokens=10000,
+    temperature=1.0,
+    constrained_decoding=True,
+    future_timestamps=None,
+    **kwargs,
 ):
     if constrained_decoding:
-        assert future_timestamps is not None, "Future timestamps must be provided for constrained decoding"
+        assert (
+            future_timestamps is not None
+        ), "Future timestamps must be provided for constrained decoding"
 
     def constrained_decoding_regex(required_timestamps):
         """
@@ -325,7 +336,7 @@ class DirectPrompt(Baseline):
                 llm=self.llm,
                 tokenizer=self.tokenizer,
                 temperature=self.temperature,
-                constrained_decoding=self.constrained_decoding
+                constrained_decoding=self.constrained_decoding,
             )
 
         else:
@@ -465,9 +476,13 @@ Example:
             # Pass future timestamps as kwarg in case the client supports constrained decoding
             if "future_timestamps" in inspect.signature(self.client).parameters:
                 chat_completion = self.client(
-                    model=self.model, n=batch_size, messages=messages,
+                    model=self.model,
+                    n=batch_size,
+                    messages=messages,
                     # Pass future timestamps as kwarg in case the client supports constrained decoding
-                    future_timestamps=task_instance.future_time.index.strftime("%Y-%m-%d %H:%M:%S").values
+                    future_timestamps=task_instance.future_time.index.strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    ).values,
                 )
             else:
                 chat_completion = self.client(
