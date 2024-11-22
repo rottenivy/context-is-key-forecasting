@@ -125,20 +125,12 @@ def get_model_and_tokenizer(llm_path, llm_type):
             device_map="auto",
             attn_implementation="flash_attention_2",
         )
-    elif "qwen" in llm_type:
-        model = AutoModelForCausalLM.from_pretrained(
-            llm_path, torch_dtype="auto", device_map="auto"
-        )
-    elif "Mistral-Small" in llm_type:
-        model = MistralForCausalLM.from_pretrained(
-            llm_path, device_map="auto", torch_dtype=torch.bfloat16
-        )
-    elif "Mistral-7B" in llm_type:
+    elif "qwen" in llm_type or "Mistral-7B" in llm_type or "falcon" in llm_type:
         model = AutoModelForCausalLM.from_pretrained(
             llm_path, torch_dtype=torch.bfloat16, device_map="auto"
         )
-    elif "falcon" in llm_type:
-        model = AutoModelForCausalLM.from_pretrained(
+    elif "Mistral-Small" in llm_type:
+        model = MistralForCausalLM.from_pretrained(
             llm_path, torch_dtype=torch.bfloat16, device_map="auto"
         )
     else:
