@@ -3,6 +3,8 @@ from transformers import (
     LlamaTokenizer,
     AutoModelForCausalLM,
     AutoTokenizer,
+    LlamaTokenizerFast,
+    MistralForCausalLM,
 )
 import torch
 import gc
@@ -21,6 +23,18 @@ LLM_MAP = {
     "gemma-2-9B-instruct": "google/gemma-2-9b-it",
     "gemma-2-27B": "google/gemma-2-27b",
     "gemma-2-27B-instruct": "google/gemma-2-27b-it",
+    # New models for the rebuttal
+    "qwen2.5-0.5B-Instruct": "Qwen/Qwen2.5-0.5B-Instruct",
+    "qwen2.5-1.5B-Instruct": "Qwen/Qwen2.5-1.5B-Instruct",
+    "qwen2.5-3B-Instruct": "Qwen/Qwen2.5-3B-Instruct",
+    "qwen2.5-7B-Instruct": "Qwen/Qwen2.5-7B-Instruct",
+    "qwen2.5-14B-Instruct": "Qwen/Qwen2.5-14B-Instruct",
+    "qwen2.5-32B-Instruct": "Qwen/Qwen2.5-32B-Instruct",
+    "qwen2.5-72B-Instruct": "Qwen/Qwen2.5-72B-Instruct",
+    "Mistral-Small-Instruct-2409": "mistralai/Mistral-Small-Instruct-2409",
+    "Mistral-7B-Instruct-v0.3": "mistralai/Mistral-7B-Instruct-v0.3",
+    "falcon-7b-instruct": "tiiuae/falcon-7b-instruct",
+    "falcon-40b-instruct": "tiiuae/falcon-40b-instruct",
 }
 
 
@@ -45,10 +59,19 @@ def get_tokenizer(llm_path, llm_type):
             llm_path,
             trust_remote_code=True,
         )
-    elif "mixtral" in llm_type or "gemma" in llm_type:
+    elif "mixtral" in llm_type or "gemma" in llm_type or "qwen" in llm_type:
         tokenizer = AutoTokenizer.from_pretrained(
             llm_path,
         )
+    elif "Mistral-Small" in llm_type:
+        tokenizer = LlamaTokenizerFast.from_pretrained(
+            "mistralai/Mistral-Small-Instruct-2409"
+        )
+        tokenizer.pad_token = tokenizer.eos_token
+    elif "Mistral-7B" in llm_type:
+        tokenizer = AutoTokenizer.from_pretrained(llm_path)
+    elif "falcon" in llm_type:
+        tokenizer = AutoTokenizer.from_pretrained(llm_path)
     else:
         assert False
 
@@ -101,6 +124,22 @@ def get_model_and_tokenizer(llm_path, llm_type):
             llm_path,
             device_map="auto",
             attn_implementation="flash_attention_2",
+        )
+    elif "qwen" in llm_type:
+        model = AutoModelForCausalLM.from_pretrained(
+            llm_path, torch_dtype="auto", device_map="auto"
+        )
+    elif "Mistral-Small" in llm_type:
+        model = MistralForCausalLM.from_pretrained(
+            llm_path, device_map="auto", torch_dtype=torch.bfloat16
+        )
+    elif "Mistral-7B" in llm_type:
+        model = AutoModelForCausalLM.from_pretrained(
+            llm_path, torch_dtype=torch.bfloat16, device_map="auto"
+        )
+    elif "falcon" in llm_type:
+        model = AutoModelForCausalLM.from_pretrained(
+            llm_path, torch_dtype=torch.bfloat16, device_map="auto"
         )
     else:
         assert False
