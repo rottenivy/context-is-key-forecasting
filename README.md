@@ -1,6 +1,10 @@
 # Context is Key: A Benchmark for Forecasting with Essential Textual Information
 
-📝 [[Paper]](https://arxiv.org/abs/2410.18959) 🌐 [[Website]](https://servicenow.github.io/context-is-key-forecasting) ✉️ [[Contact]](mailto:arjun.ashok@servicenow.com,andrew.williams1@servicenow.com,alexandre.drouin@servicenow.com) ⭐ [[Citation]](#citing-this-work)
+📄 [Paper](https://arxiv.org/abs/2410.18959) -
+🌐 [Website](https://servicenow.github.io/context-is-key-forecasting) -
+✉️ [Contact](mailto:arjun.ashok@servicenow.com,andrew.williams1@servicenow.com,alexandre.drouin@servicenow.com) -
+🌟 [Contributors](#contributors) -
+📝 [Citation](#citing-this-work)
 
 ![poster](https://github.com/user-attachments/assets/523ae60a-6c3d-42bf-80b8-83e23d8e7ab0)
 
@@ -34,6 +38,10 @@ Here is a list of all environment variables which the Context-is-Key benchmark w
 | **CIK_LLAMA31_405B_API_KEY**| API key for the Llama-3.1-405b API.                                     | None (Required for baseline)         |
 | **CIK_NIXTLA_BASE_URL**     | Azure API URL for the Nixtla TimeGEN baseline.                             | None (Required for baseline)         |
 | **CIK_NIXTLA_API_KEY**          | Azure API key for the Nixtla TimeGEN baseline.                          | None (Required for baseline)         |
+
+## 🌟 Contributors
+
+[![CiK contributors](https://contrib.rocks/image?repo=ServiceNow/context-is-key-forecasting&max=2000)](https://github.com/ServiceNow/context-is-key-forecasting/graphs/contributors)
 
 ## Citing this work
 
