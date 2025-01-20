@@ -200,29 +200,14 @@ def experiment_directprompt(
         "gpt-35-turbo": {"input": 0.002, "output": 0.002},
         "gpt-3.5-turbo": {"input": 0.003, "output": 0.006},  # OpenAI API
         "gpt-4o-mini": {"input": 0.00015, "output": 0.0006},  # OpenAI API
-        "llama-3.1-405b": {"input": 0.0, "output": 0.0},  # Toolkit
-        "llama-3.1-405b-instruct": {"input": 0.0, "output": 0.0},  # Toolkit
-        "llama-2-7B": {"input": 0.0, "output": 0.0},  # Toolkit
-        "llama-2-70B": {"input": 0.0, "output": 0.0},  # Toolkit
-        "llama-3-8B": {"input": 0.0, "output": 0.0},  # Toolkit
-        "llama-3-8B-instruct": {"input": 0.0, "output": 0.0},  # Toolkit
-        "llama-3-70B": {"input": 0.0, "output": 0.0},  # Toolkit
-        "llama-3-70B-instruct": {"input": 0.0, "output": 0.0},  # Toolkit
-        "mixtral-8x7B": {"input": 0.0, "output": 0.0},  # Toolkit
-        "mixtral-8x7B-instruct": {"input": 0.0, "output": 0.0},  # Toolkit
-        "phi-3-mini-128k-instruct": {"input": 0.0, "output": 0.0},  # Toolkit
-        "gemma-2-9B": {"input": 0.0, "output": 0.0},  # Toolkit
-        "gemma-2-9B-instruct": {"input": 0.0, "output": 0.0},  # Toolkit
-        "gemma-2-27B": {"input": 0.0, "output": 0.0},  # Toolkit
-        "gemma-2-27B-instruct": {"input": 0.0, "output": 0.0},  # Toolkit
     }
-    if not llm.startswith("openrouter-") and llm not in openai_costs:
-        raise ValueError(f"Invalid model: {llm} -- Not in cost dictionary")
+    # if not llm.startswith("openrouter-") and llm not in openai_costs:
+    #     raise ValueError(f"Invalid model: {llm} -- Not in cost dictionary")
 
     dp_forecaster = DirectPrompt(
         model=llm,
         use_context=use_context,
-        token_cost=openai_costs[llm] if not llm.startswith("openrouter-") else None,
+        token_cost=openai_costs[llm] if llm in openai_costs else {"input": 0.0, "output": 0.0}, # Cost only used for OpenAI models
         batch_size=batch_size,
         batch_size_on_retry=batch_size_on_retry,
         n_retries=n_retries,
