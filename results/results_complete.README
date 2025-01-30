@@ -1,0 +1,14 @@
+Column descriptions for the results_complete.csv file:
+
+* Model: Which model has been used for these results, included whether Direct Prompt or LLMP was used.
+* Use context: Whether the model was given the task context. False for models who cannot use it.
+* Task: The task class from the benchmark.
+* Instance: The task instance number, this number is used as the random number generator seed when creating the task instance.
+* Task weight: The relative weight given to this task when aggregating results.
+* RCRPS: Our main RCRPS metric, but without the cap of 5 we used in our aggregated results.
+* RCPRS: An unbiased estimate of the variance of the RCRPS metric. This number can rarely be negative.
+* RCRPS scaling: The alpha scaling factor which has been applied to RCRPS and CRPS results.
+* CRPS: The CRPS metric, ignoring regions of interest and constraint violations. Scaled by RCRPS scaling.
+* CRPS RoI: The CRPS metric, but only for the region of interest time steps. If no region of interest for the task, is the CRPS for all time steps.
+* CRPS RoI: The CRPS metric, but only for the time steps outside the region of interest. If no region of interest for the task, is the CRPS for all time steps.
+* CRPS constraint violations: The penalty term included in the RCRPS for forecasts which break the task explicit constraints.
