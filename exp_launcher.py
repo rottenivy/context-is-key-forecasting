@@ -145,7 +145,7 @@ if __name__ == "__main__":
         help="Launch a job that summarizes all experiments and uploads to GitHub",
     )
     parser.add_argument(
-        "--resultsdir", type=str, default="results_24_sep_with_transform"
+        "--resultsdir", type=str, default="vincent/results"
     )
     parser.add_argument(
         "--cap",
