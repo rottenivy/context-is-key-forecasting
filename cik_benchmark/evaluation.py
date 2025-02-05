@@ -163,7 +163,7 @@ def evaluate_task(
             samples, extra_info = samples
         else:
             extra_info = {}
-        evaluation = task.evaluate(samples)
+        evaluation = task.evaluate(samples)  # (n_samples, pred_len, n_series)
         result = {
             "seed": seed,
             "score": (
