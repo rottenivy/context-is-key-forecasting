@@ -1,2 +1,8 @@
 *pdf
 *png
+__pycache__/
+.vscode/
+inference_cache
+metric_scaling_cache
+models
+benchmark_results

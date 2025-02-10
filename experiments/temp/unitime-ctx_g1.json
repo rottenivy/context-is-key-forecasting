@@ -1,7 +1,7 @@
 [
     {
-        "label": "TimeLLM-ctx",
-        "method": "timellm",
+        "label": "UniTime-ctx",
+        "method": "unitime",
         "use_context": true,
         "dataset": "etth1",
         "pred_len": "96"

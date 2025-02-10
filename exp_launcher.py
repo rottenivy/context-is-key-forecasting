@@ -19,6 +19,21 @@ CURRENT_TIME = str(int(datetime.now().timestamp()))
 STARCASTER_DATA_OBJECT = "snow.research.starcaster.data"
 
 
+# LAUNCH_COMMAND = """
+# eai job new \
+#     --name {label}_starcaster\
+#     --cpu {n_cpu}\
+#     --gpu {n_gpu}\
+#     --mem {cpu_mem}\
+#     --image registry.toolkit-sp.yul201.service-now.com/snow.research.starcaster/interactive_toolkit\
+#     --data {STARCASTER_DATA_OBJECT}:/starcaster/data\
+#     --env CUDA_LAUNCH_BLOCKING=1\
+#     --env CIK_METRIC_COMPUTE_VARIANCE=1\
+#     --env PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True\
+#     --preemptable\
+#     -- bash -c 'git config --global user.email "results@starcaster.ai" && git config --global user.name "StarCaster Result Uploader" && conda init && source /tmp/.bashrc && source /starcaster/data/benchmark/configs && conda activate /starcaster/data/benchmark/conda && huggingface-cli login --token $HF_TOKEN && cd {code_path} && pip install -r requirements.txt && python run_baselines.py --exp-spec {exp_spec} --output /starcaster/data/benchmark/{resultsdir} {other_args}'
+# """
+
 LAUNCH_COMMAND = """
 eai job new \
     --name {label}_starcaster\
@@ -31,7 +46,7 @@ eai job new \
     --env CIK_METRIC_COMPUTE_VARIANCE=1\
     --env PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True\
     --preemptable\
-    -- bash -c 'git config --global user.email "results@starcaster.ai" && git config --global user.name "StarCaster Result Uploader" && conda init && source /tmp/.bashrc && source /starcaster/data/benchmark/configs && conda activate /starcaster/data/benchmark/conda && huggingface-cli login --token $HF_TOKEN && cd {code_path} && pip install -r requirements.txt && python run_baselines.py --exp-spec {exp_spec} --output /starcaster/data/benchmark/{resultsdir} {other_args}'
+    -- bash -c 'git config --global user.email "results@starcaster.ai" && git config --global user.name "StarCaster Result Uploader" && conda init && source /tmp/.bashrc && source /starcaster/data/benchmark/configs && conda activate /starcaster/data/benchmark/conda && huggingface-cli login --token $HF_TOKEN && cd {code_path} && python run_baselines.py --exp-spec {exp_spec} --output /starcaster/data/benchmark/{resultsdir} {other_args}'
 """
 
 
