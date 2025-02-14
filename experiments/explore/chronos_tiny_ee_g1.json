@@ -1,0 +1,7 @@
+[
+    {
+        "label": "Chronos_tiny_ee",
+        "method": "chronos_ee",
+        "model_size": "tiny"
+    }
+]

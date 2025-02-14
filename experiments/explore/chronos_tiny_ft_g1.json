@@ -1,0 +1,7 @@
+[
+    {
+        "label": "Chronos_tiny_ft",
+        "method": "chronos_ft",
+        "model_size": "tiny"
+    }
+]
