@@ -28,6 +28,8 @@ from cik_benchmark.baselines.r_forecast import R_ETS, R_Arima
 from cik_benchmark.evaluation import evaluate_all_tasks
 from cik_benchmark.config import RESULT_CACHE_PATH
 
+from cik_benchmark.baselines.chronos_ft import ChronosFTForecaster
+from cik_benchmark.baselines.chronos_ee import ChronosForecaster_ExtraEmbed
 
 logging.basicConfig(level=logging.INFO)
 
@@ -96,6 +98,34 @@ def experiment_chronos(
     """
     results = evaluate_all_tasks(
         ChronosForecaster(model_size=model_size),
+        n_samples=n_samples,
+        output_folder=f"{output_folder}/chronos/",
+        use_cache=True,
+        max_parallel=max_parallel,
+        skip_cache_miss=skip_cache_miss,
+    )
+    return results, {}
+
+
+def experiment_chronos_ft(
+    model_size, n_samples, output_folder, max_parallel=1, skip_cache_miss=False
+):
+    results = evaluate_all_tasks(
+        ChronosFTForecaster(model_size=model_size),
+        n_samples=n_samples,
+        output_folder=f"{output_folder}/chronos/",
+        use_cache=True,
+        max_parallel=max_parallel,
+        skip_cache_miss=skip_cache_miss,
+    )
+    return results, {}
+
+
+def experiment_chronos_ee(
+    model_size, n_samples, output_folder, max_parallel=1, skip_cache_miss=False
+):
+    results = evaluate_all_tasks(
+        ChronosForecaster_ExtraEmbed(model_size=model_size),
         n_samples=n_samples,
         output_folder=f"{output_folder}/chronos/",
         use_cache=False,
